@@ -1,0 +1,64 @@
+{#include base.html}
+{#title}Translation Task - TestGenesis{/title}
+
+{#body}
+<section class="clearfix">
+    <div class="title-area">
+        <h2>Translation Status</h2>
+        <p class="muted">Session: <code>{session.sessionId}</code> | Format: <code>{session.ticket.targetFormat}</code></p>
+    </div>
+    <div class="action-area">
+        <a href="/translations" class="btn">All Tasks</a>
+    </div>
+</section>
+
+<section>
+    <h3>Status</h3>
+    {#if session.status}
+        <div style="margin-bottom: 0.5rem;">
+            <span id="status-badge" class="status status-{session.status.state.name().toLowerCase().replace('translation_state_', '')}">
+                {session.status.state.name().replace('TRANSLATION_STATE_', '')}
+            </span>
+        </div>
+        <p id="status-message" class="muted small" style="word-break: break-word;">{session.status.message}</p>
+    {#else}
+        <div style="margin-bottom: 0.5rem;">
+            <span id="status-badge" class="status status-pending">PENDING</span>
+        </div>
+        <p id="status-message" class="muted small" style="word-break: break-word;">Waiting for agent...</p>
+    {/if}
+</section>
+
+{#if session.result}
+    <section id="results-section">
+        <h3>Payloads Result</h3>
+        <ul>
+            {#for payload in session.result.payloadsList}
+                <li class="clearfix">
+                    <div class="title-area">
+                        <strong>{payload.attachment.name ?: payload.type}</strong>
+                        <code>{payload.type}</code>
+                    </div>
+                    <div class="action-area">
+                        <div class="actions">
+                            <a href="/translations/{session.sessionId}/payloads/{payload_index}/download" class="btn">Download</a>
+                            <a href="/translations/{session.sessionId}/payloads/{payload_index}/save-form" class="btn">Save as CMS Payload</a>
+                        </div>
+                    </div>
+                </li>
+            {/for}
+        </ul>
+    </section>
+{/if}
+
+<section>
+    <h3>Console Output</h3>
+    <pre class="console" id="telemetry-console"></pre>
+</section>
+
+<script>
+    window.sessionId = "{session.sessionId}";
+</script>
+<script src="/js/translations_status.js"></script>
+{/body}
+{/include}

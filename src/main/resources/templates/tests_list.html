@@ -1,0 +1,100 @@
+{#include base.html}
+{#title}Tests - TestGenesis{/title}
+
+{#body}
+<section class="clearfix">
+    <div class="title-area">
+        <h2>Tests</h2>
+    </div>
+    <div class="action-area">
+        <a href="/tests/new" class="btn">Create Config</a>
+    </div>
+</section>
+
+<table>
+    <thead>
+        <tr>
+            <th>Configuration</th>
+            <th>Type</th>
+            <th>Payloads</th>
+            <th style="text-align: right;">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {#for test in tests}
+        <tr>
+            <td>
+                <strong>{test.name}</strong>
+                {#if test.description}
+                    <br><small class="muted">{test.description}</small>
+                {/if}
+            </td>
+            <td><code>{test.testType}</code></td>
+            <td class="muted">{test.payloads.size()}</td>
+            <td style="text-align: right;">
+                <a href="/tests/{test.id}/run" class="btn">Run</a>
+                <a href="/tests/{test.id}/edit" class="btn">Edit</a>
+                <form action="/tests/{test.id}/delete" method="POST" onsubmit="return confirm('Are you sure?');">
+                    <button type="submit" class="btn-error">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {#else}
+        <tr>
+            <td colspan="4" class="muted">No configurations found.</td>
+        </tr>
+        {/for}
+    </tbody>
+</table>
+
+{#if !batches.isEmpty()}
+<section>
+    <h3>Batches</h3>
+    <ul>
+        {#for batch in batches}
+        <li class="clearfix">
+            <div class="title-area">
+                <strong>{batch.testName}</strong>
+                <code>{batch.batchId}</code>
+            </div>
+            <div class="action-area wrap-text" style="text-align: right; max-width: 60%;">
+                <span class="status status-{batch.status.name().toLowerCase()}">{batch.status}</span>
+                <span class="muted">{batch.completedCount}/{batch.totalIterations}</span>
+                <a href="/tests/batch/{batch.batchId}/status" class="btn">Monitor</a>
+            </div>
+        </li>
+        {/for}
+    </ul>
+</section>
+{/if}
+
+{#if !sessions.isEmpty()}
+<section>
+    <h3>Sessions</h3>
+    <ul>
+        {#for session in sessions}
+        <li class="clearfix">
+            <div class="title-area">
+                <strong>{session.ticket.testType}</strong>
+                <code>{session.sessionId}</code>
+            </div>
+            <div class="action-area wrap-text" style="text-align: right; max-width: 60%;">
+                {#if session.status}
+                    <span class="status status-{session.status.state.name().toLowerCase().replace('test_state_', '')}">
+                        {session.status.state.name().replace('TEST_STATE_', '')}
+                    </span>
+                    {#if session.status.message}
+                        <br><small class="muted trim-text">{session.status.message}</small>
+                    {/if}
+                {#else}
+                    <span class="status">PENDING</span>
+                {/if}
+                <a href="/tests/{session.sessionId}/status" class="btn">View</a>
+            </div>
+        </li>
+        {/for}
+    </ul>
+</section>
+{/if}
+{/body}
+{/include}

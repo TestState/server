@@ -1,0 +1,86 @@
+{#include base.html}
+{#title}Execution Status - TestGenesis{/title}
+
+{#body}
+<section class="clearfix">
+    <div class="title-area">
+        <h2>Test Status</h2>
+        <p class="muted">
+            Session: <code>{session.sessionId}</code>
+            {#if session.negotiationDurationMs > 0}
+                <span class="small" style="margin-left: 1rem;">(Negotiated in <strong>{session.negotiationDurationMs}ms</strong>)</span>
+            {/if}
+        </p>
+    </div>
+    <div class="action-area">
+        <a href="/tests/{session.sessionId}/report/json" class="btn">JSON</a>
+        <a href="/tests/{session.sessionId}/report/json?full=true" class="btn">Full JSON</a>
+        <a href="/tests" class="btn">Back</a>
+    </div>
+</section>
+
+<section>
+    <div class="clearfix" style="margin-bottom: 0.5rem;">
+        <h3 class="title-area">Execution Progress</h3>
+        <span id="status-badge" class="status-badge status action-area">PENDING</span>
+    </div>
+    <div id="steps-container">
+        <p id="status-message" class="muted" style="word-break: break-word;">Waiting for agent...</p>
+    </div>
+</section>
+
+<section id="summary-section" class="d-none">
+    <h3>Summary</h3>
+    <p class="small">Duration: <strong id="summary-duration"></strong></p>
+    <pre style="font-size: 0.8rem; border: 1px solid var(--border); padding: 1rem; background: #010409; border-radius: 6px;" id="summary-json"></pre>
+</section>
+
+<section id="attachments-section" class="d-none">
+    <h3>Attachments</h3>
+    <div id="attachments-container" class="grid" style="margin-top: 1rem;"></div>
+</section>
+
+<section>
+    <h3>Console Output</h3>
+    <pre class="console" id="telemetry-console"></pre>
+</section>
+
+<template id="attachment-template">
+    <div class="card">
+        <p class="attachment-name small truncate" style="margin-bottom: 0.5rem;"></p>
+        <img class="attachment-img d-none" style="width: 100%; height: auto; border-radius: 4px; cursor: pointer; margin-bottom: 0.5rem;">
+        <a class="download-link btn small" style="display: block; text-align: center;">Download</a>
+    </div>
+</template>
+
+<template id="step-template">
+    <article style="border-bottom: 1px solid var(--border); padding: 0.75rem 0;">
+        <div style="cursor:pointer;" class="step-header clearfix">
+            <div class="title-area">
+                <strong>
+                    <span class="status-badge status" style="margin-right:0.5rem; vertical-align: middle;"></span>
+                    <span class="step-name"></span>
+                </strong>
+            </div>
+            <div class="action-area">
+                <code class="duration muted small"></code>
+            </div>
+        </div>
+        <div class="details d-none" style="margin-top:0.75rem; clear: both;">
+            <p class="muted small message"></p>
+            <pre class="metadata" style="font-size:0.75rem; color:var(--muted);"></pre>
+            <div class="attachments"></div>
+        </div>
+    </article>
+</template>
+
+<template id="nested-steps-template">
+    <div class="nested-steps" style="margin-left: 1.5rem; margin-top: 0.5rem; border-left: 2px solid var(--border); padding-left: 1rem;"></div>
+</template>
+
+<script>
+    window.sessionId = "{session.sessionId}";
+</script>
+<script src="/js/tests_status.js"></script>
+{/body}
+{/include}

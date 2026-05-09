@@ -1,0 +1,32 @@
+# Stage 1: Build
+FROM maven:3.9-eclipse-temurin-21 AS build
+WORKDIR /workspace
+
+# 1. Cache dependencies
+# Copy only the pom.xml and the shared specification to download dependencies first.
+# This ensures that we don't re-download everything if only source code changes.
+COPY specification /specification
+COPY implementation/server/teststate-cms/pom.xml /workspace/teststate-cms/
+WORKDIR /workspace/teststate-cms/
+
+# Download dependencies (go-offline)
+# We use quarkus:go-offline which is better at resolving Quarkus extensions than the standard maven-dependency-plugin.
+RUN mvn quarkus:go-offline -B || true
+
+# 2. Build application
+# Copy source code and build
+COPY implementation/server/teststate-cms/src /workspace/teststate-cms/src
+RUN mvn package -DskipTests
+
+# Stage 2: Runtime
+# Using a lightweight JRE image for the final application
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /work/
+
+# Copy the Quarkus fast-jar distribution from the build stage
+COPY --from=build /workspace/teststate-cms/target/quarkus-app/ /work/
+
+EXPOSE 8080 9000
+
+# Run the application
+CMD ["java", "-jar", "quarkus-run.jar", "-Dquarkus.http.host=0.0.0.0"]

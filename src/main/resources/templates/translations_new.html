@@ -1,0 +1,84 @@
+{#include base.html}
+{#title}New Task - TestGenesis{/title}
+
+{#body}
+<section class="clearfix">
+    <div class="title-area">
+        <h2>New Translation Task</h2>
+    </div>
+    <div class="action-area">
+        <a href="/translations" class="btn">Cancel</a>
+    </div>
+</section>
+
+<form action="/translations/start" method="POST">
+    <fieldset>
+        <legend>Configuration</legend>
+        <div class="field">
+            <label>Agent</label><br>
+            <select name="agentId" id="agent-select" required autofocus>
+                <option value="">-- Select Agent --</option>
+                {#for agent in agents}
+                    <option value="{agent.id}">{agent.displayName}</option>
+                {#else}
+                    <option disabled>No agents available</option>
+                {/for}
+            </select>
+        </div>
+
+        <div class="field">
+            <label>Translation Type</label><br>
+            <select name="type" id="type-select" required disabled>
+                <option value="">-- Select Agent First --</option>
+            </select>
+        </div>
+    </fieldset>
+
+    <fieldset>
+        <legend>Source Payloads</legend>
+        <ul id="payload-list" style="max-height: 400px; overflow-y: auto;">
+            {#for p in allPayloads}
+                <li data-type="{p.type}" class="clearfix">
+                    <label style="display:block; width:100%; cursor:pointer;">
+                        <div class="title-area">
+                            <input type="checkbox" name="payloadIds" value="{p.id}" style="width:auto; margin:0; vertical-align: middle;">
+                            <span style="margin-left: 0.5rem; vertical-align: middle;">{p.name}</span> 
+                            <code class="muted small" style="vertical-align: middle;">{p.type}</code>
+                        </div>
+                    </label>
+                </li>
+            {#else}
+                <li class="muted">No payloads found.</li>
+            {/for}
+        </ul>
+    </fieldset>
+
+    <button type="submit" id="start-btn" class="btn btn-primary" disabled>Start Task</button>
+</form>
+
+<template id="option-template">
+    <option value=""></option>
+</template>
+
+<script>
+    window.agents = [
+        {#for agent in agents}
+        {
+            id: "{agent.id}",
+            displayName: "{agent.displayName}",
+            supportedTranslations: [
+                {#for st in agent.supportedTranslations}
+                {
+                    type: "{st.type}",
+                    sources: [{#for stp in st.sourcePayloadTypes}"{stp}"{#if stp_hasNext},{/if}{/for}],
+                    targets: [{#for ttp in st.targetPayloadTypes}"{ttp}"{#if ttp_hasNext},{/if}{/for}]
+                }{#if st_hasNext},{/if}
+                {/for}
+            ]
+        }{#if agent_hasNext},{/if}
+        {/for}
+    ];
+</script>
+<script src="/js/translations_new.js"></script>
+{/body}
+{/include}

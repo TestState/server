@@ -1,0 +1,55 @@
+{#include base.html}
+{#title}{#if payload.id}Edit{#else}New{/if} Payload - TestGenesis{/title}
+
+{#body}
+<section class="clearfix">
+    <div class="title-area">
+        <h2>{#if payload.id}Edit{#else}New{/if} Payload</h2>
+    </div>
+    <div class="action-area">
+        <a href="/payloads" class="btn">Back</a>
+    </div>
+</section>
+
+<form action="/payloads/save" method="POST" enctype="multipart/form-data">
+    {#if payload.id}<input type="hidden" name="id" value="{payload.id}">{/if}
+    
+    <fieldset>
+        <legend>General Information</legend>
+        <div class="field">
+            <label>Name</label><br>
+            <input type="text" name="name" value="{payload.name}" required placeholder="Payload Name">
+        </div>
+        <div class="field">
+            <label>Description</label><br>
+            <textarea name="description" placeholder="Metadata description...">{payload.description}</textarea>
+        </div>
+        <div class="field">
+            <label>Type</label><br>
+            <input type="text" name="type" value="{payload.type}" list="payload-types" required placeholder="e.g. selenium-script">
+            <datalist id="payload-types">
+                {#for type in availableTypes}
+                    <option value="{type}"></option>
+                {/for}
+            </datalist>
+        </div>
+        <div class="field">
+            <label>Metadata (JSON)</label><br>
+            <textarea name="metadata" style="font-family:monospace; font-size:0.85rem;" rows="5">{payload.metadata}</textarea>
+        </div>
+    </fieldset>
+
+    <fieldset>
+        <legend>Attachment</legend>
+        {#if payload.attachmentName}
+            <div class="field">
+                <span class="muted small">Current: <strong>{payload.attachmentName}</strong></span>
+            </div>
+        {/if}
+        <input type="file" name="attachmentFile">
+    </fieldset>
+
+    <button type="submit" class="btn btn-primary">Save Payload</button>
+</form>
+{/body}
+{/include}
