@@ -1,4 +1,4 @@
-package me.hsgamer.testgenesis.cms.rest;
+package me.hsgamer.teststate.cms.rest;
 
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
@@ -7,12 +7,12 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import me.hsgamer.testgenesis.cms.service.AgentManager;
-import me.hsgamer.testgenesis.cms.service.BatchTestManager;
-import me.hsgamer.testgenesis.cms.service.PayloadService;
-import me.hsgamer.testgenesis.cms.service.StatisticsService;
-import me.hsgamer.testgenesis.cms.service.TestService;
-import me.hsgamer.testgenesis.cms.service.TestSessionManager;
+import me.hsgamer.teststate.cms.service.AgentManager;
+import me.hsgamer.teststate.cms.service.BatchTestManager;
+import me.hsgamer.teststate.cms.service.PayloadService;
+import me.hsgamer.teststate.cms.service.StatisticsService;
+import me.hsgamer.teststate.cms.service.TestService;
+import me.hsgamer.teststate.cms.service.TestSessionManager;
 
 @Path("/")
 public class IndexWebResource {

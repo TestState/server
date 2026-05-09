@@ -16,6 +16,7 @@
         <quarkus.grpc.zero.version>0.0.9</quarkus.grpc.zero.version>
         <protobuf.version>4.34.0</protobuf.version>
         <lombok.version>1.18.40</lombok.version>
+        <specification.dir>${project.basedir}/../../../specification</specification.dir>
 
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.5.4</surefire-plugin.version>
@@ -131,7 +132,7 @@
                         </goals>
                         <configuration>
                             <properties>
-                                <quarkus.grpc.codegen.proto-directory>${project.basedir}/../../../specification</quarkus.grpc.codegen.proto-directory>
+                                <quarkus.grpc.codegen.proto-directory>${specification.dir}</quarkus.grpc.codegen.proto-directory>
                             </properties>
                         </configuration>
                     </execution>

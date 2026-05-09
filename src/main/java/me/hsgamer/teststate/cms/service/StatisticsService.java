@@ -1,4 +1,4 @@
-package me.hsgamer.testgenesis.cms.service;
+package me.hsgamer.teststate.cms.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import java.util.concurrent.atomic.AtomicLong;

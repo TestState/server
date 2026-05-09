@@ -1,11 +1,11 @@
-package me.hsgamer.testgenesis.cms.service;
+package me.hsgamer.teststate.cms.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import me.hsgamer.testgenesis.cms.core.TestInfo;
-import me.hsgamer.testgenesis.cms.persistence.PayloadEntity;
-import me.hsgamer.testgenesis.cms.persistence.TestEntity;
+import me.hsgamer.teststate.cms.core.TestInfo;
+import me.hsgamer.teststate.cms.persistence.PayloadEntity;
+import me.hsgamer.teststate.cms.persistence.TestEntity;
 
 import java.util.ArrayList;
 import java.util.List;

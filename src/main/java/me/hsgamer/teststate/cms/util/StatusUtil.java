@@ -1,7 +1,7 @@
-package me.hsgamer.testgenesis.cms.util;
+package me.hsgamer.teststate.cms.util;
 
-import me.hsgamer.testgenesis.uap.v1.TestState;
-import me.hsgamer.testgenesis.uap.v1.TranslationState;
+import me.hsgamer.teststate.uap.v1.TestState;
+import me.hsgamer.teststate.uap.v1.TranslationState;
 
 public class StatusUtil {
     public static boolean isTerminal(TranslationState state) {

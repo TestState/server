@@ -1,14 +1,14 @@
-package me.hsgamer.testgenesis.cms.service;
+package me.hsgamer.teststate.cms.service;
 
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
-import me.hsgamer.testgenesis.cms.core.Agent;
-import me.hsgamer.testgenesis.cms.core.TranslationSession;
-import me.hsgamer.testgenesis.cms.core.TranslationTicket;
-import me.hsgamer.testgenesis.cms.core.TranslationTicketResult;
-import me.hsgamer.testgenesis.uap.v1.*;
+import me.hsgamer.teststate.cms.core.Agent;
+import me.hsgamer.teststate.cms.core.TranslationSession;
+import me.hsgamer.teststate.cms.core.TranslationTicket;
+import me.hsgamer.teststate.cms.core.TranslationTicketResult;
+import me.hsgamer.teststate.uap.v1.*;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

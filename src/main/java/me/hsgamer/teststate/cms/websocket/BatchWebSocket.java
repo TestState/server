@@ -1,4 +1,4 @@
-package me.hsgamer.testgenesis.cms.websocket;
+package me.hsgamer.teststate.cms.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.websockets.next.OnOpen;
@@ -7,8 +7,8 @@ import io.quarkus.websockets.next.WebSocket;
 import io.quarkus.websockets.next.WebSocketConnection;
 import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
-import me.hsgamer.testgenesis.cms.core.TestBatchSession;
-import me.hsgamer.testgenesis.cms.service.BatchTestManager;
+import me.hsgamer.teststate.cms.core.TestBatchSession;
+import me.hsgamer.teststate.cms.service.BatchTestManager;
 
 import java.util.Map;
 

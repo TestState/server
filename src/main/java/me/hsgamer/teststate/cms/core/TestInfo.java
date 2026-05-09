@@ -1,4 +1,4 @@
-package me.hsgamer.testgenesis.cms.core;
+package me.hsgamer.teststate.cms.core;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package me.hsgamer.testgenesis.cms.persistence;
+package me.hsgamer.teststate.cms.persistence;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.persistence.Entity;

@@ -1,4 +1,4 @@
-package me.hsgamer.testgenesis.cms.util;
+package me.hsgamer.teststate.cms.util;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

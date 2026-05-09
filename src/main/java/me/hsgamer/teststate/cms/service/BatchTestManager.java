@@ -1,11 +1,11 @@
-package me.hsgamer.testgenesis.cms.service;
+package me.hsgamer.teststate.cms.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import me.hsgamer.testgenesis.cms.core.BatchStatus;
-import me.hsgamer.testgenesis.cms.core.TestBatchSession;
-import me.hsgamer.testgenesis.cms.core.TestTicket;
-import me.hsgamer.testgenesis.cms.persistence.TestEntity;
+import me.hsgamer.teststate.cms.core.BatchStatus;
+import me.hsgamer.teststate.cms.core.TestBatchSession;
+import me.hsgamer.teststate.cms.core.TestTicket;
+import me.hsgamer.teststate.cms.persistence.TestEntity;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

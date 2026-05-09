@@ -1,6 +1,6 @@
-package me.hsgamer.testgenesis.cms.core;
+package me.hsgamer.teststate.cms.core;
 
-import me.hsgamer.testgenesis.uap.v1.Capability;
+import me.hsgamer.teststate.uap.v1.Capability;
 
 import java.util.List;
 

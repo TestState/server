@@ -1,8 +1,8 @@
-package me.hsgamer.testgenesis.cms.websocket;
+package me.hsgamer.teststate.cms.websocket;
 
-import me.hsgamer.testgenesis.uap.v1.Telemetry;
-import me.hsgamer.testgenesis.uap.v1.TestStatus;
-import me.hsgamer.testgenesis.uap.v1.TranslationStatus;
+import me.hsgamer.teststate.uap.v1.Telemetry;
+import me.hsgamer.teststate.uap.v1.TestStatus;
+import me.hsgamer.teststate.uap.v1.TranslationStatus;
 
 public class WSMessage {
     public record TelemetryMsg(String type, String level, String message, long timestamp) {
@@ -34,7 +34,7 @@ public class WSMessage {
 
     public record BatchUpdateMsg(String type, String batchId, String status, long completed, int total,
                                  java.util.List<SessionStatusDTO> sessions) {
-        public static BatchUpdateMsg from(me.hsgamer.testgenesis.cms.core.TestBatchSession batch) {
+        public static BatchUpdateMsg from(me.hsgamer.teststate.cms.core.TestBatchSession batch) {
             return new BatchUpdateMsg("BATCH_UPDATE", batch.getBatchId(), batch.getStatus().name(),
                 batch.getCompletedCount(), batch.getTotalIterations(),
                 batch.getSessions().stream().map(s -> new SessionStatusDTO(

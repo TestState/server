@@ -1,11 +1,11 @@
-package me.hsgamer.testgenesis.cms.websocket;
+package me.hsgamer.teststate.cms.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.websockets.next.WebSocketConnection;
 import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
-import me.hsgamer.testgenesis.cms.core.Session;
-import me.hsgamer.testgenesis.uap.v1.Telemetry;
+import me.hsgamer.teststate.cms.core.Session;
+import me.hsgamer.teststate.uap.v1.Telemetry;
 
 import java.util.ArrayList;
 import java.util.List;

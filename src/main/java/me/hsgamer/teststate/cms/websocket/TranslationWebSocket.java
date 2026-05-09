@@ -1,10 +1,10 @@
-package me.hsgamer.testgenesis.cms.websocket;
+package me.hsgamer.teststate.cms.websocket;
 
 import io.quarkus.websockets.next.*;
 import jakarta.inject.Inject;
-import me.hsgamer.testgenesis.cms.core.TranslationSession;
-import me.hsgamer.testgenesis.cms.service.TranslationManager;
-import me.hsgamer.testgenesis.uap.v1.TranslationStatus;
+import me.hsgamer.teststate.cms.core.TranslationSession;
+import me.hsgamer.teststate.cms.service.TranslationManager;
+import me.hsgamer.teststate.uap.v1.TranslationStatus;
 
 import java.util.List;
 import java.util.Optional;

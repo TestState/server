@@ -1,4 +1,4 @@
-package me.hsgamer.testgenesis.cms.persistence;
+package me.hsgamer.teststate.cms.persistence;
 
 import com.google.protobuf.ByteString;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
@@ -9,9 +9,9 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.Column;
 import lombok.Getter;
 import lombok.Setter;
-import me.hsgamer.testgenesis.cms.util.ProtoUtil;
-import me.hsgamer.testgenesis.uap.v1.Attachment;
-import me.hsgamer.testgenesis.uap.v1.Payload;
+import me.hsgamer.teststate.cms.util.ProtoUtil;
+import me.hsgamer.teststate.uap.v1.Attachment;
+import me.hsgamer.teststate.uap.v1.Payload;
 
 @Entity
 @Getter

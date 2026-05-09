@@ -1,4 +1,4 @@
-package me.hsgamer.testgenesis.cms.core;
+package me.hsgamer.teststate.cms.core;
 
 import lombok.Getter;
 
@@ -9,9 +9,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import me.hsgamer.testgenesis.uap.v1.TestState;
+import me.hsgamer.teststate.uap.v1.TestState;
 
-import static me.hsgamer.testgenesis.cms.util.StatusUtil.isTerminal;
+import static me.hsgamer.teststate.cms.util.StatusUtil.isTerminal;
 
 @Getter
 public class TestBatchSession {

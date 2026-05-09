@@ -1,8 +1,8 @@
-package me.hsgamer.testgenesis.cms.core;
+package me.hsgamer.teststate.cms.core;
 
 import lombok.Getter;
-import me.hsgamer.testgenesis.cms.util.StatusUtil;
-import me.hsgamer.testgenesis.uap.v1.*;
+import me.hsgamer.teststate.cms.util.StatusUtil;
+import me.hsgamer.teststate.uap.v1.*;
 
 import java.util.ArrayList;
 import java.util.List;

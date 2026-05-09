@@ -1,4 +1,4 @@
-package me.hsgamer.testgenesis.cms.service;
+package me.hsgamer.teststate.cms.service;
 
 import io.grpc.*;
 import io.quarkus.grpc.GlobalInterceptor;
@@ -9,10 +9,10 @@ import jakarta.enterprise.inject.Default;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
-import me.hsgamer.testgenesis.cms.core.Session;
-import me.hsgamer.testgenesis.cms.core.TestSession;
-import me.hsgamer.testgenesis.cms.core.TranslationSession;
-import me.hsgamer.testgenesis.uap.v1.*;
+import me.hsgamer.teststate.cms.core.Session;
+import me.hsgamer.teststate.cms.core.TestSession;
+import me.hsgamer.teststate.cms.core.TranslationSession;
+import me.hsgamer.teststate.uap.v1.*;
 
 @Singleton
 @Default

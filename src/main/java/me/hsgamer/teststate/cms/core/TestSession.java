@@ -1,12 +1,12 @@
-package me.hsgamer.testgenesis.cms.core;
+package me.hsgamer.teststate.cms.core;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.hsgamer.testgenesis.cms.util.StatusUtil;
-import me.hsgamer.testgenesis.uap.v1.TestResponse;
-import me.hsgamer.testgenesis.uap.v1.TestResult;
-import me.hsgamer.testgenesis.uap.v1.TestState;
-import me.hsgamer.testgenesis.uap.v1.TestStatus;
+import me.hsgamer.teststate.cms.util.StatusUtil;
+import me.hsgamer.teststate.uap.v1.TestResponse;
+import me.hsgamer.teststate.uap.v1.TestResult;
+import me.hsgamer.teststate.uap.v1.TestState;
+import me.hsgamer.teststate.uap.v1.TestStatus;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;

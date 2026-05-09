@@ -1,13 +1,13 @@
-package me.hsgamer.testgenesis.cms.websocket;
+package me.hsgamer.teststate.cms.websocket;
 
 import com.google.protobuf.util.Durations;
 import io.quarkus.websockets.next.*;
 import jakarta.inject.Inject;
-import me.hsgamer.testgenesis.cms.core.TestSession;
-import me.hsgamer.testgenesis.cms.service.TestSessionManager;
-import me.hsgamer.testgenesis.cms.util.ProtoUtil;
-import me.hsgamer.testgenesis.uap.v1.TestResult;
-import me.hsgamer.testgenesis.uap.v1.TestStatus;
+import me.hsgamer.teststate.cms.core.TestSession;
+import me.hsgamer.teststate.cms.service.TestSessionManager;
+import me.hsgamer.teststate.cms.util.ProtoUtil;
+import me.hsgamer.teststate.uap.v1.TestResult;
+import me.hsgamer.teststate.uap.v1.TestStatus;
 
 import java.util.List;
 import java.util.Map;
@@ -55,7 +55,7 @@ public class TestWebSocket extends BaseWebSocket<TestSession> {
         );
     }
 
-    private StepReportDTO mapReport(me.hsgamer.testgenesis.uap.v1.StepReport report) {
+    private StepReportDTO mapReport(me.hsgamer.teststate.uap.v1.StepReport report) {
         return new StepReportDTO(
             report.getStatus().name(),
             report.getName(),

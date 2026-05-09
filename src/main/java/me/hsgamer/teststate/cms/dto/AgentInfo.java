@@ -1,4 +1,4 @@
-package me.hsgamer.testgenesis.cms.dto;
+package me.hsgamer.teststate.cms.dto;
 
 import java.util.List;
 

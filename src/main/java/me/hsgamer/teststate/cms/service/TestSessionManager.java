@@ -1,10 +1,10 @@
-package me.hsgamer.testgenesis.cms.service;
+package me.hsgamer.teststate.cms.service;
 
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import me.hsgamer.testgenesis.cms.core.*;
-import me.hsgamer.testgenesis.uap.v1.*;
+import me.hsgamer.teststate.cms.core.*;
+import me.hsgamer.teststate.uap.v1.*;
 import org.eclipse.microprofile.context.ManagedExecutor;
 
 import java.util.*;

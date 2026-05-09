@@ -1,14 +1,14 @@
-package me.hsgamer.testgenesis.cms.service;
+package me.hsgamer.teststate.cms.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
-import me.hsgamer.testgenesis.cms.core.Agent;
-import me.hsgamer.testgenesis.cms.dto.AgentInfo;
-import me.hsgamer.testgenesis.cms.dto.TestTypeInfo;
-import me.hsgamer.testgenesis.cms.dto.TranslationTypeInfo;
-import me.hsgamer.testgenesis.uap.v1.Capability;
-import me.hsgamer.testgenesis.uap.v1.ListenResponse;
-import me.hsgamer.testgenesis.uap.v1.PayloadRequirement;
+import me.hsgamer.teststate.cms.core.Agent;
+import me.hsgamer.teststate.cms.dto.AgentInfo;
+import me.hsgamer.teststate.cms.dto.TestTypeInfo;
+import me.hsgamer.teststate.cms.dto.TranslationTypeInfo;
+import me.hsgamer.teststate.uap.v1.Capability;
+import me.hsgamer.teststate.uap.v1.ListenResponse;
+import me.hsgamer.teststate.uap.v1.PayloadRequirement;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

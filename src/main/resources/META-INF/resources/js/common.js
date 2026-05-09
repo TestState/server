@@ -1,5 +1,5 @@
 /**
- * Common utilities for TestGenesis CMS
+ * Common utilities for TestState CMS
  */
 
 window.el = (id) => document.getElementById(id);
