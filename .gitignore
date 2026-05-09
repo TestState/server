@@ -11,4 +11,4 @@ mvnw.cmd
 *.log
 .env
 *.secret
-teststate-db.*
+*.db
