@@ -1,9 +1,11 @@
 package me.hsgamer.teststate.cms.websocket;
-
+ 
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import me.hsgamer.teststate.uap.v1.Telemetry;
 import me.hsgamer.teststate.uap.v1.TestStatus;
 import me.hsgamer.teststate.uap.v1.TranslationStatus;
-
+ 
+@RegisterForReflection
 public class WSMessage {
     public record TelemetryMsg(String type, String level, String message, long timestamp) {
         public static TelemetryMsg from(Telemetry t) {
@@ -11,27 +13,27 @@ public class WSMessage {
                 t.getTimestamp().getSeconds() * 1000 + t.getTimestamp().getNanos() / 1000000);
         }
     }
-
+ 
     public record StatusMsg(String type, String state, String message) {
         public static StatusMsg from(String state, String message) {
             return new StatusMsg("STATUS", state, message);
         }
-
+ 
         public static StatusMsg from(TestStatus s) {
             return from(s.getState().name(), s.getMessage());
         }
-
+ 
         public static StatusMsg from(TranslationStatus s) {
             return from(s.getState().name(), s.getMessage());
         }
     }
-
+ 
     public record ResultMsg(String type, Object result) {
         public static ResultMsg from(Object result) {
             return new ResultMsg("RESULT", result);
         }
     }
-
+ 
     public record BatchUpdateMsg(String type, String batchId, String status, long completed, int totalIterations,
                                  long passedCount, long failedCount, long runningCount, long pendingCount,
                                  String throughput, String avgNegotiate,
@@ -51,7 +53,7 @@ public class WSMessage {
                 )).toList());
         }
     }
-
+ 
     public record SessionStatusDTO(String sessionId, String state, String message, String agentId, String agentName,
                                    long negotiationDurationMs) {
     }

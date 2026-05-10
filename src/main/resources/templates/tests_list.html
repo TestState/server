@@ -30,7 +30,7 @@
                 {/if}
             </td>
             <td><code>{test.testType}</code></td>
-            <td class="muted">{test.payloads.size()}</td>
+            <td class="muted">{test.payloads.size}</td>
             <td style="text-align: right;">
                 <a href="/tests/{test.id}/run" class="btn">Run</a>
                 <a href="/tests/{test.id}/edit" class="btn">Edit</a>
@@ -47,7 +47,7 @@
     </tbody>
 </table>
 
-{#if !batches.isEmpty()}
+{#if !batches.isEmpty}
 <section>
     <h3>Batches</h3>
     <ul>
@@ -68,7 +68,7 @@
 </section>
 {/if}
 
-{#if !sessions.isEmpty()}
+{#if !sessions.isEmpty}
 <section>
     <h3>Sessions</h3>
     <ul>
@@ -80,8 +80,8 @@
             </div>
             <div class="action-area wrap-text" style="text-align: right; max-width: 60%;">
                 {#if session.status}
-                    <span class="status status-{session.status.state.name().toLowerCase().replace('test_state_', '')}">
-                        {session.status.state.name().replace('TEST_STATE_', '')}
+                    <span class="status status-{session.status.state.stateClass}">
+                        {session.status.state.displayState}
                     </span>
                     {#if session.status.message}
                         <small class="muted trim-text" style="margin-left: 0.5rem;">{session.status.message}</small>
