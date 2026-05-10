@@ -204,7 +204,9 @@ public class TestWebResource {
     @Blocking
     public Response cancelBatch(@PathParam("batchId") String batchId) {
         batchTestManager.getBatchSession(batchId).ifPresent(batch -> {
-            batch.setStatus(BatchStatus.CANCELLED);
+            if (batch.getStatus() == BatchStatus.PENDING || batch.getStatus() == BatchStatus.RUNNING) {
+                batch.setStatus(BatchStatus.CANCELLED);
+            }
         });
         return Response.seeOther(URI.create("/tests/batch/" + batchId + "/status")).build();
     }

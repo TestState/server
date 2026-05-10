@@ -60,14 +60,18 @@
                     <strong>{agent.displayName}</strong><br>
                     <code class="muted small">{agent.id}</code>
                 </td>
-                <td>
-                    {#for cap in agent.capabilities}
-                        {#if cap.hasTest}
-                            <code>{cap.test.type}</code>
-                        {#else if cap.hasTranslation}
-                            <code style="color: #d2a8ff; background: rgba(210, 168, 255, 0.1);">{cap.translation.type}</code>
-                        {/if}
-                    {/for}
+                <td style="padding: 1rem 0.5rem;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                        {#for cap in agent.capabilities}
+                            {#if cap.hasTest}
+                                <code style="margin: 0;">{cap.test.type}</code>
+                            {#else if cap.hasTranslation}
+                                <code style="margin: 0; color: #d2a8ff; background: rgba(210, 168, 255, 0.1);">{cap.translation.type}</code>
+                            {#else}
+                                <code style="margin: 0; color: var(--muted); background: rgba(139, 148, 158, 0.1);">UNKNOWN</code>
+                            {/if}
+                        {/for}
+                    </div>
                 </td>
             </tr>
         {#else}
