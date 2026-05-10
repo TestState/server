@@ -25,5 +25,6 @@ public class TestEntity extends PanacheEntity {
         joinColumns = @JoinColumn(name = "test_id"),
         inverseJoinColumns = @JoinColumn(name = "payload_id")
     )
+    @org.hibernate.annotations.BatchSize(size = 20)
     public List<PayloadEntity> payloads = new ArrayList<>();
 }

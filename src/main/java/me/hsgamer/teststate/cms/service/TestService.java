@@ -73,11 +73,10 @@ public class TestService {
     }
 
     private List<PayloadEntity> fetchPayloads(List<Long> ids) {
-        List<PayloadEntity> payloads = new ArrayList<>();
-        for (Long pid : ids) {
-            PayloadEntity.findByIdOptional(pid).ifPresent(p -> payloads.add((PayloadEntity) p));
+        if (ids == null || ids.isEmpty()) {
+            return new ArrayList<>();
         }
-        return payloads;
+        return PayloadEntity.find("id IN ?1", ids).list();
     }
 
     @Transactional

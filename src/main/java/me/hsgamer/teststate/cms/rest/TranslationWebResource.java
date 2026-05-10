@@ -71,10 +71,7 @@ public class TranslationWebResource {
                 .build());
         }
 
-        List<Payload> sourcePayloads = payloadIds.stream()
-            .map(id -> payloadService.findById(id).orElseThrow(() -> new NotFoundException("Payload not found: " + id)))
-            .map(PayloadEntity::toProto)
-            .toList();
+        List<Payload> sourcePayloads = payloadService.preparePayloads(payloadIds);
 
         return translationManager.startTranslation(agentId, type, sourcePayloads)
             .map(result -> {
