@@ -22,10 +22,12 @@
 <section>
     <div class="clearfix" style="margin-bottom: 0.5rem;">
         <h3 class="title-area">Execution Progress</h3>
-        <span id="status-badge" class="status-badge status action-area">PENDING</span>
+        <div class="action-area" style="text-align: right;">
+            <span id="status-badge" class="status-badge status" style="vertical-align: middle;">PENDING</span>
+            <small id="status-message" class="muted" style="margin-left: 0.5rem; vertical-align: middle;">Waiting for agent...</small>
+        </div>
     </div>
     <div id="steps-container">
-        <p id="status-message" class="muted" style="word-break: break-word;">Waiting for agent...</p>
     </div>
 </section>
 

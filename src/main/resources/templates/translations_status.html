@@ -16,16 +16,16 @@
     <h3>Status</h3>
     {#if session.status}
         <div style="margin-bottom: 0.5rem;">
-            <span id="status-badge" class="status status-{session.status.state.name().toLowerCase().replace('translation_state_', '')}">
+            <span id="status-badge" class="status status-{session.status.state.name().toLowerCase().replace('translation_state_', '')}" style="vertical-align: middle;">
                 {session.status.state.name().replace('TRANSLATION_STATE_', '')}
             </span>
+            <small id="status-message" class="muted" style="margin-left: 0.5rem; vertical-align: middle;">{session.status.message}</small>
         </div>
-        <p id="status-message" class="muted small" style="word-break: break-word;">{session.status.message}</p>
     {#else}
         <div style="margin-bottom: 0.5rem;">
-            <span id="status-badge" class="status status-pending">PENDING</span>
+            <span id="status-badge" class="status status-pending" style="vertical-align: middle;">PENDING</span>
+            <small id="status-message" class="muted" style="margin-left: 0.5rem; vertical-align: middle;">Waiting for agent...</small>
         </div>
-        <p id="status-message" class="muted small" style="word-break: break-word;">Waiting for agent...</p>
     {/if}
 </section>
 

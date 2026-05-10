@@ -61,7 +61,7 @@
 </form>
 
 <script>
-    const agents = [
+    window.agents = [
         {#for agent in agents}
         {
             displayName: "{agent.displayName}",
@@ -77,41 +77,7 @@
         }{#if agent_hasNext},{/if}
         {/for}
     ];
-
-    const typeInput = document.querySelector('input[name="testType"]');
-    const payloadItems = document.querySelectorAll('#payload-list li');
-
-    function updateRecommendations() {
-        const type = typeInput.value;
-        const requirements = new Map(); // type -> 'REQUIRED' | 'RECOMMENDED'
-
-        agents.forEach(a => {
-            const t = a.supportedTests.find(tt => tt.testType === type);
-            if (t) {
-                t.required.forEach(r => requirements.set(r, 'REQUIRED'));
-                t.optional.forEach(o => {
-                    if (requirements.get(o) !== 'REQUIRED') requirements.set(o, 'RECOMMENDED');
-                });
-            }
-        });
-
-        payloadItems.forEach(item => {
-            const pType = item.dataset.type;
-            const badge = item.querySelector('.recommendation');
-            const state = requirements.get(pType);
-
-            if (state) {
-                badge.textContent = state;
-                badge.style.display = 'inline-block';
-                badge.className = 'recommendation status small ' + (state === 'REQUIRED' ? 'status-failed' : 'status-completed');
-            } else {
-                badge.style.display = 'none';
-            }
-        });
-    }
-
-    typeInput.addEventListener('input', updateRecommendations);
-    updateRecommendations();
 </script>
+<script src="/js/tests_edit.js"></script>
 {/body}
 {/include}

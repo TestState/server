@@ -32,21 +32,26 @@ public class WSMessage {
         }
     }
 
-    public record BatchUpdateMsg(String type, String batchId, String status, long completed, int total,
+    public record BatchUpdateMsg(String type, String batchId, String status, long completed, int totalIterations,
+                                 long passedCount, long failedCount, long runningCount, long pendingCount,
+                                 String throughput, String avgNegotiate,
                                  java.util.List<SessionStatusDTO> sessions) {
         public static BatchUpdateMsg from(me.hsgamer.teststate.cms.core.TestBatchSession batch) {
             return new BatchUpdateMsg("BATCH_UPDATE", batch.getBatchId(), batch.getStatus().name(),
                 batch.getCompletedCount(), batch.getTotalIterations(),
+                batch.getPassedCount(), batch.getFailedCount(), batch.getRunningCount(), batch.getPendingCount(),
+                batch.getThroughputFormatted(), batch.getAverageNegotiationDurationFormatted(),
                 batch.getSessions().stream().map(s -> new SessionStatusDTO(
                     s.getSessionId(),
                     s.getStatus() != null ? s.getStatus().getState().name() : "PENDING",
                     s.getStatus() != null ? s.getStatus().getMessage() : "Waiting...",
                     s.getAgentId(),
-                    s.getAgentName()
+                    s.getAgentName(),
+                    s.getNegotiationDurationMs()
                 )).toList());
         }
     }
 
-    public record SessionStatusDTO(String sessionId, String state, String message, String agentId, String agentName) {
+    public record SessionStatusDTO(String sessionId, String state, String message, String agentId, String agentName, long negotiationDurationMs) {
     }
 }
