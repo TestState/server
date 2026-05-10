@@ -145,8 +145,10 @@ public class TestWebResource {
             .map(p -> p.id)
             .collect(java.util.stream.Collectors.toSet());
 
+        Set<String> compatibleTypes = agentManager.getCompatiblePayloadTypes(test.testType);
         List<PayloadEntity> extraPayloads = payloadService.listAll().stream()
             .filter(p -> !linkedIds.contains(p.id))
+            .filter(p -> compatibleTypes.contains(p.type))
             .toList();
 
         return tests_run

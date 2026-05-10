@@ -77,13 +77,21 @@ public class AgentManager {
     }
 
     public Set<String> getAvailablePayloadTypes() {
-        return agents.values().stream().filter(Agent::isReady).flatMap(a -> a.capabilities.stream())
+        return agents.values().stream().filter(Agent::isReady).flatMap(a -> a.capabilities().stream())
             .flatMap(c -> switch (c.getFormatCase()) {
                 case TEST -> c.getTest().getPayloadsList().stream().map(PayloadRequirement::getType);
                 case TRANSLATION ->
                     Stream.concat(c.getTranslation().getSourcePayloadsList().stream(), c.getTranslation().getTargetPayloadsList().stream()).map(PayloadRequirement::getType);
                 default -> Stream.empty();
             }).collect(Collectors.toCollection(TreeSet::new));
+    }
+
+    public Set<String> getCompatiblePayloadTypes(String testType) {
+        return agents.values().stream().filter(Agent::isReady).flatMap(a -> a.capabilities().stream())
+            .filter(c -> c.hasTest() && c.getTest().getType().equals(testType))
+            .flatMap(c -> c.getTest().getPayloadsList().stream())
+            .map(PayloadRequirement::getType)
+            .collect(Collectors.toSet());
     }
 
     public Map<String, Set<String>> getPayloadMimeTypeMapping() {
