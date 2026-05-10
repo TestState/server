@@ -41,6 +41,7 @@ form { display: inline-block; vertical-align: middle; }
 .full-width-form { display: block; width: 100%; }
 fieldset { border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem 2rem; margin-bottom: 2rem; background: #0d1117; }
 legend { padding: 0 0.75rem; font-weight: 600; font-size: 0.85rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+label { display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.85rem; }
 .field { margin-bottom: 1.5rem; }
 input, select, textarea {
     background: #0d1117; border: 1px solid var(--border); color: var(--fg);
@@ -153,5 +154,5 @@ pre { background: #010409; border: 1px solid var(--border); border-radius: 8px; 
 .status-message-box { margin-bottom: 1rem; border-left: 2px solid var(--border); padding-left: 0.75rem; word-break: break-word; }
 .scrollable-list { max-height: 400px; overflow-y: auto; }
 .label-block { display: block; width: 100%; cursor: pointer; }
-.label-inline { display: inline-block; vertical-align: middle; cursor: pointer; margin-right: 2rem; margin-top: 0.5rem; }
+.label-inline { display: inline-block !important; vertical-align: middle; cursor: pointer; margin-right: 2rem; margin-top: 0.5rem; }
 .input-readonly { border-color: transparent !important; padding-left: 0 !important; background: transparent !important; }

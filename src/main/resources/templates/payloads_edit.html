@@ -17,15 +17,15 @@
     <fieldset>
         <legend>General Information</legend>
         <div class="field">
-            <label>Name</label><br>
+            <label>Name</label>
             <input type="text" name="name" value="{payload.name}" required placeholder="Payload Name">
         </div>
         <div class="field">
-            <label>Description</label><br>
+            <label>Description</label>
             <textarea name="description" placeholder="Metadata description...">{payload.description}</textarea>
         </div>
         <div class="field">
-            <label>Type</label><br>
+            <label>Type</label>
             <input type="text" name="type" value="{payload.type}" list="payload-types" required placeholder="e.g. selenium-script">
             <datalist id="payload-types">
                 {#for type in availableTypes}
@@ -34,7 +34,7 @@
             </datalist>
         </div>
         <div class="field">
-            <label>Metadata (JSON)</label><br>
+            <label>Metadata (JSON)</label>
             <textarea name="metadata" class="font-mono small" rows="5">{payload.metadata}</textarea>
         </div>
     </fieldset>
