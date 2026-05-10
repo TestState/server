@@ -1,7 +1,7 @@
 package me.hsgamer.teststate.cms.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.quarkus.qute.Template;
+import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import io.smallrye.common.annotation.Blocking;
 import io.smallrye.mutiny.Uni;
@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import me.hsgamer.teststate.cms.core.BatchStatus;
 import me.hsgamer.teststate.cms.core.TestBatchSession;
 import me.hsgamer.teststate.cms.core.TestSession;
+import me.hsgamer.teststate.cms.dto.AgentInfo;
 import me.hsgamer.teststate.cms.persistence.PayloadEntity;
 import me.hsgamer.teststate.cms.persistence.TestEntity;
 import me.hsgamer.teststate.cms.service.*;
@@ -22,6 +23,7 @@ import me.hsgamer.teststate.uap.v1.TestResult;
 import org.jboss.resteasy.reactive.RestForm;
 
 import java.net.URI;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,39 +48,36 @@ public class TestWebResource {
     @Inject
     BatchTestManager batchTestManager;
 
-    @Inject
-    Template tests_list;
-
-    @Inject
-    Template tests_edit;
-
-    @Inject
-    Template tests_run;
-
-    @Inject
-    Template tests_status;
-
-    @Inject
-    Template tests_batch_status;
+    @CheckedTemplate(basePath = "")
+    public static class Templates {
+        public static native TemplateInstance tests_list(List<TestEntity> tests, Collection<TestSession> sessions, Collection<TestBatchSession> batches);
+        public static native TemplateInstance tests_edit(TestEntity test, List<PayloadEntity> allPayloads, List<AgentInfo> agents, Collection<String> testTypes);
+        public static native TemplateInstance tests_run(TestEntity test, List<AgentInfo> agents, List<PayloadEntity> extraPayloads);
+        public static native TemplateInstance tests_status(TestSession session);
+        public static native TemplateInstance tests_batch_status(TestBatchSession batch);
+    }
 
     @GET
     @Produces(MediaType.TEXT_HTML)
     @Blocking
     public TemplateInstance list() {
-        return tests_list
-            .data("tests", testService.listAll())
-            .data("sessions", testSessionManager.getTestSessions())
-            .data("batches", batchTestManager.getBatchSessions());
+        return Templates.tests_list(
+            testService.listAll(),
+            testSessionManager.getTestSessions(),
+            batchTestManager.getBatchSessions()
+        );
     }
 
     @GET
     @Path("/new")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance createForm() {
-        return tests_edit.data("test", new TestEntity())
-            .data("allPayloads", payloadService.listAll())
-            .data("agents", agentManager.getAgentInfos())
-            .data("testTypes", agentManager.getAvailableTestTypes());
+        return Templates.tests_edit(
+            new TestEntity(),
+            payloadService.listAll(),
+            agentManager.getAgentInfos(),
+            agentManager.getAvailableTestTypes()
+        );
     }
 
 
@@ -88,10 +87,12 @@ public class TestWebResource {
     public TemplateInstance editForm(@PathParam("id") Long id) {
         TestEntity entity = testService.findById(id)
             .orElseThrow(() -> new NotFoundException("Test not found: " + id));
-        return tests_edit.data("test", entity)
-            .data("allPayloads", payloadService.listAll())
-            .data("agents", agentManager.getAgentInfos())
-            .data("testTypes", agentManager.getAvailableTestTypes());
+        return Templates.tests_edit(
+            entity,
+            payloadService.listAll(),
+            agentManager.getAgentInfos(),
+            agentManager.getAvailableTestTypes()
+        );
     }
 
 
@@ -151,10 +152,11 @@ public class TestWebResource {
             .filter(p -> compatibleTypes.contains(p.type))
             .toList();
 
-        return tests_run
-            .data("test", test)
-            .data("agents", agentManager.getAgentInfos())
-            .data("extraPayloads", extraPayloads);
+        return Templates.tests_run(
+            test,
+            agentManager.getAgentInfos(),
+            extraPayloads
+        );
     }
 
     @POST
@@ -198,7 +200,7 @@ public class TestWebResource {
         TestSession session = testSessionManager.getTestSession(sessionId)
             .orElseThrow(() -> new NotFoundException("Test session not found: " + sessionId));
 
-        return tests_status.data("session", session);
+        return Templates.tests_status(session);
     }
 
     @GET
@@ -209,7 +211,7 @@ public class TestWebResource {
         TestBatchSession batch = batchTestManager.getBatchSession(batchId)
             .orElseThrow(() -> new NotFoundException("Batch not found: " + batchId));
 
-        return tests_batch_status.data("batch", batch);
+        return Templates.tests_batch_status(batch);
     }
 
     @POST

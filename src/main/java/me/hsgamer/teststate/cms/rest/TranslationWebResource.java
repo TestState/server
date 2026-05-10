@@ -1,6 +1,6 @@
 package me.hsgamer.teststate.cms.rest;
 
-import io.quarkus.qute.Template;
+import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import io.smallrye.common.annotation.Blocking;
 import io.smallrye.mutiny.Uni;
@@ -11,6 +11,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import me.hsgamer.teststate.cms.core.TranslationSession;
+import me.hsgamer.teststate.cms.dto.AgentInfo;
 import me.hsgamer.teststate.cms.persistence.PayloadEntity;
 import me.hsgamer.teststate.cms.service.AgentManager;
 import me.hsgamer.teststate.cms.service.PayloadService;
@@ -20,6 +21,7 @@ import org.jboss.resteasy.reactive.RestForm;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 @Path("/translations")
@@ -36,23 +38,19 @@ public class TranslationWebResource {
     @Inject
     TranslationManager translationManager;
 
-    @Inject
-    Template translations_new;
-
-    @Inject
-    Template translations_status;
-
-    @Inject
-    Template translations_index;
-
-    @Inject
-    Template translations_save_payload;
+    @CheckedTemplate(basePath = "")
+    public static class Templates {
+        public static native TemplateInstance translations_index(Collection<TranslationSession> sessions);
+        public static native TemplateInstance translations_new(List<AgentInfo> agents, List<PayloadEntity> allPayloads);
+        public static native TemplateInstance translations_status(TranslationSession session, List<GeneratedPayloadInfo> generatedItems);
+        public static native TemplateInstance translations_save_payload(String sessionId, int index, String defaultName, String type);
+    }
 
     @GET
     @Produces(MediaType.TEXT_HTML)
     @Blocking
     public TemplateInstance list() {
-        return translations_index.data("sessions", translationManager.getTranslationSessions());
+        return Templates.translations_index(translationManager.getTranslationSessions());
     }
 
     @GET
@@ -60,9 +58,10 @@ public class TranslationWebResource {
     @Produces(MediaType.TEXT_HTML)
     @Blocking
     public TemplateInstance createForm() {
-        return translations_new
-            .data("agents", agentManager.getAgentInfos())
-            .data("allPayloads", payloadService.listAll());
+        return Templates.translations_new(
+            agentManager.getAgentInfos(),
+            payloadService.listAll()
+        );
     }
 
     @POST
@@ -114,9 +113,10 @@ public class TranslationWebResource {
             generatedItems.add(new GeneratedPayloadInfo(i, name, p.getType(), saved.map(e -> e.id).orElse(null)));
         }
 
-        return translations_status
-            .data("session", session)
-            .data("generatedItems", generatedItems);
+        return Templates.translations_status(
+            session,
+            generatedItems
+        );
     }
 
     @GET
@@ -148,11 +148,12 @@ public class TranslationWebResource {
         }
         Payload payload = session.getRawPayloads().get(index);
         String defaultName = payload.hasAttachment() ? "Translated: " + payload.getAttachment().getName() : "Translated: " + payload.getType();
-        return translations_save_payload
-            .data("sessionId", sessionId)
-            .data("index", index)
-            .data("defaultName", defaultName)
-            .data("type", payload.getType());
+        return Templates.translations_save_payload(
+            sessionId,
+            index,
+            defaultName,
+            payload.getType()
+        );
     }
 
     @POST

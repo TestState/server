@@ -1,6 +1,6 @@
 package me.hsgamer.teststate.cms.rest;
 
-import io.quarkus.qute.Template;
+import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -16,6 +16,8 @@ import org.jboss.resteasy.reactive.multipart.FileUpload;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -31,25 +33,27 @@ public class PayloadWebResource {
     AgentManager agentManager;
 
 
-    @Inject
-    Template payloads_list;
-
-    @Inject
-    Template payloads_edit;
+    @CheckedTemplate(basePath = "")
+    public static class Templates {
+        public static native TemplateInstance payloads_list(List<PayloadEntity> payloads);
+        public static native TemplateInstance payloads_edit(PayloadEntity payload, Collection<String> availableTypes, Map<String, Set<String>> mimeTypeMapping);
+    }
 
     @GET
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance list() {
-        return payloads_list.data("payloads", payloadService.listAll());
+        return Templates.payloads_list(payloadService.listAll());
     }
 
     @GET
     @Path("/new")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance createForm() {
-        return payloads_edit.data("payload", new PayloadEntity())
-            .data("availableTypes", agentManager.getAvailablePayloadTypes())
-            .data("mimeTypeMapping", agentManager.getPayloadMimeTypeMapping());
+        return Templates.payloads_edit(
+            new PayloadEntity(),
+            agentManager.getAvailablePayloadTypes(),
+            agentManager.getPayloadMimeTypeMapping()
+        );
     }
 
 
@@ -59,9 +63,11 @@ public class PayloadWebResource {
     public TemplateInstance editForm(@PathParam("id") Long id) {
         PayloadEntity entity = payloadService.findById(id)
             .orElseThrow(() -> new NotFoundException("Payload not found: " + id));
-        return payloads_edit.data("payload", entity)
-            .data("availableTypes", agentManager.getAvailablePayloadTypes())
-            .data("mimeTypeMapping", agentManager.getPayloadMimeTypeMapping());
+        return Templates.payloads_edit(
+            entity,
+            agentManager.getAvailablePayloadTypes(),
+            agentManager.getPayloadMimeTypeMapping()
+        );
     }
 
 

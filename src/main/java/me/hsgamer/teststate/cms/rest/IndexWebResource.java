@@ -1,24 +1,37 @@
 package me.hsgamer.teststate.cms.rest;
 
-import io.quarkus.qute.Template;
+import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import me.hsgamer.teststate.cms.service.AgentManager;
-import me.hsgamer.teststate.cms.service.BatchTestManager;
-import me.hsgamer.teststate.cms.service.PayloadService;
-import me.hsgamer.teststate.cms.service.StatisticsService;
-import me.hsgamer.teststate.cms.service.TestService;
-import me.hsgamer.teststate.cms.service.TestSessionManager;
+import me.hsgamer.teststate.cms.core.Agent;
+import me.hsgamer.teststate.cms.core.TestBatchSession;
+import me.hsgamer.teststate.cms.core.TestSession;
+import me.hsgamer.teststate.cms.persistence.PayloadEntity;
+import me.hsgamer.teststate.cms.persistence.TestEntity;
+import me.hsgamer.teststate.cms.service.*;
+
+import java.util.Collection;
+import java.util.List;
 
 @Path("/")
 public class IndexWebResource {
 
-    @Inject
-    Template index;
+    @CheckedTemplate(basePath = "")
+    public static class Templates {
+        public static native TemplateInstance index(
+            Collection<Agent> agents,
+            List<TestEntity> tests,
+            List<PayloadEntity> payloads,
+            Collection<TestBatchSession> batches,
+            Collection<TestSession> sessions,
+            String avgNegotiationTime,
+            String throughput
+        );
+    }
 
     @Inject
     AgentManager agentManager;
@@ -41,12 +54,14 @@ public class IndexWebResource {
     @GET
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance get() {
-        return index.data("agents", agentManager.getAgents())
-                    .data("tests", testService.listAll())
-                    .data("payloads", payloadService.listAll())
-                    .data("batches", batchTestManager.getBatchSessions())
-                    .data("sessions", testSessionManager.getTestSessions())
-                    .data("avgNegotiationTime", String.format("%.2f", statisticsService.getAvgNegotiationTime()))
-                    .data("throughput", String.format("%.2f", statisticsService.getThroughputPerMinute()));
+        return Templates.index(
+            agentManager.getAgents(),
+            testService.listAll(),
+            payloadService.listAll(),
+            batchTestManager.getBatchSessions(),
+            testSessionManager.getTestSessions(),
+            String.format("%.2f", statisticsService.getAvgNegotiationTime()),
+            String.format("%.2f", statisticsService.getThroughputPerMinute())
+        );
     }
 }
