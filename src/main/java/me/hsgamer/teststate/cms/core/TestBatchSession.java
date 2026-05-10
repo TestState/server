@@ -4,14 +4,11 @@ import lombok.Getter;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import me.hsgamer.teststate.uap.v1.TestState;
-
-import static me.hsgamer.teststate.cms.util.StatusUtil.isTerminal;
 
 @Getter
 public class TestBatchSession {
@@ -19,16 +16,22 @@ public class TestBatchSession {
     private final String testName;
     private final TestTicket ticket;
     private final int totalIterations;
-    private final List<TestSession> sessions = new CopyOnWriteArrayList<>();
+    private final List<BatchEntry> entries = new CopyOnWriteArrayList<>();
     private final List<Runnable> listeners = new CopyOnWriteArrayList<>();
-    private final java.util.Queue<String> agentQueue = new LinkedBlockingQueue<>();
-    private final AtomicInteger failedRegistrations = new AtomicInteger(0);
     private final Instant createdAt;
 
     private Instant startedAt;
     private Instant completedAt;
 
     private volatile BatchStatus status = BatchStatus.PENDING;
+
+    public TestBatchSession(String testName, TestTicket ticket, int totalIterations) {
+        this.batchId = "BCH-" + UUID.randomUUID();
+        this.testName = testName;
+        this.ticket = ticket;
+        this.totalIterations = totalIterations;
+        this.createdAt = Instant.now();
+    }
 
     public void setStatus(BatchStatus status) {
         this.status = status;
@@ -39,35 +42,27 @@ public class TestBatchSession {
         }
     }
 
-    public TestBatchSession(String testName, TestTicket ticket, int totalIterations) {
-        this.batchId = "BCH-" + UUID.randomUUID();
-        this.testName = testName;
-        this.ticket = ticket;
-        this.totalIterations = totalIterations;
-        this.createdAt = Instant.now();
+    public BatchEntry addEntry(String agentId) {
+        BatchEntry entry = new BatchEntry(agentId);
+        entries.add(entry);
+        return entry;
     }
 
-    public void addAgent(String agentId) {
-        agentQueue.add(agentId);
+    public Optional<BatchEntry> pollPendingEntry() {
+        return entries.stream()
+            .filter(BatchEntry::isPending)
+            .findFirst();
     }
 
-    public String pollAgent() {
-        return agentQueue.poll();
-    }
-
-    public boolean isQueueEmpty() {
-        return agentQueue.isEmpty();
-    }
-
-    public synchronized void addSession(TestSession session) {
-        sessions.add(session);
+    public void markEntryActive(BatchEntry entry, TestSession session) {
+        entry.markActive(session);
         session.addStatusConsumer(s -> notifyListeners());
         session.onCompletion(this::checkCompletion);
         notifyListeners();
     }
 
-    public void markRegistrationFailed() {
-        failedRegistrations.incrementAndGet();
+    public void markEntryFailed(BatchEntry entry) {
+        entry.markFailed();
         notifyListeners();
         checkCompletion();
     }
@@ -83,39 +78,47 @@ public class TestBatchSession {
     private synchronized void checkCompletion() {
         if (status != BatchStatus.RUNNING) return;
 
-        long terminalCount = sessions.stream()
-            .filter(s -> s.getStatus() != null && isTerminal(s.getStatus().getState()))
-            .count();
-
-        if (terminalCount + failedRegistrations.get() >= totalIterations) {
+        long done = entries.stream().filter(BatchEntry::isTerminallyComplete).count();
+        if (done >= totalIterations) {
             setStatus(BatchStatus.COMPLETED);
         }
 
-        // Always notify on completion/terminal state to trigger manager
         notifyListeners();
     }
 
+    public List<TestSession> getSessions() {
+        return entries.stream()
+            .map(BatchEntry::getSession)
+            .filter(s -> s != null)
+            .collect(java.util.stream.Collectors.toList());
+    }
+
     public long getCompletedCount() {
-        return sessions.stream()
-            .filter(s -> s.getStatus() != null && isTerminal(s.getStatus().getState()))
-            .count() + failedRegistrations.get();
+        return entries.stream().filter(BatchEntry::isTerminallyComplete).count();
     }
 
     public long getPassedCount() {
-        return sessions.stream()
-            .filter(s -> s.getStatus() != null && s.getStatus().getState() == TestState.TEST_STATE_COMPLETED)
+        return entries.stream()
+            .filter(e -> e.getSession() != null
+                && e.getSession().getStatus() != null
+                && e.getSession().getStatus().getState() == TestState.TEST_STATE_COMPLETED)
             .count();
     }
 
     public long getFailedCount() {
-        return sessions.stream()
-            .filter(s -> s.getStatus() != null && s.getStatus().getState() == TestState.TEST_STATE_FAILED)
-            .count() + failedRegistrations.get();
+        return entries.stream()
+            .filter(e -> e.getEntryStatus() == BatchEntry.EntryStatus.FAILED
+                || (e.getSession() != null
+                    && e.getSession().getStatus() != null
+                    && e.getSession().getStatus().getState() == TestState.TEST_STATE_FAILED))
+            .count();
     }
 
     public long getRunningCount() {
-        return sessions.stream()
-            .filter(s -> s.getStatus() != null && s.getStatus().getState() == TestState.TEST_STATE_RUNNING)
+        return entries.stream()
+            .filter(e -> e.getSession() != null
+                && e.getSession().getStatus() != null
+                && e.getSession().getStatus().getState() == TestState.TEST_STATE_RUNNING)
             .count();
     }
 
@@ -123,10 +126,14 @@ public class TestBatchSession {
         return totalIterations - getCompletedCount() - getRunningCount();
     }
 
-    public long getActiveSessionCount() {
-        return sessions.stream()
-            .filter(s -> s.getStatus() == null || !isTerminal(s.getStatus().getState()))
-            .count();
+    public long getActiveEntryCount() {
+        return entries.stream().filter(e -> !e.isTerminallyComplete()).count();
+    }
+
+    public boolean hasActiveEntry() {
+        return entries.stream().anyMatch(e ->
+            e.getEntryStatus() == BatchEntry.EntryStatus.REGISTERING
+            || (e.getEntryStatus() == BatchEntry.EntryStatus.ACTIVE && !e.isTerminallyComplete()));
     }
 
     public double getThroughput() {
@@ -138,9 +145,10 @@ public class TestBatchSession {
     }
 
     public double getAverageNegotiationDuration() {
-        return sessions.stream()
+        return entries.stream()
+            .map(BatchEntry::getSession)
+            .filter(s -> s != null && s.getNegotiationDurationMs() > 0)
             .mapToLong(TestSession::getNegotiationDurationMs)
-            .filter(d -> d > 0)
             .average()
             .orElse(0);
     }
