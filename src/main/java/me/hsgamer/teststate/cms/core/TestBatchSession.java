@@ -10,6 +10,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import me.hsgamer.teststate.uap.v1.TestState;
 
+import io.quarkus.qute.TemplateData;
+
 @Getter
 public class TestBatchSession {
     private final String batchId;
@@ -109,8 +111,8 @@ public class TestBatchSession {
         return entries.stream()
             .filter(e -> e.getEntryStatus() == BatchEntry.EntryStatus.FAILED
                 || (e.getSession() != null
-                    && e.getSession().getStatus() != null
-                    && e.getSession().getStatus().getState() == TestState.TEST_STATE_FAILED))
+                && e.getSession().getStatus() != null
+                && e.getSession().getStatus().getState() == TestState.TEST_STATE_FAILED))
             .count();
     }
 
@@ -133,7 +135,7 @@ public class TestBatchSession {
     public boolean hasActiveEntry() {
         return entries.stream().anyMatch(e ->
             e.getEntryStatus() == BatchEntry.EntryStatus.REGISTERING
-            || (e.getEntryStatus() == BatchEntry.EntryStatus.ACTIVE && !e.isTerminallyComplete()));
+                || (e.getEntryStatus() == BatchEntry.EntryStatus.ACTIVE && !e.isTerminallyComplete()));
     }
 
     public double getThroughput() {

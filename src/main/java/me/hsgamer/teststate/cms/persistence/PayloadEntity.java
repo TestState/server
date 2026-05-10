@@ -76,4 +76,3 @@ public class PayloadEntity extends PanacheEntity {
         this.description = "Translated";
     }
 }
-

@@ -2,6 +2,7 @@ package me.hsgamer.teststate.cms.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.qute.CheckedTemplate;
+import io.quarkus.qute.TemplateData;
 import io.quarkus.qute.TemplateInstance;
 import io.smallrye.common.annotation.Blocking;
 import io.smallrye.mutiny.Uni;
@@ -48,15 +49,6 @@ public class TestWebResource {
     @Inject
     BatchTestManager batchTestManager;
 
-    @CheckedTemplate(basePath = "")
-    public static class Templates {
-        public static native TemplateInstance tests_list(List<TestEntity> tests, Collection<TestSession> sessions, Collection<TestBatchSession> batches);
-        public static native TemplateInstance tests_edit(TestEntity test, List<PayloadEntity> allPayloads, List<AgentInfo> agents, Collection<String> testTypes);
-        public static native TemplateInstance tests_run(TestEntity test, List<AgentInfo> agents, List<PayloadEntity> extraPayloads);
-        public static native TemplateInstance tests_status(TestSession session);
-        public static native TemplateInstance tests_batch_status(TestBatchSession batch);
-    }
-
     @GET
     @Produces(MediaType.TEXT_HTML)
     @Blocking
@@ -80,7 +72,6 @@ public class TestWebResource {
         );
     }
 
-
     @GET
     @Path("/{id}/edit")
     @Produces(MediaType.TEXT_HTML)
@@ -94,7 +85,6 @@ public class TestWebResource {
             agentManager.getAvailableTestTypes()
         );
     }
-
 
     @POST
     @Path("/save")
@@ -305,5 +295,18 @@ public class TestWebResource {
             .type(attachment.getMimeType())
             .header("Content-Disposition", "attachment; filename=\"" + attachment.getName() + "\"")
             .build();
+    }
+
+    @CheckedTemplate(basePath = "")
+    public static class Templates {
+        public static native TemplateInstance tests_list(List<TestEntity> tests, Collection<TestSession> sessions, Collection<TestBatchSession> batches);
+
+        public static native TemplateInstance tests_edit(TestEntity test, List<PayloadEntity> allPayloads, List<AgentInfo> agents, Collection<String> testTypes);
+
+        public static native TemplateInstance tests_run(TestEntity test, List<AgentInfo> agents, List<PayloadEntity> extraPayloads);
+
+        public static native TemplateInstance tests_status(TestSession session);
+
+        public static native TemplateInstance tests_batch_status(TestBatchSession batch);
     }
 }

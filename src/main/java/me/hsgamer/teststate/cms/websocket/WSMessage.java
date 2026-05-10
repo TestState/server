@@ -52,6 +52,7 @@ public class WSMessage {
         }
     }
 
-    public record SessionStatusDTO(String sessionId, String state, String message, String agentId, String agentName, long negotiationDurationMs) {
+    public record SessionStatusDTO(String sessionId, String state, String message, String agentId, String agentName,
+                                   long negotiationDurationMs) {
     }
 }

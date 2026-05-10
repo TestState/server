@@ -1,6 +1,7 @@
 package me.hsgamer.teststate.cms.rest;
 
 import io.quarkus.qute.CheckedTemplate;
+import io.quarkus.qute.TemplateData;
 import io.quarkus.qute.TemplateInstance;
 import io.smallrye.common.annotation.Blocking;
 import io.smallrye.mutiny.Uni;
@@ -37,14 +38,6 @@ public class TranslationWebResource {
 
     @Inject
     TranslationManager translationManager;
-
-    @CheckedTemplate(basePath = "")
-    public static class Templates {
-        public static native TemplateInstance translations_index(Collection<TranslationSession> sessions);
-        public static native TemplateInstance translations_new(List<AgentInfo> agents, List<PayloadEntity> allPayloads);
-        public static native TemplateInstance translations_status(TranslationSession session, List<GeneratedPayloadInfo> generatedItems);
-        public static native TemplateInstance translations_save_payload(String sessionId, int index, String defaultName, String type);
-    }
 
     @GET
     @Produces(MediaType.TEXT_HTML)
@@ -175,6 +168,17 @@ public class TranslationWebResource {
         payloadService.savePayload(sessionId, payload, name, description);
 
         return Response.seeOther(URI.create("/translations/" + sessionId + "/status")).build();
+    }
+
+    @CheckedTemplate(basePath = "")
+    public static class Templates {
+        public static native TemplateInstance translations_index(Collection<TranslationSession> sessions);
+
+        public static native TemplateInstance translations_new(List<AgentInfo> agents, List<PayloadEntity> allPayloads);
+
+        public static native TemplateInstance translations_status(TranslationSession session, List<GeneratedPayloadInfo> generatedItems);
+
+        public static native TemplateInstance translations_save_payload(String sessionId, int index, String defaultName, String type);
     }
 
     public record GeneratedPayloadInfo(int index, String name, String type, Long databaseId) {

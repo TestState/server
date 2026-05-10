@@ -1,6 +1,7 @@
 package me.hsgamer.teststate.cms.rest;
 
 import io.quarkus.qute.CheckedTemplate;
+import io.quarkus.qute.TemplateData;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
@@ -20,34 +21,16 @@ import java.util.List;
 @Path("/")
 public class IndexWebResource {
 
-    @CheckedTemplate(basePath = "")
-    public static class Templates {
-        public static native TemplateInstance index(
-            Collection<Agent> agents,
-            List<TestEntity> tests,
-            List<PayloadEntity> payloads,
-            Collection<TestBatchSession> batches,
-            Collection<TestSession> sessions,
-            String avgNegotiationTime,
-            String throughput
-        );
-    }
-
     @Inject
     AgentManager agentManager;
-
     @Inject
     TestService testService;
-
     @Inject
     PayloadService payloadService;
-
     @Inject
     BatchTestManager batchTestManager;
-
     @Inject
     TestSessionManager testSessionManager;
-
     @Inject
     StatisticsService statisticsService;
 
@@ -62,6 +45,19 @@ public class IndexWebResource {
             testSessionManager.getTestSessions(),
             String.format("%.2f", statisticsService.getAvgNegotiationTime()),
             String.format("%.2f", statisticsService.getThroughputPerMinute())
+        );
+    }
+
+    @CheckedTemplate(basePath = "")
+    public static class Templates {
+        public static native TemplateInstance index(
+            Collection<Agent> agents,
+            List<TestEntity> tests,
+            List<PayloadEntity> payloads,
+            Collection<TestBatchSession> batches,
+            Collection<TestSession> sessions,
+            String avgNegotiationTime,
+            String throughput
         );
     }
 }

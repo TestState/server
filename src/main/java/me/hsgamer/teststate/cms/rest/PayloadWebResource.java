@@ -1,6 +1,7 @@
 package me.hsgamer.teststate.cms.rest;
 
 import io.quarkus.qute.CheckedTemplate;
+import io.quarkus.qute.TemplateData;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -32,13 +33,6 @@ public class PayloadWebResource {
     @Inject
     AgentManager agentManager;
 
-
-    @CheckedTemplate(basePath = "")
-    public static class Templates {
-        public static native TemplateInstance payloads_list(List<PayloadEntity> payloads);
-        public static native TemplateInstance payloads_edit(PayloadEntity payload, Collection<String> availableTypes, Map<String, Set<String>> mimeTypeMapping);
-    }
-
     @GET
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance list() {
@@ -56,7 +50,6 @@ public class PayloadWebResource {
         );
     }
 
-
     @GET
     @Path("/{id}/edit")
     @Produces(MediaType.TEXT_HTML)
@@ -69,7 +62,6 @@ public class PayloadWebResource {
             agentManager.getPayloadMimeTypeMapping()
         );
     }
-
 
     @POST
     @Path("/save")
@@ -142,5 +134,12 @@ public class PayloadWebResource {
             .type(entity.getAttachmentMimeType())
             .header("Content-Disposition", "attachment; filename=\"" + entity.getAttachmentName() + "\"")
             .build();
+    }
+
+    @CheckedTemplate(basePath = "")
+    public static class Templates {
+        public static native TemplateInstance payloads_list(List<PayloadEntity> payloads);
+
+        public static native TemplateInstance payloads_edit(PayloadEntity payload, Collection<String> availableTypes, Map<String, Set<String>> mimeTypeMapping);
     }
 }

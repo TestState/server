@@ -1,6 +1,7 @@
 package me.hsgamer.teststate.cms.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
+
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAccumulator;
 
@@ -16,6 +17,7 @@ public class StatisticsService {
 
     /**
      * Reports a completed session negotiation duration.
+     *
      * @param durationMs The duration in milliseconds from SessionProposal to SessionReady.
      */
     public void reportNegotiation(long durationMs) {
@@ -32,6 +34,7 @@ public class StatisticsService {
 
     /**
      * Returns the average negotiation time in milliseconds.
+     *
      * @return Average negotiation time.
      */
     public double getAvgNegotiationTime() {
@@ -41,6 +44,7 @@ public class StatisticsService {
 
     /**
      * Returns the throughput in sessions per minute.
+     *
      * @return Sessions per minute.
      */
     public double getThroughputPerMinute() {
@@ -51,6 +55,7 @@ public class StatisticsService {
 
     /**
      * Returns the total number of completed sessions.
+     *
      * @return Total completed sessions.
      */
     public long getCompletedSessionsCount() {

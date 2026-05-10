@@ -58,7 +58,7 @@
                 <code>{batch.batchId}</code>
             </div>
             <div class="action-area wrap-text" style="text-align: right; max-width: 60%;">
-                <span class="status status-{batch.status.name().toLowerCase()}">{batch.status}</span>
+                <span class="status status-{batch.status.statusClass}">{batch.status}</span>
                 <span class="muted">{batch.completedCount}/{batch.totalIterations}</span>
                 <a href="/tests/batch/{batch.batchId}/status" class="btn">Monitor</a>
             </div>

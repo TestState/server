@@ -4,17 +4,9 @@ import lombok.Getter;
 
 @Getter
 public class BatchEntry {
-    public enum EntryStatus {
-        PENDING,
-        REGISTERING,
-        ACTIVE,
-        FAILED
-    }
-
     private final String agentId;
     private volatile EntryStatus entryStatus = EntryStatus.PENDING;
     private volatile TestSession session;
-
     public BatchEntry(String agentId) {
         this.agentId = agentId;
     }
@@ -40,5 +32,12 @@ public class BatchEntry {
         if (entryStatus == EntryStatus.FAILED) return true;
         if (session == null) return false;
         return session.getStatus() != null && me.hsgamer.teststate.cms.util.StatusUtil.isTerminal(session.getStatus().getState());
+    }
+
+    public enum EntryStatus {
+        PENDING,
+        REGISTERING,
+        ACTIVE,
+        FAILED
     }
 }

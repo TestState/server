@@ -80,8 +80,8 @@
                     <td><code>{session.sessionId}</code></td>
                     <td>
                         {#if session.status}
-                            <span class="status-badge status status-{session.status.state.name().toLowerCase().replace('test_state_', '')}">
-                                {session.status.state.name().replace('TEST_STATE_', '')}
+                            <span class="status-badge status status-{session.status.state.stateClass}">
+                                {session.status.state.displayState}
                             </span>
                             {#if session.status.message}
                                 <small class="muted trim-text status-message" style="margin-left: 0.5rem;">{session.status.message}</small>
