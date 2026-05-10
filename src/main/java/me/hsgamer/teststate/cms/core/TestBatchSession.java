@@ -123,6 +123,12 @@ public class TestBatchSession {
         return totalIterations - getCompletedCount() - getRunningCount();
     }
 
+    public long getActiveSessionCount() {
+        return sessions.stream()
+            .filter(s -> s.getStatus() == null || !isTerminal(s.getStatus().getState()))
+            .count();
+    }
+
     public double getThroughput() {
         if (startedAt == null) return 0;
         Instant end = completedAt != null ? completedAt : Instant.now();

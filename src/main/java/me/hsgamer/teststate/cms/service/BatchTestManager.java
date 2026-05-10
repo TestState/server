@@ -66,7 +66,7 @@ public class BatchTestManager {
 
     private synchronized void processNextSequential(TestBatchSession batch) {
         if (batch.getStatus() != BatchStatus.RUNNING) return;
-        if (batch.getRunningCount() > 0) return;
+        if (batch.getActiveSessionCount() > 0) return;
 
         String agentId = batch.pollAgent();
         if (agentId != null) {
