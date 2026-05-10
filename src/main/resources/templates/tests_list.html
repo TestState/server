@@ -84,7 +84,7 @@
                         {session.status.state.name().replace('TEST_STATE_', '')}
                     </span>
                     {#if session.status.message}
-                        <br><small class="muted trim-text">{session.status.message}</small>
+                        <small class="muted trim-text" style="margin-left: 0.5rem;">{session.status.message}</small>
                     {/if}
                 {#else}
                     <span class="status">PENDING</span>
