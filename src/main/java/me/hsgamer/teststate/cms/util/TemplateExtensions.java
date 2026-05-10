@@ -19,6 +19,11 @@ public class TemplateExtensions {
         return e.name().toLowerCase();
     }
 
+    public static boolean isCancelable(me.hsgamer.teststate.cms.core.BatchStatus status) {
+        return status == me.hsgamer.teststate.cms.core.BatchStatus.PENDING || 
+               status == me.hsgamer.teststate.cms.core.BatchStatus.RUNNING;
+    }
+
     /**
      * Cleans up the Protobuf TestState enum name for display and CSS.
      */

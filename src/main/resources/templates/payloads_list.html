@@ -11,40 +11,44 @@
     </div>
 </section>
  
-<table>
-    <thead>
-        <tr>
-            <th>Payload</th>
-            <th>Type</th>
-            <th class="text-right">Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {#for payload in payloads}
-        <tr>
-            <td>
-                <strong>{payload.name}</strong>
-                {#if payload.description}
-                    <br><small class="muted">{payload.description}</small>
-                {/if}
-            </td>
-            <td><code>{payload.type}</code></td>
-            <td class="text-right">
-                {#if payload.attachmentName}
-                    <a href="/payloads/{payload.id}/attachment" class="btn">Download</a>
-                {/if}
-                <a href="/payloads/{payload.id}/edit" class="btn">Edit</a>
-                <form action="/payloads/{payload.id}/delete" method="POST" onsubmit="return confirm('Are you sure?');">
-                    <button type="submit" class="btn-error">Delete</button>
-                </form>
-            </td>
-        </tr>
-        {#else}
-        <tr>
-            <td colspan="3" class="muted">No payloads found.</td>
-        </tr>
-        {/for}
-    </tbody>
-</table>
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>Payload</th>
+                <th>Type</th>
+                <th class="text-right">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {#for payload in payloads}
+            <tr>
+                <td>
+                    <strong>{payload.name}</strong>
+                    {#if payload.description}
+                        <br><small class="muted">{payload.description}</small>
+                    {/if}
+                </td>
+                <td><code>{payload.type}</code></td>
+                <td class="text-right">
+                    <div class="flex-row" style="justify-content: flex-end;">
+                        {#if payload.attachmentName}
+                            <a href="/payloads/{payload.id}/attachment" class="btn">Download</a>
+                        {/if}
+                        <a href="/payloads/{payload.id}/edit" class="btn">Edit</a>
+                        <form action="/payloads/{payload.id}/delete" method="POST" onsubmit="return confirm('Are you sure?');">
+                            <button type="submit" class="btn-error">Delete</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {#else}
+            <tr>
+                <td colspan="3" class="muted">No payloads found.</td>
+            </tr>
+            {/for}
+        </tbody>
+    </table>
+</div>
 {/body}
 {/include}

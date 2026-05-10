@@ -38,12 +38,12 @@
         <legend>Source Payloads</legend>
         <ul id="payload-list" class="scrollable-list">
             {#for p in allPayloads}
-                <li data-type="{p.type}" class="clearfix">
+                <li data-type="{p.type}">
                     <label class="label-block">
-                        <div class="title-area">
-                            <input type="checkbox" name="payloadIds" value="{p.id}" class="w-auto m-0 v-middle">
-                            <span class="ml-05 v-middle">{p.name}</span> 
-                            <code class="muted small v-middle">{p.type}</code>
+                        <div class="flex-row">
+                            <input type="checkbox" name="payloadIds" value="{p.id}" class="w-auto m-0">
+                            <span>{p.name}</span> 
+                            <code class="muted small">{p.type}</code>
                         </div>
                     </label>
                 </li>

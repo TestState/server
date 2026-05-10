@@ -11,7 +11,7 @@
     </div>
 </section>
  
-<section>
+<div class="table-container">
     <table>
         <thead>
             <tr>
@@ -26,34 +26,36 @@
             <tr>
                 <td><code>{session.sessionId}</code></td>
                 <td><code>{session.ticket.targetFormat}</code></td>
-                <td class="wrap-text">
-                    {#if session.status}
-                        <span class="status status-{session.status.state.stateClass}">
-                            {session.status.state.displayState}
-                        </span>
-                        {#if session.status.message}
-                            <small class="muted trim-text ml-05">{session.status.message}</small>
+                <td>
+                    <div class="flex-row">
+                        {#if session.status}
+                            <span class="status status-{session.status.state.stateClass}">
+                                {session.status.state.displayState}
+                            </span>
+                            {#if session.status.message}
+                                <small class="muted trim-text ml-05">{session.status.message}</small>
+                            {/if}
+                        {#else}
+                            <span class="status">PENDING</span>
                         {/if}
-                    {#else}
-                        <span class="status">PENDING</span>
-                    {/if}
+                    </div>
                 </td>
                 <td class="text-right">
-                    <div class="actions">
+                    <div class="flex-row" style="justify-content: flex-end;">
                         <a href="/translations/{session.sessionId}/status" class="btn">Monitor</a>
                     </div>
                 </td>
             </tr>
             {#else}
             <tr>
-                <td colspan="4" class="empty-table-cell">
-                    <p class="muted">No translation tasks found.</p>
+                <td colspan="4" class="muted text-center p-3">
+                    <p class="mb-1">No translation tasks found.</p>
                     <a href="/translations/new" class="btn">Start a translation</a>
                 </td>
             </tr>
             {/for}
         </tbody>
     </table>
-</section>
+</div>
 {/body}
 {/include}

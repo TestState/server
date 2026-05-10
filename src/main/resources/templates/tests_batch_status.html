@@ -10,7 +10,7 @@
     <div class="action-area">
         <a href="/tests/batch/{batch.batchId}/report/json" class="btn">JSON</a>
         <a href="/tests/batch/{batch.batchId}/report/json?full=true" class="btn">Full JSON</a>
-        {#if batch.status.name == "PENDING" || batch.status.name == "RUNNING"}
+        {#if batch.status.isCancelable}
             <form action="/tests/batch/{batch.batchId}/cancel" method="POST">
                 <button type="submit" class="btn-error">Cancel</button>
             </form>

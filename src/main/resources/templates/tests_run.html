@@ -15,17 +15,17 @@
 <form action="/tests/{test.id}/start" method="POST" class="full-width-form">
     <fieldset>
         <legend>Execution Agents</legend>
-        <ul>
+        <ul class="scrollable-list">
             {#for agent in agents}
                 {#if agent.supportsTestType(test.testType)}
-                    <li class="clearfix">
+                    <li>
                         <label class="label-block">
-                            <div class="title-area">
-                                <input type="checkbox" name="agentIds" value="{agent.id}" class="w-auto m-0 v-middle">
-                                <strong class="ml-05 v-middle">{agent.displayName}</strong>
-                                <code class="muted v-middle">{agent.id}</code>
+                            <div class="flex-row">
+                                <input type="checkbox" name="agentIds" value="{agent.id}" class="w-auto m-0">
+                                <strong>{agent.displayName}</strong>
+                                <code class="muted">{agent.id}</code>
                             </div>
-                            <div class="action-area">
+                            <div class="flex-row">
                                 <span class="status status-completed">Online</span>
                             </div>
                         </label>
@@ -47,21 +47,23 @@
         </div>
         <div class="field">
             <label>Execution Mode</label>
-            <label class="label-inline">
-                <input type="radio" name="parallel" value="false" checked class="w-auto v-middle"> <span class="v-middle">Sequential</span>
-            </label>
-            <label class="label-inline">
-                <input type="radio" name="parallel" value="true" class="w-auto v-middle"> <span class="v-middle">Parallel</span>
-            </label>
+            <div class="flex-row mt-05">
+                <label class="label-inline m-0">
+                    <input type="radio" name="parallel" value="false" checked class="w-auto"> <span>Sequential</span>
+                </label>
+                <label class="label-inline m-0">
+                    <input type="radio" name="parallel" value="true" class="w-auto"> <span>Parallel</span>
+                </label>
+            </div>
         </div>
     </fieldset>
  
     <fieldset>
         <legend>Primary Payloads</legend>
-        <ul>
+        <ul class="scrollable-list">
             {#for payload in test.payloads}
-                <li>
-                    <span>{payload.name}</span>
+                <li class="flex-row">
+                    <span class="flex-grow">{payload.name}</span>
                     <code>{payload.type}</code>
                 </li>
             {#else}
@@ -72,14 +74,14 @@
  
     <fieldset>
         <legend>Extra Payloads</legend>
-        <ul>
+        <ul class="scrollable-list">
             {#for payload in extraPayloads}
-                <li class="clearfix">
+                <li>
                     <label class="label-block">
-                        <div class="title-area">
-                            <input type="checkbox" name="extraPayloadIds" value="{payload.id}" class="w-auto m-0 v-middle">
-                            <span class="ml-05 v-middle">{payload.name}</span>
-                            <code class="v-middle">{payload.type}</code>
+                        <div class="flex-row">
+                            <input type="checkbox" name="extraPayloadIds" value="{payload.id}" class="w-auto m-0">
+                            <span>{payload.name}</span>
+                            <code class="muted">{payload.type}</code>
                         </div>
                     </label>
                 </li>
