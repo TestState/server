@@ -1,6 +1,6 @@
 {#include base.html}
 {#title}Translation Task - TestState{/title}
-
+ 
 {#body}
 <section class="clearfix">
     <div class="title-area">
@@ -11,25 +11,25 @@
         <a href="/translations" class="btn">All Tasks</a>
     </div>
 </section>
-
+ 
 <section>
-    <div class="clearfix" style="margin-bottom: 0.5rem;">
+    <div class="clearfix mb-05">
         <h3 class="title-area">Status</h3>
-        <div class="action-area" style="text-align: right;">
+        <div class="action-area text-right">
             {#if session.status}
-                <span id="status-badge" class="status status-{session.status.state.stateClass}" style="vertical-align: middle;">
+                <span id="status-badge" class="status status-{session.status.state.stateClass} v-middle">
                     {session.status.state.displayState}
                 </span>
             {#else}
-                <span id="status-badge" class="status status-pending" style="vertical-align: middle;">PENDING</span>
+                <span id="status-badge" class="status status-pending v-middle">PENDING</span>
             {/if}
         </div>
     </div>
-    <div id="status-message" class="muted small" style="margin-bottom: 1rem; border-left: 2px solid var(--border); padding-left: 0.75rem; word-break: break-word; min-height: 1.2rem;">
+    <div id="status-message" class="status-message-box muted small">
         {#if session.status}{session.status.message}{#else}Waiting for agent...{/if}
     </div>
 </section>
-
+ 
 {#if session.result}
     <section id="results-section">
         <h3>Payloads Result</h3>
@@ -51,12 +51,12 @@
         </ul>
     </section>
 {/if}
-
+ 
 <section>
     <h3>Console Output</h3>
     <pre class="console" id="telemetry-console"></pre>
 </section>
-
+ 
 <script>
     window.sessionId = "{session.sessionId}";
 </script>

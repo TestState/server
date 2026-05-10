@@ -1,6 +1,6 @@
 {#include base.html}
 {#title}Launch Test - TestState{/title}
-
+ 
 {#body}
 <section class="clearfix">
     <div class="title-area">
@@ -11,19 +11,19 @@
         <a href="/tests" class="btn">Back</a>
     </div>
 </section>
-
-<form action="/tests/{test.id}/start" method="POST">
+ 
+<form action="/tests/{test.id}/start" method="POST" class="full-width-form">
     <fieldset>
         <legend>Execution Agents</legend>
         <ul>
             {#for agent in agents}
                 {#if agent.supportsTestType(test.testType)}
                     <li class="clearfix">
-                        <label style="display:block; width:100%; cursor:pointer;">
+                        <label class="label-block">
                             <div class="title-area">
-                                <input type="checkbox" name="agentIds" value="{agent.id}" style="width:auto; margin:0; vertical-align: middle;">
-                                <strong style="margin-left: 0.5rem; vertical-align: middle;">{agent.displayName}</strong>
-                                <code class="muted" style="vertical-align: middle;">{agent.id}</code>
+                                <input type="checkbox" name="agentIds" value="{agent.id}" class="w-auto m-0 v-middle">
+                                <strong class="ml-05 v-middle">{agent.displayName}</strong>
+                                <code class="muted v-middle">{agent.id}</code>
                             </div>
                             <div class="action-area">
                                 <span class="status status-completed">Online</span>
@@ -38,24 +38,24 @@
             {/for}
         </ul>
     </fieldset>
-
+ 
     <fieldset>
         <legend>Parameters</legend>
         <div class="field">
             <label>Iterations</label><br>
-            <input type="number" name="iterations" value="1" min="1" max="100" required style="width:100px;">
+            <input type="number" name="iterations" value="1" min="1" max="100" required class="w-100px">
         </div>
         <div class="field">
             <strong>Execution Mode</strong><br>
-            <label style="display:inline-block; vertical-align:middle; cursor:pointer; margin-right:2rem; margin-top:0.5rem;">
-                <input type="radio" name="parallel" value="false" checked style="width:auto; vertical-align:middle;"> <span style="vertical-align:middle;">Sequential</span>
+            <label class="label-inline">
+                <input type="radio" name="parallel" value="false" checked class="w-auto v-middle"> <span class="v-middle">Sequential</span>
             </label>
-            <label style="display:inline-block; vertical-align:middle; cursor:pointer; margin-top:0.5rem;">
-                <input type="radio" name="parallel" value="true" style="width:auto; vertical-align:middle;"> <span style="vertical-align:middle;">Parallel</span>
+            <label class="label-inline m-0">
+                <input type="radio" name="parallel" value="true" class="w-auto v-middle"> <span class="v-middle">Parallel</span>
             </label>
         </div>
     </fieldset>
-
+ 
     <fieldset>
         <legend>Primary Payloads</legend>
         <ul>
@@ -69,17 +69,17 @@
             {/for}
         </ul>
     </fieldset>
-
+ 
     <fieldset>
         <legend>Extra Payloads</legend>
         <ul>
             {#for payload in extraPayloads}
                 <li class="clearfix">
-                    <label style="display:block; width:100%; cursor:pointer;">
+                    <label class="label-block">
                         <div class="title-area">
-                            <input type="checkbox" name="extraPayloadIds" value="{payload.id}" style="width:auto; margin:0; vertical-align: middle;">
-                            <span style="margin-left: 0.5rem; vertical-align: middle;">{payload.name}</span>
-                            <code style="vertical-align: middle;">{payload.type}</code>
+                            <input type="checkbox" name="extraPayloadIds" value="{payload.id}" class="w-auto m-0 v-middle">
+                            <span class="ml-05 v-middle">{payload.name}</span>
+                            <code class="v-middle">{payload.type}</code>
                         </div>
                     </label>
                 </li>
@@ -88,7 +88,7 @@
             {/for}
         </ul>
     </fieldset>
-
+ 
     <button type="submit" class="btn btn-primary">Launch Execution</button>
 </form>
 {/body}

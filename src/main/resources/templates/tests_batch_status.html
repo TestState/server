@@ -1,6 +1,6 @@
 {#include base.html}
 {#title}Batch Status - TestState{/title}
-
+ 
 {#body}
 <section class="clearfix">
     <div class="title-area">
@@ -18,7 +18,7 @@
         <a href="/tests" class="btn">Back</a>
     </div>
 </section>
-
+ 
 <section>
     <h3>Progress</h3>
     <div class="stats-container">
@@ -55,14 +55,14 @@
             <span class="value" id="batch-status-label">{batch.status}</span>
         </div>
     </div>
-    <div id="batch-progress-container" style="width:100%; height:14px; background:var(--border); border-radius: 7px; overflow: hidden; display: flex;">
-        <div class="progress-passed" title="Passed: {batch.passedCount}" style="flex: {batch.passedCount}; background:#10b981; transition: flex 0.3s;"></div>
-        <div class="progress-failed" title="Failed: {batch.failedCount}" style="flex: {batch.failedCount}; background:#ef4444; transition: flex 0.3s;"></div>
-        <div class="progress-running" title="Running: {batch.runningCount}" style="flex: {batch.runningCount}; background:#3b82f6; transition: flex 0.3s;"></div>
-        <div class="progress-pending" style="flex: {batch.pendingCount}; background:transparent;"></div>
+    <div id="batch-progress-container" class="batch-progress-bar">
+        <div class="progress-passed" title="Passed: {batch.passedCount}" style="flex: {batch.passedCount};"></div>
+        <div class="progress-failed" title="Failed: {batch.failedCount}" style="flex: {batch.failedCount};"></div>
+        <div class="progress-running" title="Running: {batch.runningCount}" style="flex: {batch.runningCount};"></div>
+        <div class="progress-pending" style="flex: {batch.pendingCount};"></div>
     </div>
 </section>
-
+ 
 <section>
     <h3>Individual Tasks</h3>
     <table>
@@ -72,7 +72,7 @@
                 <th>Session</th>
                 <th>Status</th>
                 <th>Negotiation</th>
-                <th style="text-align: right;">Action</th>
+                <th class="text-right">Action</th>
             </tr>
         </thead>
         <tbody id="sessions-table">
@@ -86,11 +86,11 @@
                                 {session.status.state.displayState}
                             </span>
                             {#if session.status.message}
-                                <small class="muted trim-text status-message" style="margin-left: 0.5rem;">{session.status.message}</small>
+                                <small class="muted trim-text status-message ml-05">{session.status.message}</small>
                             {/if}
                         {#else}
                             <span class="status-badge status">PENDING</span>
-                            <small class="muted trim-text status-message" style="margin-left: 0.5rem;"></small>
+                            <small class="muted trim-text status-message ml-05"></small>
                         {/if}
                     </td>
                     <td class="negotiation">
@@ -100,7 +100,7 @@
                             <span class="muted small">-</span>
                         {/if}
                     </td>
-                    <td style="text-align: right;">
+                    <td class="text-right">
                         <a href="/tests/{session.sessionId}/status" class="btn small view-btn">View</a>
                     </td>
                 </tr>
@@ -112,24 +112,24 @@
         </tbody>
     </table>
 </section>
-
+ 
 <template id="session-row-template">
     <tr>
         <td><strong class="agent-name"></strong></td>
         <td><code class="session-id"></code></td>
         <td>
-            <span class="status-badge status"></span>
-            <small class="muted trim-text status-message" style="margin-left: 0.5rem;"></small>
+            <span class="status-badge status v-middle"></span>
+            <small class="muted trim-text status-message ml-05 v-middle"></small>
         </td>
         <td class="negotiation">
             <span class="muted small">-</span>
         </td>
-        <td style="text-align: right;">
+        <td class="text-right">
             <a href="#" class="btn small view-btn">View</a>
         </td>
     </tr>
 </template>
-
+ 
 <script>
     window.batchId = "{batch.batchId}";
 </script>

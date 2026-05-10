@@ -1,6 +1,6 @@
 {#include base.html}
 {#title}Translations - TestState{/title}
-
+ 
 {#body}
 <section class="clearfix">
     <div class="title-area">
@@ -10,7 +10,7 @@
         <a href="/translations/new" class="btn btn-primary">Start New Task</a>
     </div>
 </section>
-
+ 
 <section>
     <table>
         <thead>
@@ -18,7 +18,7 @@
                 <th>Session ID</th>
                 <th>Target Format</th>
                 <th>Status</th>
-                <th style="text-align: right;">Actions</th>
+                <th class="text-right">Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -32,13 +32,13 @@
                             {session.status.state.displayState}
                         </span>
                         {#if session.status.message}
-                            <small class="muted trim-text" style="margin-left: 0.5rem;">{session.status.message}</small>
+                            <small class="muted trim-text ml-05">{session.status.message}</small>
                         {/if}
                     {#else}
                         <span class="status">PENDING</span>
                     {/if}
                 </td>
-                <td style="text-align: right;">
+                <td class="text-right">
                     <div class="actions">
                         <a href="/translations/{session.sessionId}/status" class="btn">Monitor</a>
                     </div>
@@ -46,7 +46,7 @@
             </tr>
             {#else}
             <tr>
-                <td colspan="4" style="text-align: center; padding: 3rem;">
+                <td colspan="4" class="empty-table-cell">
                     <p class="muted">No translation tasks found.</p>
                     <a href="/translations/new" class="btn">Start a translation</a>
                 </td>

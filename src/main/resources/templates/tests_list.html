@@ -1,6 +1,6 @@
 {#include base.html}
 {#title}Tests - TestState{/title}
-
+ 
 {#body}
 <section class="clearfix">
     <div class="title-area">
@@ -10,14 +10,14 @@
         <a href="/tests/new" class="btn">Create Config</a>
     </div>
 </section>
-
+ 
 <table>
     <thead>
         <tr>
             <th>Configuration</th>
             <th>Type</th>
             <th>Payloads</th>
-            <th style="text-align: right;">Actions</th>
+            <th class="text-right">Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -31,7 +31,7 @@
             </td>
             <td><code>{test.testType}</code></td>
             <td class="muted">{test.payloads.size}</td>
-            <td style="text-align: right;">
+            <td class="text-right">
                 <a href="/tests/{test.id}/run" class="btn">Run</a>
                 <a href="/tests/{test.id}/edit" class="btn">Edit</a>
                 <form action="/tests/{test.id}/delete" method="POST" onsubmit="return confirm('Are you sure?');">
@@ -46,7 +46,7 @@
         {/for}
     </tbody>
 </table>
-
+ 
 {#if !batches.isEmpty}
 <section>
     <h3>Batches</h3>
@@ -55,9 +55,9 @@
         <li class="clearfix">
             <div class="title-area">
                 <strong>{batch.testName}</strong>
-                <code>{batch.batchId}</code>
+                <code class="small">{batch.batchId}</code>
             </div>
-            <div class="action-area wrap-text" style="text-align: right; max-width: 60%;">
+            <div class="action-area wrap-text max-w-60 text-right">
                 <span class="status status-{batch.status.statusClass}">{batch.status}</span>
                 <span class="muted">{batch.completedCount}/{batch.totalIterations}</span>
                 <a href="/tests/batch/{batch.batchId}/status" class="btn">Monitor</a>
@@ -67,7 +67,7 @@
     </ul>
 </section>
 {/if}
-
+ 
 {#if !sessions.isEmpty}
 <section>
     <h3>Sessions</h3>
@@ -76,15 +76,15 @@
         <li class="clearfix">
             <div class="title-area">
                 <strong>{session.ticket.testType}</strong>
-                <code>{session.sessionId}</code>
+                <code class="small">{session.sessionId}</code>
             </div>
-            <div class="action-area wrap-text" style="text-align: right; max-width: 60%;">
+            <div class="action-area wrap-text max-w-60 text-right">
                 {#if session.status}
                     <span class="status status-{session.status.state.stateClass}">
                         {session.status.state.displayState}
                     </span>
                     {#if session.status.message}
-                        <small class="muted trim-text" style="margin-left: 0.5rem;">{session.status.message}</small>
+                        <small class="muted trim-text ml-05">{session.status.message}</small>
                     {/if}
                 {#else}
                     <span class="status">PENDING</span>

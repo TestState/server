@@ -1,6 +1,6 @@
 {#include base.html}
 {#title}{#if payload.id}Edit{#else}New{/if} Payload - TestState{/title}
-
+ 
 {#body}
 <section class="clearfix">
     <div class="title-area">
@@ -10,8 +10,8 @@
         <a href="/payloads" class="btn">Back</a>
     </div>
 </section>
-
-<form action="/payloads/save" method="POST" enctype="multipart/form-data">
+ 
+<form action="/payloads/save" method="POST" enctype="multipart/form-data" class="full-width-form">
     {#if payload.id}<input type="hidden" name="id" value="{payload.id}">{/if}
     
     <fieldset>
@@ -35,10 +35,10 @@
         </div>
         <div class="field">
             <label>Metadata (JSON)</label><br>
-            <textarea name="metadata" style="font-family:monospace; font-size:0.85rem;" rows="5">{payload.metadata}</textarea>
+            <textarea name="metadata" class="font-mono small" rows="5">{payload.metadata}</textarea>
         </div>
     </fieldset>
-
+ 
     <fieldset>
         <legend>Attachment</legend>
         {#if payload.attachmentName}
@@ -48,7 +48,7 @@
         {/if}
         <input type="file" name="attachmentFile">
     </fieldset>
-
+ 
     <button type="submit" class="btn btn-primary">Save Payload</button>
 </form>
 {/body}

@@ -1,6 +1,6 @@
-{#include base}
+{#include base.html}
 {#title}Dashboard - TestState{/title}
-
+ 
 {#body}
 <section class="clearfix">
     <div class="title-area">
@@ -11,7 +11,7 @@
         <a href="/payloads/new" class="btn">New Payload</a>
     </div>
 </section>
-
+ 
 <!-- Statistics -->
 <section>
     <h3>System Overview</h3>
@@ -42,14 +42,14 @@
         </div>
     </div>
 </section>
-
+ 
 <!-- Connected Agents -->
 <section>
     <h3>Connected Agents</h3>
     <table>
         <thead>
         <tr>
-            <th style="width: 200px;">Agent</th>
+            <th>Agent</th>
             <th>Capabilities</th>
         </tr>
         </thead>
@@ -60,15 +60,15 @@
                     <strong>{agent.displayName}</strong><br>
                     <code class="muted small">{agent.id}</code>
                 </td>
-                <td style="width: auto; white-space: normal; padding: 1rem 0.5rem;">
-                    <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                <td class="w-auto">
+                    <div class="capabilities-list">
                         {#for cap in agent.capabilities}
                             {#if cap.hasTest}
-                                <code style="margin: 0;">{cap.test.type}</code>
+                                <code class="m-0">{cap.test.type}</code>
                             {#else if cap.hasTranslation}
-                                <code style="margin: 0; color: #d2a8ff; background: rgba(210, 168, 255, 0.1);">{cap.translation.type}</code>
+                                <code class="m-0 cap-translation">{cap.translation.type}</code>
                             {#else}
-                                <code style="margin: 0; color: var(--muted); background: rgba(139, 148, 158, 0.1);">UNKNOWN</code>
+                                <code class="m-0 cap-unknown">UNKNOWN</code>
                             {/if}
                         {/for}
                     </div>
@@ -82,7 +82,7 @@
         </tbody>
     </table>
 </section>
-
+ 
 <!-- Recent Tests -->
 <section>
     <h3>Recent Configurations</h3>
@@ -103,7 +103,7 @@
         {/for}
     </ul>
 </section>
-
+ 
 <!-- Active Batch Sessions -->
 <section>
     <h3>Active Batches</h3>
@@ -114,7 +114,7 @@
                     <strong>{batch.testName}</strong>
                     <code class="muted small">{batch.batchId}</code>
                 </div>
-                <div class="action-area wrap-text" style="text-align: right; max-width: 60%;">
+                <div class="action-area wrap-text max-w-60 text-right">
                     <span class="status status-{batch.status.statusClass}">{batch.status}</span>
                     <a href="/tests/batch/{batch.batchId}/status" class="btn small">Monitor</a>
                 </div>
@@ -124,7 +124,7 @@
         {/for}
     </ul>
 </section>
-
+ 
 <!-- Active Individual Sessions -->
 <section>
     <h3>Active Sessions</h3>
@@ -135,13 +135,13 @@
                     <strong>{session.ticket.testType}</strong>
                     <code class="muted small">{session.sessionId}</code>
                 </div>
-                <div class="action-area wrap-text" style="text-align: right; max-width: 60%;">
+                <div class="action-area wrap-text max-w-60 text-right">
                     {#if session.status}
                         <span class="status status-{session.status.state.stateClass}">
                             {session.status.state.displayState}
                         </span>
                         {#if session.status.message}
-                            <small class="muted trim-text" style="margin-left: 0.5rem;">{session.status.message}</small>
+                            <small class="muted trim-text ml-05">{session.status.message}</small>
                         {/if}
                     {#else}
                         <span class="status">PENDING</span>

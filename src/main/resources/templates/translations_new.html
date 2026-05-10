@@ -1,6 +1,6 @@
 {#include base.html}
 {#title}New Task - TestState{/title}
-
+ 
 {#body}
 <section class="clearfix">
     <div class="title-area">
@@ -10,8 +10,8 @@
         <a href="/translations" class="btn">Cancel</a>
     </div>
 </section>
-
-<form action="/translations/start" method="POST">
+ 
+<form action="/translations/start" method="POST" class="full-width-form">
     <fieldset>
         <legend>Configuration</legend>
         <div class="field">
@@ -25,7 +25,7 @@
                 {/for}
             </select>
         </div>
-
+ 
         <div class="field">
             <label>Translation Type</label><br>
             <select name="type" id="type-select" required disabled>
@@ -33,17 +33,17 @@
             </select>
         </div>
     </fieldset>
-
+ 
     <fieldset>
         <legend>Source Payloads</legend>
-        <ul id="payload-list" style="max-height: 400px; overflow-y: auto;">
+        <ul id="payload-list" class="scrollable-list">
             {#for p in allPayloads}
                 <li data-type="{p.type}" class="clearfix">
-                    <label style="display:block; width:100%; cursor:pointer;">
+                    <label class="label-block">
                         <div class="title-area">
-                            <input type="checkbox" name="payloadIds" value="{p.id}" style="width:auto; margin:0; vertical-align: middle;">
-                            <span style="margin-left: 0.5rem; vertical-align: middle;">{p.name}</span> 
-                            <code class="muted small" style="vertical-align: middle;">{p.type}</code>
+                            <input type="checkbox" name="payloadIds" value="{p.id}" class="w-auto m-0 v-middle">
+                            <span class="ml-05 v-middle">{p.name}</span> 
+                            <code class="muted small v-middle">{p.type}</code>
                         </div>
                     </label>
                 </li>
@@ -52,14 +52,14 @@
             {/for}
         </ul>
     </fieldset>
-
+ 
     <button type="submit" id="start-btn" class="btn btn-primary" disabled>Start Task</button>
 </form>
-
+ 
 <template id="option-template">
     <option value=""></option>
 </template>
-
+ 
 <script>
     window.agents = [
         {#for agent in agents}

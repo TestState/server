@@ -1,32 +1,39 @@
 {#include base.html}
-{#title}{#if test.id}Edit{#else}New{/if} Config - TestState{/title}
-
+{#title}Edit Configuration - TestState{/title}
+ 
 {#body}
 <section class="clearfix">
     <div class="title-area">
         <h2>{#if test.id}Edit{#else}New{/if} Configuration</h2>
     </div>
     <div class="action-area">
+        {#if test.id}
+            <form action="/tests/{test.id}/copy" method="POST">
+                <button type="submit" class="btn">Duplicate</button>
+            </form>
+        {/if}
         <a href="/tests" class="btn">Back</a>
     </div>
 </section>
-
-<form action="/tests/save" method="POST">
-    {#if test.id}<input type="hidden" name="id" value="{test.id}">{/if}
-    
+ 
+<form action="/tests/save" method="POST" class="full-width-form">
+    {#if test.id}
+        <input type="hidden" name="id" value="{test.id}">
+    {/if}
+ 
     <fieldset>
-        <legend>General Information</legend>
+        <legend>Basic Information</legend>
         <div class="field">
-            <label>Name</label><br>
-            <input type="text" name="name" value="{test.name}" required placeholder="Test Name">
+            <label>Name</label>
+            <input type="text" name="name" value="{test.name ?: ''}" required placeholder="Smoke Test - Chrome">
         </div>
         <div class="field">
-            <label>Description</label><br>
-            <textarea name="description" placeholder="Brief overview...">{test.description}</textarea>
+            <label>Description</label>
+            <textarea name="description" placeholder="Basic smoke test for the web application...">{test.description ?: ''}</textarea>
         </div>
         <div class="field">
-            <label>Test Type</label><br>
-            <input type="text" name="testType" value="{test.testType}" list="test-types" required placeholder="e.g. selenium-side">
+            <label>Execution Type</label>
+            <input type="text" name="testType" value="{test.testType ?: ''}" list="test-types" required placeholder="e.g. selenium">
             <datalist id="test-types">
                 {#for type in testTypes}
                     <option value="{type}"></option>
@@ -34,44 +41,47 @@
             </datalist>
         </div>
     </fieldset>
-
+ 
     <fieldset>
-        <legend>Linked Payloads</legend>
+        <legend>Associated Payloads</legend>
+        <p class="muted small mb-1">Select payloads to be included by default in this configuration.</p>
         <ul id="payload-list">
             {#for payload in allPayloads}
-                <li data-type="{payload.type}" class="clearfix">
-                    <label style="display:block; width:100%; cursor:pointer;">
+                <li class="clearfix" data-type="{payload.type}">
+                    <label class="label-block">
                         <div class="title-area">
-                            <input type="checkbox" name="payloadIds" value="{payload.id}" style="width:auto; margin:0; vertical-align: middle;" {#if test.payloads.contains(payload)}checked{/if}>
-                            <strong style="margin-left: 0.5rem; vertical-align: middle;">{payload.name}</strong>
-                            <code class="muted" style="vertical-align: middle;">{payload.type}</code>
+                            <input type="checkbox" name="payloadIds" value="{payload.id}" class="w-auto m-0 v-middle" 
+                                   {#if test.payloads.contains(payload)}checked{/if}>
+                            <strong class="ml-05 v-middle">{payload.name}</strong>
+                            <code class="muted v-middle">{payload.type}</code>
                         </div>
                         <div class="action-area">
-                            <span class="recommendation status small" style="display:none;"></span>
+                            <span class="recommendation" style="display:none;"></span>
                         </div>
                     </label>
                 </li>
             {#else}
-                <li class="muted">No payloads available. <a href="/payloads/new">Create one first.</a></li>
+                <li class="muted small">No payloads available. <a href="/payloads/new">Create one first.</a></li>
             {/for}
         </ul>
     </fieldset>
-
+ 
     <button type="submit" class="btn btn-primary">Save Configuration</button>
 </form>
-
+ 
 <script>
     window.agents = [
         {#for agent in agents}
         {
+            id: "{agent.id}",
             displayName: "{agent.displayName}",
             supportedTests: [
-                {#for test in agent.supportedTests}
+                {#for st in agent.supportedTests}
                 {
-                    testType: "{test.testType}",
-                    required: [{#for r in test.requiredPayloadTypes}"{r}"{#if r_hasNext},{/if}{/for}],
-                    optional: [{#for o in test.optionalPayloadTypes}"{o}"{#if o_hasNext},{/if}{/for}]
-                }{#if test_hasNext},{/if}
+                    testType: "{st.testType}",
+                    required: [{#for r in st.requiredPayloadTypes}"{r}"{#if r_hasNext},{/if}{/for}],
+                    optional: [{#for o in st.optionalPayloadTypes}"{o}"{#if o_hasNext},{/if}{/for}]
+                }{#if st_hasNext},{/if}
                 {/for}
             ]
         }{#if agent_hasNext},{/if}

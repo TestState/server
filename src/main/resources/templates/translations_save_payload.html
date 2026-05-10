@@ -1,6 +1,6 @@
 {#include base.html}
 {#title}Save Payload - TestState{/title}
-
+ 
 {#body}
 <section class="clearfix">
     <div class="title-area">
@@ -10,11 +10,11 @@
         <a href="/translations/{sessionId}/status" class="btn">Cancel</a>
     </div>
 </section>
-
-<form action="/translations/save-payload" method="POST">
+ 
+<form action="/translations/save-payload" method="POST" class="full-width-form">
     <input type="hidden" name="sessionId" value="{sessionId}">
     <input type="hidden" name="index" value="{index}">
-
+ 
     <fieldset>
         <legend>Repository Entity</legend>
         <div class="field">
@@ -26,15 +26,15 @@
             <textarea name="description" rows="3">Translated {type} from session {sessionId}</textarea>
         </div>
     </fieldset>
-
+ 
     <fieldset>
         <legend>Metadata</legend>
         <div class="field">
             <label>Payload Type</label><br>
-            <input type="text" value="{type}" readonly style="border-color: transparent; padding-left: 0;">
+            <input type="text" value="{type}" readonly class="input-readonly">
         </div>
     </fieldset>
-
+ 
     <button type="submit" class="btn btn-primary">Save to Database</button>
 </form>
 {/body}
