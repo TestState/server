@@ -7,6 +7,7 @@ public class BatchEntry {
     private final String agentId;
     private volatile EntryStatus entryStatus = EntryStatus.PENDING;
     private volatile TestSession session;
+
     public BatchEntry(String agentId) {
         this.agentId = agentId;
     }

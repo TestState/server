@@ -6,6 +6,7 @@ import jakarta.inject.Inject;
 import me.hsgamer.teststate.cms.core.TestSession;
 import me.hsgamer.teststate.cms.service.TestSessionManager;
 import me.hsgamer.teststate.cms.util.ProtoUtil;
+import me.hsgamer.teststate.uap.v1.StepReport;
 import me.hsgamer.teststate.uap.v1.TestResult;
 import me.hsgamer.teststate.uap.v1.TestStatus;
 
@@ -55,7 +56,7 @@ public class TestWebSocket extends BaseWebSocket<TestSession> {
         );
     }
 
-    private StepReportDTO mapReport(me.hsgamer.teststate.uap.v1.StepReport report) {
+    private StepReportDTO mapReport(StepReport report) {
         return new StepReportDTO(
             report.getStatus().name(),
             report.getName(),

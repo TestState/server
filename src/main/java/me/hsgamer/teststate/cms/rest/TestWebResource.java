@@ -2,7 +2,6 @@ package me.hsgamer.teststate.cms.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.qute.CheckedTemplate;
-import io.quarkus.qute.TemplateData;
 import io.quarkus.qute.TemplateInstance;
 import io.smallrye.common.annotation.Blocking;
 import io.smallrye.mutiny.Uni;
@@ -24,11 +23,7 @@ import me.hsgamer.teststate.uap.v1.TestResult;
 import org.jboss.resteasy.reactive.RestForm;
 
 import java.net.URI;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Path("/tests")
 @Slf4j

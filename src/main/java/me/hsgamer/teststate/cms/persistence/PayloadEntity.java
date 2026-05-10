@@ -2,11 +2,7 @@ package me.hsgamer.teststate.cms.persistence;
 
 import com.google.protobuf.ByteString;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.PreRemove;
-import jakarta.persistence.Lob;
-import jakarta.persistence.Column;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import me.hsgamer.teststate.cms.util.ProtoUtil;
