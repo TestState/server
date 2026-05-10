@@ -61,7 +61,9 @@ public class TestBatchSession {
 
     public synchronized void addSession(TestSession session) {
         sessions.add(session);
+        session.addStatusConsumer(s -> notifyListeners());
         session.onCompletion(this::checkCompletion);
+        notifyListeners();
     }
 
     public void markRegistrationFailed() {
