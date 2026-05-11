@@ -2,132 +2,136 @@
 {#title}Batch Status - TestState{/title}
  
 {#body}
-<section class="clearfix">
-    <div class="title-area">
-        <h2>Batch Execution</h2>
-        <p class="muted">Test: <strong>{batch.testName}</strong> | ID: <code>{batch.batchId}</code></p>
+<section class="flex-between mb-3">
+    <div>
+        <h2>Batch</h2>
+        <p class="muted">{batch.batchId}</p>
     </div>
-    <div class="action-area">
-        <a href="/tests/batch/{batch.batchId}/report/json" class="btn">JSON</a>
-        <a href="/tests/batch/{batch.batchId}/report/json?full=true" class="btn">Full JSON</a>
+    <div class="flex">
+        <a href="/tests/batch/{batch.batchId}/report/json" class="btn small">Export</a>
+        <a href="/tests/batch/{batch.batchId}/report/json?full=true" class="btn small">JSON</a>
         {#if batch.status.isCancelable}
-            <form action="/tests/batch/{batch.batchId}/cancel" method="POST">
-                <button type="submit" class="btn-error">Cancel</button>
+            <form action="/tests/batch/{batch.batchId}/cancel" method="POST" class="m-0">
+                <button type="submit" class="btn-error small">Stop</button>
             </form>
         {/if}
-        <a href="/tests" class="btn">Back</a>
+        <a href="/tests" class="btn small">Return</a>
     </div>
 </section>
  
 <section>
     <h3>Progress</h3>
-    <div class="stats-container">
+    <div class="stats-container mb-3">
+        <div class="stat-box">
+            <span class="label">Status</span>
+            <div class="value"><span id="batch-status-label" class="status">{batch.status}</span></div>
+        </div>
         <div class="stat-box">
             <span class="label">Total</span>
-            <span class="value" id="stat-total">{batch.totalIterations}</span>
+            <div id="stat-total" class="value">{batch.totalIterations}</div>
         </div>
         <div class="stat-box">
             <span class="label">Passed</span>
-            <span class="value" id="stat-passed">{batch.passedCount}</span>
+            <div id="stat-passed" class="value text-success">{batch.passedCount}</div>
         </div>
         <div class="stat-box">
             <span class="label">Failed</span>
-            <span class="value" id="stat-failed">{batch.failedCount}</span>
+            <div id="stat-failed" class="value text-error">{batch.failedCount}</div>
         </div>
         <div class="stat-box">
             <span class="label">Running</span>
-            <span class="value" id="stat-running">{batch.runningCount}</span>
+            <div id="stat-running" class="value text-accent">{batch.runningCount}</div>
         </div>
         <div class="stat-box">
             <span class="label">Pending</span>
-            <span class="value" id="stat-pending">{batch.pendingCount}</span>
-        </div>
-        <div class="stat-box" title="Sessions per Minute">
-            <span class="label">Throughput</span>
-            <span class="value" id="stat-throughput">{batch.throughputFormatted}/m</span>
-        </div>
-        <div class="stat-box" title="Avg. Negotiation Duration">
-            <span class="label">Avg. Negotiate</span>
-            <span class="value" id="stat-avg-negotiate">{batch.averageNegotiationDurationFormatted}ms</span>
+            <div id="stat-pending" class="value">{batch.pendingCount}</div>
         </div>
         <div class="stat-box">
-            <span class="label">Status</span>
-            <span class="value" id="batch-status-label">{batch.status}</span>
+            <span class="label">Rate</span>
+            <div id="stat-throughput" class="value">{batch.throughputFormatted}/m</div>
+        </div>
+        <div class="stat-box">
+            <span class="label">Time</span>
+            <div id="stat-avg-negotiate" class="value">{batch.averageNegotiationDurationFormatted}ms</div>
         </div>
     </div>
-    <div id="batch-progress-container" class="batch-progress-bar">
-        <div class="progress-passed" title="Passed: {batch.passedCount}" style="flex: {batch.passedCount};"></div>
-        <div class="progress-failed" title="Failed: {batch.failedCount}" style="flex: {batch.failedCount};"></div>
-        <div class="progress-running" title="Running: {batch.runningCount}" style="flex: {batch.runningCount};"></div>
+ 
+    <div id="batch-progress-container" class="progress-bar">
+        <div class="progress-passed" style="flex: {batch.passedCount};" title="Passed: {batch.passedCount}"></div>
+        <div class="progress-failed" style="flex: {batch.failedCount};" title="Failed: {batch.failedCount}"></div>
+        <div class="progress-running" style="flex: {batch.runningCount};" title="Running: {batch.runningCount}"></div>
         <div class="progress-pending" style="flex: {batch.pendingCount};"></div>
     </div>
 </section>
  
 <section>
-    <h3>Individual Tasks</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>Agent</th>
-                <th>Session</th>
-                <th>Status</th>
-                <th>Negotiation</th>
-                <th class="text-right">Action</th>
-            </tr>
-        </thead>
-        <tbody id="sessions-table">
+    <h3>Sessions</h3>
+    <div id="sessions-table-container" class="data-grid batch-sessions-grid">
+        <div class="data-grid-header full-column">
+            <div class="data-grid-cell">Node</div>
+            <div class="data-grid-cell">ID</div>
+            <div class="data-grid-cell">State</div>
+            <div class="data-grid-cell">Message</div>
+            <div class="data-grid-cell text-right">Time</div>
+            <div class="data-grid-cell"></div>
+        </div>
+        <div id="sessions-table" style="display: contents;">
             {#for session in batch.sessions}
-                <tr data-session-id="{session.sessionId}">
-                    <td><strong>{session.agentName}</strong></td>
-                    <td><code>{session.sessionId}</code></td>
-                    <td>
-                        {#if session.status}
-                            <span class="status-badge status status-{session.status.state.stateClass}">
-                                {session.status.state.displayState}
-                            </span>
-                            {#if session.status.message}
-                                <small class="muted trim-text status-message ml-05">{session.status.message}</small>
+                <div class="data-grid-row full-column" data-session-id="{session.sessionId}">
+                    <div class="data-grid-cell" data-label="Agent"><strong>{session.agentName}</strong></div>
+                    <div class="data-grid-cell" data-label="ID"><code class="font-mono small">{session.sessionId}</code></div>
+                    <div class="data-grid-cell" data-label="Status">
+                        <div class="flex">
+                            {#if session.status}
+                                <span class="status status-{session.status.state.stateClass}">
+                                    {session.status.state.displayState}
+                                </span>
+                                {#if session.status.message}
+                                    <div class="small muted truncate status-message ml-05" style="max-width: 200px;">{session.status.message}</div>
+                                {/if}
+                            {#else}
+                                <span class="status">PENDING</span>
+                                <div class="small muted truncate status-message ml-05"></div>
                             {/if}
-                        {#else}
-                            <span class="status-badge status">PENDING</span>
-                            <small class="muted trim-text status-message ml-05"></small>
-                        {/if}
-                    </td>
-                    <td class="negotiation">
+                        </div>
+                    </div>
+                    <div class="data-grid-cell negotiation" data-label="Time">
                         {#if session.negotiationDurationMs > 0}
                             <span class="muted small">{session.negotiationDurationMs}ms</span>
                         {#else}
                             <span class="muted small">-</span>
                         {/if}
-                    </td>
-                    <td class="text-right">
+                    </div>
+                    <div class="data-grid-cell flex-end" data-label="Action">
                         <a href="/tests/{session.sessionId}/status" class="btn small view-btn">View</a>
-                    </td>
-                </tr>
+                    </div>
+                </div>
             {#else}
-                <tr id="empty-row">
-                    <td colspan="5" class="muted small">Waiting for sessions...</td>
-                </tr>
+                <div id="empty-row" class="p-3 muted text-center full-column">
+                    Awaiting session registration...
+                </div>
             {/for}
-        </tbody>
-    </table>
+        </div>
+    </div>
 </section>
  
 <template id="session-row-template">
-    <tr>
-        <td><strong class="agent-name"></strong></td>
-        <td><code class="session-id"></code></td>
-        <td>
-            <span class="status-badge status v-middle"></span>
-            <small class="muted trim-text status-message ml-05 v-middle"></small>
-        </td>
-        <td class="negotiation">
+    <div class="data-grid-row full-column">
+        <div class="data-grid-cell" data-label="Agent"><strong class="agent-name"></strong></div>
+        <div class="data-grid-cell" data-label="ID"><code class="font-mono small session-id"></code></div>
+        <div class="data-grid-cell" data-label="Status">
+            <div class="flex">
+                <span class="status status-badge"></span>
+                <div class="small muted truncate status-message ml-05" style="max-width: 200px;"></div>
+            </div>
+        </div>
+        <div class="data-grid-cell negotiation" data-label="Time">
             <span class="muted small">-</span>
-        </td>
-        <td class="text-right">
+        </div>
+        <div class="data-grid-cell flex-end" data-label="Action">
             <a href="#" class="btn small view-btn">View</a>
-        </td>
-    </tr>
+        </div>
+    </div>
 </template>
  
 <script>

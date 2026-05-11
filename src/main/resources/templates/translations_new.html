@@ -2,58 +2,60 @@
 {#title}New Task - TestState{/title}
  
 {#body}
-<section class="clearfix">
-    <div class="title-area">
-        <h2>New Translation Task</h2>
+<section class="flex-between mb-3">
+    <div>
+        <h2>New</h2>
     </div>
-    <div class="action-area">
+    <div>
         <a href="/translations" class="btn">Cancel</a>
     </div>
 </section>
  
 <form action="/translations/start" method="POST" class="full-width-form">
     <fieldset>
-        <legend>Configuration</legend>
+        <legend>Task</legend>
         <div class="field">
-            <label>Agent</label>
+            <label>Node</label>
             <select name="agentId" id="agent-select" required autofocus>
-                <option value="">-- Select Agent --</option>
+                <option value="">-- Select Node --</option>
                 {#for agent in agents}
                     <option value="{agent.id}">{agent.displayName}</option>
                 {#else}
-                    <option disabled>No agents available</option>
+                    <option disabled>No agents</option>
                 {/for}
             </select>
         </div>
  
         <div class="field">
-            <label>Translation Type</label>
+            <label>Type</label>
             <select name="type" id="type-select" required disabled>
-                <option value="">-- Select Agent First --</option>
+                <option value="">-- Select Node First --</option>
             </select>
         </div>
     </fieldset>
  
     <fieldset>
-        <legend>Source Payloads</legend>
+        <legend>Payloads</legend>
         <ul id="payload-list" class="scrollable-list">
             {#for p in allPayloads}
                 <li data-type="{p.type}">
-                    <label class="label-block">
-                        <div class="flex-row">
-                            <input type="checkbox" name="payloadIds" value="{p.id}" class="w-auto m-0">
-                            <span>{p.name}</span> 
+                    <label class="flex m-0 cursor-pointer">
+                        <input type="checkbox" name="payloadIds" value="{p.id}" class="m-0">
+                        <div class="flex-column">
+                            <strong>{p.name}</strong> 
                             <code class="muted small">{p.type}</code>
                         </div>
                     </label>
                 </li>
             {#else}
-                <li class="muted">No payloads found.</li>
+                <li class="muted small p-2 text-center">Empty.</li>
             {/for}
         </ul>
     </fieldset>
  
-    <button type="submit" id="start-btn" class="btn btn-primary" disabled>Start Task</button>
+    <div class="form-actions">
+        <button type="submit" id="start-btn" class="btn btn-primary" disabled>Start</button>
+    </div>
 </form>
  
 <template id="option-template">

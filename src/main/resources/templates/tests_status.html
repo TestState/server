@@ -2,78 +2,68 @@
 {#title}Execution Status - TestState{/title}
  
 {#body}
-<section class="clearfix">
-    <div class="title-area">
-        <h2>Test Status</h2>
-        <p class="muted">
-            Session: <code>{session.sessionId}</code>
-            {#if session.negotiationDurationMs > 0}
-                <span class="small ml-1">(Negotiated in <strong>{session.negotiationDurationMs}ms</strong>)</span>
-            {/if}
-        </p>
+<section class="flex-between mb-3">
+    <div>
+        <h2>Status</h2>
+        <p class="muted">{session.sessionId}</p>
     </div>
-    <div class="action-area">
-        <a href="/tests/{session.sessionId}/report/json" class="btn">JSON</a>
-        <a href="/tests/{session.sessionId}/report/json?full=true" class="btn">Full JSON</a>
-        <a href="/tests" class="btn">Back</a>
+    <div class="flex">
+        <a href="/tests/{session.sessionId}/report/json" class="btn small">Export</a>
+        <a href="/tests/{session.sessionId}/report/json?full=true" class="btn small">JSON</a>
+        <a href="/tests" class="btn small">Return</a>
     </div>
 </section>
  
 <section>
-    <div class="clearfix mb-05">
-        <h3 class="title-area">Execution Progress</h3>
-        <div class="action-area text-right">
-            <span id="status-badge" class="status-badge status v-middle">PENDING</span>
-        </div>
+    <div class="flex-between mb-1">
+        <h3>Progress</h3>
+        <span id="status-badge" class="status">PENDING</span>
     </div>
-    <div id="status-message" class="status-message-box muted small">
-        Waiting for agent...
+    <div id="status-message" class="muted small mb-2">
+        Awaiting agent...
     </div>
-    <div id="steps-container">
-    </div>
+    <div id="steps-container"></div>
 </section>
  
 <section id="summary-section" class="d-none">
     <h3>Summary</h3>
-    <p class="small">Duration: <strong id="summary-duration"></strong></p>
-    <pre class="mb-1" id="summary-json"></pre>
+    <article>
+        <p class="small mb-1">Duration: <strong id="summary-duration"></strong></p>
+        <pre id="summary-json" class="metadata-pre"></pre>
+    </article>
 </section>
  
 <section id="attachments-section" class="d-none">
-    <h3>Attachments</h3>
-    <div id="attachments-container" class="grid mt-1"></div>
+    <h3>Assets</h3>
+    <div id="attachments-container" class="asset-grid"></div>
 </section>
  
 <section>
-    <h3>Console Output</h3>
-    <pre class="console" id="telemetry-console"></pre>
+    <h3>Logs</h3>
+    <div class="console" id="telemetry-console"></div>
 </section>
  
 <template id="attachment-template">
-    <div class="card">
-        <p class="attachment-name small truncate mb-05"></p>
-        <img class="attachment-img d-none w-full h-auto cursor-pointer mb-05">
-        <a class="download-link btn small w-full text-center">Download</a>
-    </div>
+    <article>
+        <div class="attachment-name small truncate mb-2" style="font-weight: 600;"></div>
+        <img class="attachment-img asset-img d-none mb-2">
+        <a class="download-link btn small w-full">Download</a>
+    </article>
 </template>
  
 <template id="step-template">
-    <article class="step-item">
-        <div class="step-header clearfix cursor-pointer">
-            <div class="title-area">
-                <strong>
-                    <span class="status-badge status mr-05 v-middle"></span>
-                    <span class="step-name"></span>
-                </strong>
+    <article class="mb-1">
+        <div class="flex-between cursor-pointer step-header">
+            <div class="flex">
+                <span class="status mr-1"></span>
+                <strong class="step-name small"></strong>
             </div>
-            <div class="action-area">
-                <code class="duration muted small"></code>
-            </div>
+            <code class="duration muted small"></code>
         </div>
-        <div class="details d-none mt-05 clear-both">
-            <p class="muted small message"></p>
-            <pre class="metadata small-pre"></pre>
-            <div class="attachments"></div>
+        <div class="details step-details d-none">
+            <p class="muted small status-message mb-2"></p>
+            <pre class="metadata-pre step-metadata d-none"></pre>
+            <div class="attachments asset-grid asset-grid-small"></div>
         </div>
     </article>
 </template>

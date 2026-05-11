@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!row) {
                         const template = el('session-row-template');
                         const clone = template.content.cloneNode(true);
-                        row = clone.querySelector('tr');
+                        row = clone.querySelector('.data-grid-row');
                         row.dataset.sessionId = s.sessionId;
 
                         row.querySelector('.agent-name').textContent = s.agentName;
@@ -69,10 +69,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         table.appendChild(clone);
                     }
 
-                    const badge = row.querySelector('.status-badge');
+                    const badge = row.querySelector('.status');
                     const cleanStatus = s.state.replace('TEST_STATE_', '');
                     badge.textContent = cleanStatus;
-                    badge.className = 'status-badge status status-' + cleanStatus.toLowerCase();
+                    badge.className = 'status status-' + cleanStatus.toLowerCase();
 
                     const msgEl = row.querySelector('.status-message');
                     if (msgEl) msgEl.textContent = s.message || '';

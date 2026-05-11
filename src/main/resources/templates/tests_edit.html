@@ -1,18 +1,18 @@
 {#include base.html}
-{#title}Edit Configuration - TestState{/title}
+{#title}{#if test.id}Edit{#else}New{/if} Test - TestState{/title}
  
 {#body}
-<section class="clearfix">
-    <div class="title-area">
-        <h2>{#if test.id}Edit{#else}New{/if} Configuration</h2>
+<section class="flex-between mb-3">
+    <div>
+        <h2>{#if test.id}Edit{#else}New{/if}</h2>
     </div>
-    <div class="action-area">
+    <div class="flex">
         {#if test.id}
-            <form action="/tests/{test.id}/copy" method="POST">
-                <button type="submit" class="btn">Duplicate</button>
+            <form action="/tests/{test.id}/copy" method="POST" class="m-0">
+                <button type="submit" class="btn">Copy</button>
             </form>
         {/if}
-        <a href="/tests" class="btn">Back</a>
+        <a href="/tests" class="btn">Return</a>
     </div>
 </section>
  
@@ -22,18 +22,18 @@
     {/if}
  
     <fieldset>
-        <legend>Basic Information</legend>
+        <legend>Settings</legend>
         <div class="field">
             <label>Name</label>
-            <input type="text" name="name" value="{test.name ?: ''}" required placeholder="Smoke Test - Chrome">
+            <input type="text" name="name" value="{test.name ?: ''}" required placeholder="Name">
         </div>
         <div class="field">
             <label>Description</label>
-            <textarea name="description" placeholder="Basic smoke test for the web application...">{test.description ?: ''}</textarea>
+            <textarea name="description" rows="3" placeholder="Description...">{test.description ?: ''}</textarea>
         </div>
         <div class="field">
-            <label>Execution Type</label>
-            <input type="text" name="testType" value="{test.testType ?: ''}" list="test-types" required placeholder="e.g. selenium">
+            <label>Type</label>
+            <input type="text" name="testType" value="{test.testType ?: ''}" list="test-types" required placeholder="Type">
             <datalist id="test-types">
                 {#for type in testTypes}
                     <option value="{type}"></option>
@@ -43,30 +43,29 @@
     </fieldset>
  
     <fieldset>
-        <legend>Associated Payloads</legend>
-        <p class="muted small mb-1">Select payloads to be included by default in this configuration.</p>
+        <legend>Payloads</legend>
         <ul id="payload-list" class="scrollable-list">
             {#for payload in allPayloads}
-                <li data-type="{payload.type}">
-                    <label class="label-block">
-                        <div class="flex-row">
-                            <input type="checkbox" name="payloadIds" value="{payload.id}" class="w-auto m-0" 
-                                   {#if test.payloads.contains(payload)}checked{/if}>
+                <li data-type="{payload.type}" class="flex-between">
+                    <label class="flex m-0 cursor-pointer flex-grow">
+                        <input type="checkbox" name="payloadIds" value="{payload.id}" class="m-0" 
+                               {#if test.payloads.contains(payload)}checked{/if}>
+                        <div class="flex-column">
                             <strong>{payload.name}</strong>
-                            <code class="muted">{payload.type}</code>
-                        </div>
-                        <div class="flex-row">
-                            <span class="recommendation" style="display:none;"></span>
+                            <code class="muted small">{payload.type}</code>
                         </div>
                     </label>
+                    <span class="recommendation status d-none"></span>
                 </li>
             {#else}
-                <li class="muted small">No payloads available. <a href="/payloads/new">Create one first.</a></li>
+                <li class="muted small p-2 text-center">Empty. <a href="/payloads/new">New.</a></li>
             {/for}
         </ul>
     </fieldset>
  
-    <button type="submit" class="btn btn-primary">Save Configuration</button>
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Save</button>
+    </div>
 </form>
  
 <script>

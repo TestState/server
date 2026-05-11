@@ -7,27 +7,62 @@ document.addEventListener('DOMContentLoaded', () => {
     const render = (s) => {
         const t = el('step-template').content.cloneNode(true);
         const card = t.querySelector('article');
-        const st = s.status.toLowerCase().replace('step_status_', '');
+        const st = (s.status || 'PENDING').toLowerCase().replace('step_status_', '');
         
-        const badge = t.querySelector('.status-badge');
+        const badge = t.querySelector('.status');
         badge.textContent = st;
-        badge.className = 'status-badge status-' + st;
+        badge.className = 'status status-' + st;
         
-        t.querySelector('.step-name').textContent = s.name;
-        t.querySelector('.duration').textContent = (s.summary?.totalDuration||0) + 'ms';
-        t.querySelector('.metadata').textContent = JSON.stringify(s.summary?.metadata||{}, null, 2);
+        t.querySelector('.step-name').textContent = s.name || 'Unnamed Step';
+        t.querySelector('.duration').textContent = (s.summary?.totalDuration || 0) + 'ms';
         
+        if (s.message) {
+            t.querySelector('.status-message').textContent = s.message;
+        } else {
+            t.querySelector('.status-message').classList.add('d-none');
+        }
+
+        const metadata = s.summary?.metadata || {};
+        if (Object.keys(metadata).length > 0) {
+            t.querySelector('.metadata-pre').textContent = JSON.stringify(metadata, null, 2);
+            t.querySelector('.metadata-pre').classList.remove('d-none');
+        } else {
+            t.querySelector('.metadata-pre').classList.add('d-none');
+        }
+        
+        const stepAttachments = s.attachments || [];
+        const attContainer = t.querySelector('.attachments');
+        if (stepAttachments.length > 0) {
+            stepAttachments.forEach(a => {
+                const at = el('attachment-template').content.cloneNode(true);
+                at.querySelector('.attachment-name').textContent = a.name || 'file';
+                const dl = at.querySelector('.download-link');
+                dl.href = a.url;
+                dl.download = a.name || 'file';
+                if (a.mimeType?.startsWith('image/')) {
+                    const img = at.querySelector('.attachment-img');
+                    img.src = a.url;
+                    img.classList.remove('d-none');
+                }
+                attContainer.appendChild(at);
+            });
+        } else {
+            attContainer.classList.add('d-none');
+        }
+
         t.querySelector('.step-header').onclick = () => card.querySelector('.details').classList.toggle('d-none');
 
-        if (s.steps && s.steps.length > 0) {
+        const subSteps = s.steps || s.reports || [];
+        if (subSteps.length > 0) {
             const nestedTmpl = el('nested-steps-template').content.cloneNode(true);
             const nestedContainer = nestedTmpl.querySelector('.nested-steps');
             
-            s.steps.forEach(subStep => {
-                nestedContainer.appendChild(render(subStep));
+            subSteps.forEach(sub => {
+                nestedContainer.appendChild(render(sub));
             });
             
             card.querySelector('.details').appendChild(nestedContainer);
+            card.querySelector('.details').classList.remove('d-none'); // Show by default if has sub-steps
         }
 
         return t;
@@ -42,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (b) {
                 const s = window.formatStatus(d.state, 'TEST_STATE_');
                 b.textContent = s.text;
-                b.className = 'status-badge status-state-' + s.class;
+                b.className = 'status status-' + s.class;
             }
             if (el('status-message')) el('status-message').textContent = d.message;
         }

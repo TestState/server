@@ -1,25 +1,21 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const typeInput = document.querySelector('[name="testType"]');
-    const payloadItems = document.querySelectorAll('#payload-list li');
- 
-    if (!typeInput || !payloadItems.length) return;
+    const agentCheckboxes = document.querySelectorAll('input[name="agentIds"]');
+    const extraItems = document.querySelectorAll('#extra-payload-list li');
  
     function updateRecommendations() {
-        if (!window.agents) return;
+        if (!window.agents || !window.testType) return;
         
-        const type = typeInput.value;
-        if (!type) {
-            payloadItems.forEach(item => {
-                const badge = item.querySelector('.recommendation');
-                if (badge) badge.style.display = 'none';
-            });
-            return;
-        }
- 
+        const selectedAgentIds = Array.from(agentCheckboxes)
+            .filter(cb => cb.checked)
+            .map(cb => cb.value);
+
         const requirements = new Map(); // type -> 'REQUIRED' | 'RECOMMENDED'
- 
+
         window.agents.forEach(a => {
-            const t = a.supportedTests.find(tt => tt.testType === type);
+            // Only consider selected agents OR if no agents are selected, consider all compatible ones
+            if (selectedAgentIds.length > 0 && !selectedAgentIds.includes(a.id)) return;
+
+            const t = a.supportedTests.find(tt => tt.testType === window.testType);
             if (t) {
                 t.required.forEach(r => requirements.set(r, 'REQUIRED'));
                 t.optional.forEach(o => {
@@ -28,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
  
-        payloadItems.forEach(item => {
+        extraItems.forEach(item => {
             const pType = item.dataset.type;
             const badge = item.querySelector('.recommendation');
             if (!badge) return;
@@ -45,7 +41,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
  
-    typeInput.addEventListener('change', updateRecommendations);
-    typeInput.addEventListener('input', updateRecommendations);
+    agentCheckboxes.forEach(cb => cb.addEventListener('change', updateRecommendations));
     updateRecommendations();
 });

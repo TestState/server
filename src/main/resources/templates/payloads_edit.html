@@ -2,12 +2,12 @@
 {#title}{#if payload.id}Edit{#else}New{/if} Payload - TestState{/title}
  
 {#body}
-<section class="clearfix">
-    <div class="title-area">
-        <h2>{#if payload.id}Edit{#else}New{/if} Payload</h2>
+<section class="flex-between mb-3">
+    <div>
+        <h2>{#if payload.id}Edit{#else}New{/if}</h2>
     </div>
-    <div class="action-area">
-        <a href="/payloads" class="btn">Back</a>
+    <div>
+        <a href="/payloads" class="btn">Return</a>
     </div>
 </section>
  
@@ -15,18 +15,18 @@
     {#if payload.id}<input type="hidden" name="id" value="{payload.id}">{/if}
     
     <fieldset>
-        <legend>General Information</legend>
+        <legend>Settings</legend>
         <div class="field">
             <label>Name</label>
-            <input type="text" name="name" value="{payload.name}" required placeholder="Payload Name">
+            <input type="text" name="name" value="{payload.name}" required placeholder="Name">
         </div>
         <div class="field">
             <label>Description</label>
-            <textarea name="description" placeholder="Metadata description...">{payload.description}</textarea>
+            <textarea name="description" rows="2" placeholder="Description...">{payload.description}</textarea>
         </div>
         <div class="field">
             <label>Type</label>
-            <input type="text" name="type" value="{payload.type}" list="payload-types" required placeholder="e.g. selenium-script">
+            <input type="text" name="type" value="{payload.type}" list="payload-types" required placeholder="Type">
             <datalist id="payload-types">
                 {#for type in availableTypes}
                     <option value="{type}"></option>
@@ -34,22 +34,24 @@
             </datalist>
         </div>
         <div class="field">
-            <label>Metadata (JSON)</label>
-            <textarea name="metadata" class="font-mono small" rows="5">{payload.metadata}</textarea>
+            <label>Metadata</label>
+            <textarea name="metadata" class="font-mono small" rows="5" placeholder='{ "key": "value" }'>{payload.metadata}</textarea>
         </div>
     </fieldset>
  
     <fieldset>
-        <legend>Attachment</legend>
+        <legend>File</legend>
         {#if payload.attachmentName}
             <div class="field">
-                <span class="muted small">Current: <strong>{payload.attachmentName}</strong></span>
+                <span class="muted small">Asset: <strong>{payload.attachmentName}</strong></span>
             </div>
         {/if}
-        <input type="file" name="attachmentFile">
+        <input type="file" name="attachmentFile" class="w-full">
     </fieldset>
  
-    <button type="submit" class="btn btn-primary">Save Payload</button>
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Save</button>
+    </div>
 </form>
 {/body}
 {/include}

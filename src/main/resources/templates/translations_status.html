@@ -2,59 +2,55 @@
 {#title}Translation Task - TestState{/title}
  
 {#body}
-<section class="clearfix">
-    <div class="title-area">
-        <h2>Translation Status</h2>
-        <p class="muted">Session: <code>{session.sessionId}</code> | Format: <code>{session.ticket.targetFormat}</code></p>
+<section class="flex-between mb-3">
+    <div>
+        <h2>Status</h2>
+        <p class="muted">{session.sessionId}</p>
     </div>
-    <div class="action-area">
-        <a href="/translations" class="btn">All Tasks</a>
+    <div class="flex">
+        <a href="/translations" class="btn small">Return</a>
     </div>
 </section>
  
 <section>
-    <div class="clearfix mb-05">
-        <h3 class="title-area">Status</h3>
-        <div class="action-area text-right">
-            {#if session.status}
-                <span id="status-badge" class="status status-{session.status.state.stateClass} v-middle">
-                    {session.status.state.displayState}
-                </span>
-            {#else}
-                <span id="status-badge" class="status status-pending v-middle">PENDING</span>
-            {/if}
-        </div>
+    <div class="flex-between mb-1">
+        <h3>Progress</h3>
+        {#if session.status}
+            <span id="status-badge" class="status status-{session.status.state.stateClass}">
+                {session.status.state.displayState}
+            </span>
+        {#else}
+            <span id="status-badge" class="status status-pending">PENDING</span>
+        {/if}
     </div>
-    <div id="status-message" class="status-message-box muted small">
-        {#if session.status}{session.status.message}{#else}Waiting for agent...{/if}
+    <div id="status-message" class="muted small mb-2">
+        {#if session.status}{session.status.message}{#else}Awaiting agent...{/if}
     </div>
 </section>
  
 {#if session.result}
     <section id="results-section">
-        <h3>Payloads Result</h3>
-        <ul>
+        <h3>Result</h3>
+        <div class="card-grid">
             {#for payload in session.result.payloadsList}
-                <li class="clearfix">
-                    <div class="title-area">
+                <article class="flex-between">
+                    <div>
                         <strong>{payload.attachment.name ?: payload.type}</strong>
-                        <code>{payload.type}</code>
+                        <div class="font-mono small muted">{payload.type}</div>
                     </div>
-                    <div class="action-area">
-                        <div class="actions">
-                            <a href="/translations/{session.sessionId}/payloads/{payload_index}/download" class="btn">Download</a>
-                            <a href="/translations/{session.sessionId}/payloads/{payload_index}/save-form" class="btn">Save as CMS Payload</a>
-                        </div>
+                    <div class="flex-column align-end">
+                        <a href="/translations/{session.sessionId}/payloads/{payload_index}/download" class="btn small mb-1">Download</a>
+                        <a href="/translations/{session.sessionId}/payloads/{payload_index}/save-form" class="btn small">Save</a>
                     </div>
-                </li>
+                </article>
             {/for}
-        </ul>
+        </div>
     </section>
 {/if}
  
 <section>
-    <h3>Console Output</h3>
-    <pre class="console" id="telemetry-console"></pre>
+    <h3>Logs</h3>
+    <div class="console" id="telemetry-console"></div>
 </section>
  
 <script>

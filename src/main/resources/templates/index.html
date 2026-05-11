@@ -2,19 +2,18 @@
 {#title}Dashboard - TestState{/title}
  
 {#body}
-<section class="clearfix">
-    <div class="title-area">
+<section class="flex-between mb-3">
+    <div>
         <h2>Dashboard</h2>
     </div>
-    <div class="action-area">
-        <a href="/tests/new" class="btn btn-primary">New Test</a>
+    <div class="flex">
+        <a href="/tests/new" class="btn btn-primary">New</a>
         <a href="/payloads/new" class="btn">New Payload</a>
     </div>
 </section>
  
-<!-- Statistics -->
 <section>
-    <h3>System Overview</h3>
+    <h3>Overview</h3>
     <div class="stats-container">
         <div class="stat-box">
             <span class="label">Tests</span>
@@ -25,134 +24,99 @@
             <span class="value">{payloads.size}</span>
         </div>
         <div class="stat-box">
-            <span class="label">Agents</span>
+            <span class="label">Nodes</span>
             <span class="value">{agents.size}</span>
         </div>
         <div class="stat-box">
             <span class="label">Sessions</span>
             <span class="value">{sessions.size}</span>
         </div>
-        <div class="stat-box" title="Avg. Negotiation Time (ms)">
-            <span class="label">Avg. Negotiate</span>
+        <div class="stat-box">
+            <span class="label">Time</span>
             <span class="value">{avgNegotiationTime}ms</span>
         </div>
-        <div class="stat-box" title="Throughput (Sessions/Min)">
-            <span class="label">Throughput</span>
+        <div class="stat-box">
+            <span class="label">Rate</span>
             <span class="value">{throughput}/m</span>
         </div>
     </div>
 </section>
  
-<!-- Connected Agents -->
 <section>
-    <h3>Connected Agents</h3>
-    <table>
-        <thead>
-        <tr>
-            <th>Agent</th>
-            <th>Capabilities</th>
-        </tr>
-        </thead>
-        <tbody>
+    <h3>Nodes</h3>
+    <div class="data-grid nodes-grid">
+        <div class="data-grid-header" style="grid-template-columns: subgrid; grid-column: 1 / -1;">
+            <div class="data-grid-cell">Node</div>
+            <div class="data-grid-cell">Capabilities</div>
+        </div>
         {#for agent in agents}
-            <tr>
-                <td>
-                    <strong>{agent.displayName}</strong><br>
-                    <code class="muted small">{agent.id}</code>
-                </td>
-                <td class="w-auto">
-                    <div class="capabilities-list">
-                        {#for cap in agent.capabilities}
-                            {#if cap.hasTest}
-                                <code class="m-0">{cap.test.type}</code>
-                            {#else if cap.hasTranslation}
-                                <code class="m-0 cap-translation">{cap.translation.type}</code>
-                            {#else}
-                                <code class="m-0 cap-unknown">UNKNOWN</code>
-                            {/if}
-                        {/for}
-                    </div>
-                </td>
-            </tr>
-        {#else}
-            <tr>
-                <td colspan="2" class="muted small">No agents connected.</td>
-            </tr>
-        {/for}
-        </tbody>
-    </table>
-</section>
- 
-<!-- Recent Tests -->
-<section>
-    <h3>Recent Configurations</h3>
-    <ul>
-        {#for test in tests}
-            <li class="clearfix">
-                <div class="title-area">
-                    <strong>{test.name}</strong>
-                    <code class="muted small">{test.testType}</code>
+        <div class="data-grid-row" style="grid-template-columns: subgrid; grid-column: 1 / -1;">
+            <div class="data-grid-cell" data-label="Node">
+                <div>
+                    <strong>{agent.displayName}</strong>
+                    <div class="font-mono small muted">{agent.id}</div>
                 </div>
-                <div class="action-area">
-                    <a href="/tests/{test.id}/run" class="btn small">Launch</a>
-                    <a href="/tests/{test.id}/edit" class="btn small">Edit</a>
-                </div>
-            </li>
-        {#else}
-            <li class="muted small">No configurations found.</li>
-        {/for}
-    </ul>
-</section>
- 
-<!-- Active Batch Sessions -->
-<section>
-    <h3>Active Batches</h3>
-    <ul>
-        {#for batch in batches}
-            <li class="clearfix">
-                <div class="title-area">
-                    <strong>{batch.testName}</strong>
-                    <code class="muted small">{batch.batchId}</code>
-                </div>
-                <div class="action-area wrap-text max-w-60 text-right">
-                    <span class="status status-{batch.status.statusClass}">{batch.status}</span>
-                    <a href="/tests/batch/{batch.batchId}/status" class="btn small">Monitor</a>
-                </div>
-            </li>
-        {#else}
-            <li class="muted small">No active batches.</li>
-        {/for}
-    </ul>
-</section>
- 
-<!-- Active Individual Sessions -->
-<section>
-    <h3>Active Sessions</h3>
-    <ul>
-        {#for session in sessions}
-            <li class="clearfix">
-                <div class="title-area">
-                    <strong>{session.ticket.testType}</strong>
-                    <code class="muted small">{session.sessionId}</code>
-                </div>
-                <div class="action-area wrap-text max-w-60 text-right">
-                    {#if session.status}
-                        <span class="status status-{session.status.state.stateClass}">
-                            {session.status.state.displayState}
-                        </span>
-                        {#if session.status.message}
-                            <small class="muted trim-text ml-05">{session.status.message}</small>
+            </div>
+            <div class="data-grid-cell" data-label="Capabilities">
+                <div class="capabilities-flex">
+                    {#for cap in agent.capabilities}
+                        {#if cap.hasTest}
+                            <code class="small">{cap.test.type}</code>
+                        {#else if cap.hasTranslation}
+                            <code class="small text-success">{cap.translation.type}</code>
                         {/if}
-                    {#else}
-                        <span class="status">PENDING</span>
-                    {/if}
-                    <a href="/tests/{session.sessionId}/status" class="btn small">View</a>
+                    {/for}
                 </div>
-            </li>
+            </div>
+        </div>
         {#else}
-            <li class="muted small">No individual sessions active.</li>
+        <div class="p-3 muted text-center" style="grid-column: 1 / -1; background: var(--surface);">No nodes.</div>
         {/for}
-    </ul>
+    </div>
+</section>
+ 
+<section>
+    <h3>Batches</h3>
+    <div class="card-grid">
+        {#for batch in batches}
+        <article class="flex-between">
+            <div>
+                <strong>{batch.testName}</strong>
+                <div class="font-mono small muted">{batch.batchId}</div>
+            </div>
+            <div class="flex-column align-end">
+                <span class="status status-{batch.status.statusClass} mb-1">{batch.status}</span>
+                <a href="/tests/batch/{batch.batchId}/status" class="btn small">Monitor</a>
+            </div>
+        </article>
+        {#else}
+        <div class="muted small">No batches.</div>
+        {/for}
+    </div>
+</section>
+ 
+<section>
+    <h3>Sessions</h3>
+    <div class="card-grid">
+        {#for session in sessions}
+        <article class="flex-between">
+            <div>
+                <strong>{session.ticket.testType}</strong>
+                <div class="font-mono small muted">{session.sessionId}</div>
+            </div>
+            <div class="flex-column align-end">
+                {#if session.status}
+                    <span class="status status-{session.status.state.stateClass} mb-1">{session.status.state.displayState}</span>
+                {#else}
+                    <span class="status mb-1">PENDING</span>
+                {/if}
+                <a href="/tests/{session.sessionId}/status" class="btn small">Inspect</a>
+            </div>
+        </article>
+        {#else}
+        <div class="muted small">No sessions.</div>
+        {/for}
+    </div>
 </section>
 {/body}
 {/include}
