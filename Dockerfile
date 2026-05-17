@@ -17,7 +17,7 @@ FROM base AS build-jvm
 RUN --mount=type=cache,target=/root/.m2 mvn package -DskipTests
 
 # --- Stage 2b: Native Build ---
-FROM quay.io/quarkus/ubi-quarkus-mandrel-builder-image:23.1-java21 AS build-native
+FROM quay.io/quarkus/ubi9-quarkus-mandrel-builder-image:jdk-21 AS build-native
 USER root
 RUN microdnf install -y tar gzip && \
     curl -fsSL https://archive.apache.org/dist/maven/maven-3/3.9.6/binaries/apache-maven-3.9.6-bin.tar.gz | tar -xzC /opt && \
@@ -36,7 +36,7 @@ EXPOSE 8080 9000
 CMD ["java", "-jar", "quarkus-run.jar", "-Dquarkus.http.host=0.0.0.0"]
 
 # --- Stage 3b: Native Runtime (Target: native) ---
-FROM quay.io/quarkus/quarkus-micro-image:2.0 AS native
+FROM quay.io/quarkus/ubi9-quarkus-micro-image:2.0 AS native
 WORKDIR /work/
 COPY --from=build-native /workspace/teststate-cms/target/*-runner /work/application
 RUN chmod 775 /work/application
