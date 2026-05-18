@@ -49,15 +49,39 @@ article { background: var(--surface); border: 1px solid var(--border); border-ra
 .data-grid-header { display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; background: #161b22; color: var(--muted); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; }
 .data-grid-row { display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; background: var(--surface); transition: background 0.2s; }
 .data-grid-row:hover { background: #161b22; }
-.data-grid-cell { padding: 0.75rem 1rem; display: flex; align-items: center; }
+.data-grid-cell { padding: 0.75rem 1rem; display: flex; align-items: center; min-width: 0; }
  
 .d-contents { display: contents !important; }
 
-.nodes-grid { grid-template-columns: 1fr 2fr; }
-.tests-grid { grid-template-columns: 2fr 1fr 1fr 1fr; }
-.payloads-grid { grid-template-columns: 2fr 1fr 1fr; }
-.translations-grid { grid-template-columns: 2fr 1fr 2fr 1fr; }
-.batch-sessions-grid { grid-template-columns: 1fr 1fr 1fr 1.5fr 0.8fr 0.5fr; }
+.nodes-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
+.tests-grid { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); }
+.payloads-grid { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); }
+.translations-grid { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr); }
+.batch-sessions-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr) minmax(0, 0.8fr) minmax(0, 0.5fr); }
+
+/* Responsive Grid and Session Card adjustments */
+.card-grid article {
+    container-type: inline-size;
+}
+.card-grid article > div:first-child {
+    min-width: 0;
+}
+.card-grid article .font-mono {
+    word-break: break-all;
+}
+.card-grid .status-message {
+    max-width: 42cqw;
+}
+
+.batch-sessions-grid .data-grid-cell[data-label="Status"] .flex {
+    min-width: 0;
+    overflow: hidden;
+    width: 100%;
+}
+.batch-sessions-grid .status-message {
+    min-width: 0;
+    flex: 1;
+}
 
 @media (max-width: 600px) {
     header .container { justify-content: center; text-align: center; }
