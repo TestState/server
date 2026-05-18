@@ -11,7 +11,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!type) {
             payloadItems.forEach(item => {
                 const badge = item.querySelector('.recommendation');
-                if (badge) badge.style.display = 'none';
+                if (badge) {
+                    badge.style.display = 'none';
+                    badge.className = 'recommendation status d-none';
+                }
             });
             return;
         }
@@ -37,10 +40,11 @@ document.addEventListener('DOMContentLoaded', () => {
  
             if (state) {
                 badge.textContent = state;
-                badge.classList.remove('d-none');
+                badge.style.display = '';
                 badge.className = 'recommendation status ' + (state === 'REQUIRED' ? 'status-failed' : 'status-completed');
             } else {
-                badge.classList.add('d-none');
+                badge.style.display = 'none';
+                badge.className = 'recommendation status d-none';
             }
         });
     }
