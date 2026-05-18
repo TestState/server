@@ -19,6 +19,16 @@ public class TemplateExtensions {
         return e.name().toLowerCase();
     }
 
+    /**
+     * Truncates a string to a maximum length.
+     */
+    public static String truncate(String value, int limit) {
+        if (value == null || value.length() <= limit) {
+            return value;
+        }
+        return value.substring(0, limit) + "...";
+    }
+
     public static boolean isCancelable(me.hsgamer.teststate.cms.core.BatchStatus status) {
         return status == me.hsgamer.teststate.cms.core.BatchStatus.PENDING || 
                status == me.hsgamer.teststate.cms.core.BatchStatus.RUNNING;

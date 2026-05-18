@@ -84,11 +84,11 @@
             <div class="flex-column align-end">
                 {#if session.status}
                     <span class="status status-{session.status.state.stateClass} mb-1">{session.status.state.displayState}</span>
+                    {#if session.status.message}
+                        <div class="small muted truncate status-message mb-1">{session.status.message.truncate(100)}</div>
+                    {/if}
                 {#else}
                     <span class="status mb-1">PENDING</span>
-                {#if session.status.message}
-                    <div class="small muted truncate status-message mb-1">{session.status.message}</div>
-                {/if}
                 {/if}
                 <a href="/tests/{session.sessionId}/status" class="btn small">Inspect</a>
             </div>
