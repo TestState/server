@@ -3,6 +3,7 @@ package me.hsgamer.teststate.cms.core;
 import lombok.Getter;
 import me.hsgamer.teststate.uap.v1.TestState;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -136,11 +137,15 @@ public class TestBatchSession {
     }
 
     public double getThroughput() {
-        if (startedAt == null) return 0;
-        Instant end = completedAt != null ? completedAt : Instant.now();
-        long durationMs = java.time.Duration.between(startedAt, end).toMillis();
+        long durationMs = getDuration();
         if (durationMs < 1000) return 0;
         return (getCompletedCount() * 60000.0) / durationMs;
+    }
+
+    public long getDuration() {
+        if (startedAt == null) return 0;
+        Instant end = completedAt != null ? completedAt : Instant.now();
+        return Duration.between(startedAt, end).toMillis();
     }
 
     public double getAverageNegotiationDuration() {
