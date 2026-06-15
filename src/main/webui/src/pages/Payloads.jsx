@@ -2,7 +2,7 @@ import React from 'react';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {safeFetch} from '../utils/safeFetch';
 import {useNavigate} from 'react-router-dom';
-import {Badge, Button, Card, Center, Group, Loader, Stack, Table, Text, Title} from '@mantine/core';
+import {Badge, Button, Card, Center, Group, Loader, SimpleGrid, Stack, Text, Title} from '@mantine/core';
 import {IconDownload, IconEdit, IconPlus, IconTrash} from '@tabler/icons-react';
 
 export default function Payloads() {
@@ -41,7 +41,7 @@ export default function Payloads() {
             <Center style={{height: '50vh'}}>
                 <Stack align="center" gap="sm">
                     <Loader size="md"/>
-                    <Text size="sm" c="dimmed">Loading Payloads...</Text>
+                    <Text size="sm" c="dimmed">Loading payloads...</Text>
                 </Stack>
             </Center>
         );
@@ -65,80 +65,71 @@ export default function Payloads() {
                 </Button>
             </Group>
 
-            {/* Payloads Table */}
-            <Card withBorder shadow="sm" radius="md" p="0">
-                <Table verticalSpacing="md" horizontalSpacing="md">
-                    <Table.Thead>
-                        <Table.Tr>
-                            <Table.Th>Name</Table.Th>
-                            <Table.Th>Type</Table.Th>
-                            <Table.Th style={{textAlign: 'right'}}>Actions</Table.Th>
-                        </Table.Tr>
-                    </Table.Thead>
-                    <Table.Tbody>
-                        {payloads.map((payload) => (
-                            <Table.Tr key={payload.id}>
-                                <Table.Td>
-                                    <Text fw={600} size="sm">{payload.name}</Text>
-                                    {payload.description && (
-                                        <Text size="xs" c="dimmed">{payload.description}</Text>
-                                    )}
-                                </Table.Td>
-                                <Table.Td>
+            {/* Payloads Grid */}
+            {payloads.length === 0 ? (
+                <Card withBorder p="xl" radius="md" style={{textAlign: 'center'}}>
+                    <Text c="dimmed" size="sm" mb="xs">No payloads configured.</Text>
+                    <Center>
+                        <Button size="xs" variant="subtle" onClick={() => navigate('/payloads/new')}>
+                            Create New
+                        </Button>
+                    </Center>
+                </Card>
+            ) : (
+                <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
+                    {payloads.map((payload) => (
+                        <Card key={payload.id} withBorder p="md" shadow="xs" radius="md" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
+                            <Stack gap="xs" style={{ flexGrow: 1 }}>
+                                <Group justify="space-between" align="flex-start" wrap="nowrap">
+                                    <Text fw={600} size="sm" truncate>{payload.name}</Text>
                                     <Badge color="orange" variant="light" style={{fontFamily: 'monospace'}}>
                                         {payload.type}
                                     </Badge>
-                                </Table.Td>
-                                <Table.Td>
-                                    <Group gap="xs" justify="flex-end">
-                                        {payload.attachmentName && (
-                                            <Button
-                                                size="xs"
-                                                variant="light"
-                                                component="a"
-                                                href={`/api/payloads/${payload.id}/attachment`}
-                                                leftSection={<IconDownload size="0.8rem"/>}
-                                                title={`Export: ${payload.attachmentName}`}
-                                            >
-                                                Export
-                                            </Button>
-                                        )}
-                                        <Button
-                                            size="xs"
-                                            variant="light"
-                                            color="blue"
-                                            leftSection={<IconEdit size="0.8rem"/>}
-                                            onClick={() => navigate(`/payloads/${payload.id}/edit`)}
-                                        >
-                                            Edit
-                                        </Button>
-                                        <Button
-                                            size="xs"
-                                            variant="light"
-                                            color="red"
-                                            leftSection={<IconTrash size="0.8rem"/>}
-                                            onClick={() => handleDelete(payload.id)}
-                                            loading={deleteMutation.isPending && deleteMutation.variables === payload.id}
-                                        >
-                                            Delete
-                                        </Button>
-                                    </Group>
-                                </Table.Td>
-                            </Table.Tr>
-                        ))}
-                        {payloads.length === 0 && (
-                            <Table.Tr>
-                                <Table.Td colSpan={3} style={{textAlign: 'center', padding: '24px 0'}}>
-                                    <Text c="dimmed" size="sm" mb="xs">Empty.</Text>
-                                    <Button size="xs" variant="subtle" onClick={() => navigate('/payloads/new')}>
-                                        New.
+                                </Group>
+                                {payload.description && (
+                                    <Text size="xs" c="dimmed" lineClamp={3} style={{ flexGrow: 1 }}>
+                                        {payload.description}
+                                    </Text>
+                                )}
+                            </Stack>
+                            <div style={{height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.06)', margin: '12px 0 8px 0'}}/>
+                            <Group gap="xs" justify="flex-end">
+                                {payload.attachmentName && (
+                                    <Button
+                                        size="xs"
+                                        variant="light"
+                                        component="a"
+                                        href={`/api/payloads/${payload.id}/attachment`}
+                                        leftSection={<IconDownload size="0.8rem"/>}
+                                        title={`Export: ${payload.attachmentName}`}
+                                    >
+                                        Export
                                     </Button>
-                                </Table.Td>
-                            </Table.Tr>
-                        )}
-                    </Table.Tbody>
-                </Table>
-            </Card>
+                                )}
+                                <Button
+                                    size="xs"
+                                    variant="light"
+                                    color="blue"
+                                    leftSection={<IconEdit size="0.8rem"/>}
+                                    onClick={() => navigate(`/payloads/${payload.id}/edit`)}
+                                >
+                                    Edit
+                                </Button>
+                                <Button
+                                    size="xs"
+                                    variant="light"
+                                    color="red"
+                                    leftSection={<IconTrash size="0.8rem"/>}
+                                    onClick={() => handleDelete(payload.id)}
+                                    loading={deleteMutation.isPending && deleteMutation.variables === payload.id}
+                                >
+                                    Delete
+                                </Button>
+                            </Group>
+                        </Card>
+                    ))}
+                </SimpleGrid>
+            )}
         </Stack>
     );
 }

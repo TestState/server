@@ -241,63 +241,48 @@ export default function BatchStatus() {
                 )}
             </Card>
 
-            {/* Sessions Table */}
-            <Card withBorder shadow="sm" radius="md" p="0">
-                <Card.Section withBorder inheritPadding py="xs">
+            {/* Sessions Grid */}
+            <Card withBorder shadow="sm" radius="md" p="md">
+                <Card.Section withBorder inheritPadding py="xs" mb="md">
                     <Text fw={600}>Sessions</Text>
                 </Card.Section>
-                <Table verticalSpacing="md" horizontalSpacing="md">
-                    <Table.Thead>
-                        <Table.Tr>
-                            <Table.Th>Node</Table.Th>
-                            <Table.Th>ID</Table.Th>
-                            <Table.Th>State</Table.Th>
-                            <Table.Th style={{textAlign: 'right'}}>Time</Table.Th>
-                            <Table.Th style={{textAlign: 'right'}}>Action</Table.Th>
-                        </Table.Tr>
-                    </Table.Thead>
-                    <Table.Tbody>
+                {sessions.length === 0 ? (
+                    <Text c="dimmed" size="sm" style={{textAlign: 'center', padding: '16px 0'}}>No sessions active for this batch.</Text>
+                ) : (
+                    <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
                         {sessions.map((session) => (
-                            <Table.Tr key={session.sessionId}>
-                                <Table.Td><Text fw={600} size="sm">{session.agentName}</Text></Table.Td>
-                                <Table.Td><Text size="xs"
-                                                style={{fontFamily: 'monospace'}}>{session.sessionId}</Text></Table.Td>
-                                <Table.Td>
+                            <Card key={session.sessionId} withBorder p="md" shadow="xs" radius="md" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%', backgroundColor: 'rgba(255, 255, 255, 0.01)' }}>
+                                <Stack gap="xs" style={{ flexGrow: 1 }}>
+                                    <Group justify="space-between" align="center" wrap="nowrap">
+                                        <Text fw={600} size="sm" truncate>{session.agentName}</Text>
+                                        <Text size="xs" style={{fontFamily: 'monospace', opacity: 0.65}} truncate>{session.sessionId}</Text>
+                                    </Group>
                                     <Group gap="xs">
                                         <Badge color={getStatusColor(session.status)} variant="filled" size="xs">
                                             {getCleanStatus(session.status)}
                                         </Badge>
-                                        {session.statusMessage && (
-                                            <Text size="xs" c="dimmed" truncate style={{maxWidth: 200}}
-                                                  title={session.statusMessage}>
-                                                ({session.statusMessage})
-                                            </Text>
+                                        {session.negotiationDurationMs > 0 && (
+                                            <Badge color="gray" variant="light" size="xs">
+                                                {session.negotiationDurationMs}ms
+                                            </Badge>
                                         )}
                                     </Group>
-                                </Table.Td>
-                                <Table.Td style={{textAlign: 'right'}}>
-                                    <Text
-                                        size="xs">{session.negotiationDurationMs > 0 ? `${session.negotiationDurationMs}ms` : '-'}</Text>
-                                </Table.Td>
-                                <Table.Td>
-                                    <Group justify="flex-end">
-                                        <Button size="xs" variant="light"
-                                                onClick={() => navigate(`/tests/session/${session.sessionId}/status`)}>
-                                            View
-                                        </Button>
-                                    </Group>
-                                </Table.Td>
-                            </Table.Tr>
+                                    {session.statusMessage && (
+                                        <Text size="xs" c="dimmed" lineClamp={2} title={session.statusMessage}>
+                                            {session.statusMessage}
+                                        </Text>
+                                    )}
+                                </Stack>
+                                <div style={{height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.06)', margin: '12px 0 8px 0'}}/>
+                                <Group justify="flex-end">
+                                    <Button size="xs" variant="light" onClick={() => navigate(`/tests/session/${session.sessionId}/status`)}>
+                                        View
+                                    </Button>
+                                </Group>
+                            </Card>
                         ))}
-                        {sessions.length === 0 && (
-                            <Table.Tr>
-                                <Table.Td colSpan={5} style={{textAlign: 'center', padding: '16px 0', color: 'gray'}}>
-                                    No sessions
-                                </Table.Td>
-                            </Table.Tr>
-                        )}
-                    </Table.Tbody>
-                </Table>
+                    </SimpleGrid>
+                )}
             </Card>
         </Stack>
     );

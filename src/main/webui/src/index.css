@@ -5,3 +5,10 @@ body {
     margin: 0;
     padding: 0;
 }
+
+/* Prevent Badge text truncation/ellipsis on small/narrow screens */
+.mantine-Badge-label {
+    overflow: visible !important;
+    text-overflow: unset !important;
+    white-space: nowrap !important;
+}

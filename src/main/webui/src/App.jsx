@@ -75,6 +75,7 @@ function Navigation({closeNavbar}) {
 
 function MainLayout() {
     const [opened, {toggle, close}] = useDisclosure();
+    const navigate = useNavigate();
 
     return (
         <AppShell
@@ -94,7 +95,7 @@ function MainLayout() {
                         hiddenFrom="sm"
                         size="sm"
                     />
-                    <Text size="lg" fw={800} style={{display: 'flex', alignItems: 'center'}}>
+                    <Text size="lg" fw={800} style={{display: 'flex', alignItems: 'center', cursor: 'pointer'}} onClick={() => navigate('/')}>
                         TestState <span style={{
                         fontSize: '0.75rem',
                         fontWeight: 600,

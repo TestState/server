@@ -120,48 +120,42 @@ export default function Dashboard() {
 
             {/* Nodes Section */}
             <Card withBorder shadow="sm" radius="md" p="md">
-                <Card.Section withBorder inheritPadding py="xs">
+                <Card.Section withBorder inheritPadding py="xs" mb="md">
                     <Text fw={600}>Nodes</Text>
                 </Card.Section>
-                <Table verticalSpacing="md" horizontalSpacing="md">
-                    <Table.Thead>
-                        <Table.Tr>
-                            <Table.Th>Node</Table.Th>
-                            <Table.Th>Capabilities</Table.Th>
-                        </Table.Tr>
-                    </Table.Thead>
-                    <Table.Tbody>
+                {agents.length === 0 ? (
+                    <Text c="dimmed" size="sm" style={{textAlign: 'center', padding: '16px 0'}}>No active nodes</Text>
+                ) : (
+                    <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
                         {agents.map((agent) => (
-                            <Table.Tr key={agent.id}>
-                                <Table.Td>
-                                    <Text fw={600} size="sm">{agent.name}</Text>
-                                    <Text size="xs" style={{fontFamily: 'monospace', opacity: 0.65}}>{agent.id}</Text>
-                                </Table.Td>
-                                <Table.Td>
+                            <Card key={agent.id} withBorder p="md" shadow="xs" radius="md" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%', backgroundColor: 'rgba(255, 255, 255, 0.01)' }}>
+                                <Stack gap="xs" style={{ flexGrow: 1 }}>
+                                    <div>
+                                        <Text fw={600} size="sm">{agent.name}</Text>
+                                        <Text size="xs" style={{fontFamily: 'monospace', opacity: 0.65}} truncate>{agent.id}</Text>
+                                    </div>
+                                    <div style={{height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.06)', margin: '4px 0'}}/>
+                                    <Text size="xs" fw={600} c="dimmed">Capabilities:</Text>
                                     <Group gap="xs" wrap="wrap">
                                         {agent.capabilities?.map((cap, i) => {
-                                            if (cap.hasTest && cap.test?.type) {
-                                                return <Badge color="blue" variant="light"
-                                                              key={i}>{cap.test.type}</Badge>;
-                                            } else if (cap.hasTranslation && cap.translation?.type) {
-                                                return <Badge color="green" variant="light"
-                                                              key={i}>{cap.translation.type}</Badge>;
-                                            }
-                                            const label = typeof cap === 'string' ? cap : cap.name || JSON.stringify(cap);
-                                            return <Badge color="gray" variant="light" key={i}>{label}</Badge>;
+                                            const isTest = agent.supportedTestTypes?.includes(cap);
+                                            const isTranslation = agent.supportedTranslations?.some(t => t.type === cap);
+                                            
+                                            let color = "gray";
+                                            if (isTest) color = "blue";
+                                            else if (isTranslation) color = "green";
+
+                                            return <Badge color={color} variant="light" key={i}>{cap}</Badge>;
                                         })}
+                                        {(!agent.capabilities || agent.capabilities.length === 0) && (
+                                            <Text size="xs" c="dimmed">None</Text>
+                                        )}
                                     </Group>
-                                </Table.Td>
-                            </Table.Tr>
+                                </Stack>
+                            </Card>
                         ))}
-                        {agents.length === 0 && (
-                            <Table.Tr>
-                                <Table.Td colSpan={2} style={{textAlign: 'center', color: 'gray'}}>No active
-                                    nodes</Table.Td>
-                            </Table.Tr>
-                        )}
-                    </Table.Tbody>
-                </Table>
+                    </SimpleGrid>
+                )}
             </Card>
 
             {/* Batches and Sessions (2-column responsive layout) */}

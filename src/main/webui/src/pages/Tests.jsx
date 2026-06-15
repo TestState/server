@@ -3,7 +3,7 @@ import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {safeFetch} from '../utils/safeFetch';
 import {getCleanStatus, getStatusColor} from '../utils/format';
 import {useNavigate} from 'react-router-dom';
-import {Badge, Button, Card, Center, Group, Loader, SimpleGrid, Stack, Table, Text, Title} from '@mantine/core';
+import {Badge, Box, Button, Card, Center, Group, Loader, SimpleGrid, Stack, Table, Text, Title} from '@mantine/core';
 import {IconCopy, IconEdit, IconPlayerPlay, IconPlus, IconTrash} from '@tabler/icons-react';
 
 export default function Tests() {
@@ -25,7 +25,7 @@ export default function Tests() {
     const deleteMutation = useMutation({
         mutationFn: (id) => safeFetch(`/api/tests/${id}`, {method: 'DELETE'}),
         onSuccess: () => {
-            alert('Test deleted successfully');
+            alert('Test configuration deleted successfully');
             queryClient.invalidateQueries({queryKey: ['tests-data']});
         },
         onError: (err) => {
@@ -36,7 +36,7 @@ export default function Tests() {
     const copyMutation = useMutation({
         mutationFn: (id) => safeFetch(`/api/tests/${id}/copy`, {method: 'POST'}),
         onSuccess: () => {
-            alert('Test duplicated successfully');
+            alert('Test configuration duplicated successfully');
             queryClient.invalidateQueries({queryKey: ['tests-data']});
         },
         onError: (err) => {
@@ -77,97 +77,85 @@ export default function Tests() {
         <Stack gap="xl" w="100%">
             {/* Header */}
             <Group justify="space-between" align="center">
-                <Title order={2}>Tests</Title>
+                <Title order={2}>Test Configurations</Title>
                 <Button leftSection={<IconPlus size="1rem"/>} onClick={() => navigate('/tests/new')}>
                     New
                 </Button>
             </Group>
 
-            {/* Tests Table */}
-            <Card withBorder shadow="sm" radius="md" p="0">
-                <Table verticalSpacing="md" horizontalSpacing="md">
-                    <Table.Thead>
-                        <Table.Tr>
-                            <Table.Th>Name</Table.Th>
-                            <Table.Th>Type</Table.Th>
-                            <Table.Th>Payloads</Table.Th>
-                            <Table.Th style={{textAlign: 'right'}}>Actions</Table.Th>
-                        </Table.Tr>
-                    </Table.Thead>
-                    <Table.Tbody>
-                        {(data.tests || []).map((test) => (
-                            <Table.Tr key={test.id}>
-                                <Table.Td>
-                                    <Text fw={600} size="sm">{test.name}</Text>
-                                    {test.description && (
-                                        <Text size="xs" c="dimmed">{test.description}</Text>
-                                    )}
-                                </Table.Td>
-                                <Table.Td>
+            {/* Tests Grid */}
+            {(data.tests || []).length === 0 ? (
+                <Card withBorder p="xl" radius="md" style={{textAlign: 'center'}}>
+                    <Text c="dimmed" size="sm" mb="xs">No tests configured.</Text>
+                    <Center>
+                        <Button size="xs" variant="subtle" onClick={() => navigate('/tests/new')}>
+                            Create New
+                        </Button>
+                    </Center>
+                </Card>
+            ) : (
+                <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
+                    {(data.tests || []).map((test) => (
+                        <Card key={test.id} withBorder p="md" shadow="xs" radius="md" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
+                            <Stack gap="xs" style={{ flexGrow: 1 }}>
+                                <Group justify="space-between" align="flex-start" wrap="nowrap">
+                                    <Text fw={600} size="sm" truncate>{test.name}</Text>
                                     <Badge color="blue" variant="light" style={{fontFamily: 'monospace'}}>
                                         {test.testType}
                                     </Badge>
-                                </Table.Td>
-                                <Table.Td>
-                                    <Text size="xs" c="dimmed">
-                                        {test.payloads?.length || 0} linked
+                                </Group>
+                                <Text size="xs" c="dimmed">
+                                    {test.payloads?.length || 0} linked
+                                </Text>
+                                {test.description && (
+                                    <Text size="xs" c="dimmed" lineClamp={3} style={{ flexGrow: 1 }}>
+                                        {test.description}
                                     </Text>
-                                </Table.Td>
-                                <Table.Td>
-                                    <Group gap="xs" justify="flex-end">
-                                        <Button
-                                            size="xs"
-                                            leftSection={<IconPlayerPlay size="0.8rem"/>}
-                                            onClick={() => navigate(`/tests/${test.id}/run`)}
-                                        >
-                                            Run
-                                        </Button>
-                                        <Button
-                                            size="xs"
-                                            variant="light"
-                                            color="gray"
-                                            leftSection={<IconCopy size="0.8rem"/>}
-                                            onClick={() => copyMutation.mutate(test.id)}
-                                            loading={copyMutation.isPending && copyMutation.variables === test.id}
-                                        >
-                                            Copy
-                                        </Button>
-                                        <Button
-                                            size="xs"
-                                            variant="light"
-                                            color="blue"
-                                            leftSection={<IconEdit size="0.8rem"/>}
-                                            onClick={() => navigate(`/tests/${test.id}/edit`)}
-                                        >
-                                            Edit
-                                        </Button>
-                                        <Button
-                                            size="xs"
-                                            variant="light"
-                                            color="red"
-                                            leftSection={<IconTrash size="0.8rem"/>}
-                                            onClick={() => handleDelete(test.id)}
-                                            loading={deleteMutation.isPending && deleteMutation.variables === test.id}
-                                        >
-                                            Delete
-                                        </Button>
-                                    </Group>
-                                </Table.Td>
-                            </Table.Tr>
-                        ))}
-                        {(data.tests || []).length === 0 && (
-                            <Table.Tr>
-                                <Table.Td colSpan={4} style={{textAlign: 'center', padding: '24px 0'}}>
-                                    <Text c="dimmed" size="sm" mb="xs">Empty.</Text>
-                                    <Button size="xs" variant="subtle" onClick={() => navigate('/tests/new')}>
-                                        New.
-                                    </Button>
-                                </Table.Td>
-                            </Table.Tr>
-                        )}
-                    </Table.Tbody>
-                </Table>
-            </Card>
+                                )}
+                            </Stack>
+                            <div style={{height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.06)', margin: '12px 0 8px 0'}}/>
+                            <Group gap="xs" justify="flex-end">
+                                <Button
+                                    size="xs"
+                                    leftSection={<IconPlayerPlay size="0.8rem"/>}
+                                    onClick={() => navigate(`/tests/${test.id}/run`)}
+                                >
+                                    Run
+                                </Button>
+                                <Button
+                                    size="xs"
+                                    variant="light"
+                                    color="gray"
+                                    leftSection={<IconCopy size="0.8rem"/>}
+                                    onClick={() => copyMutation.mutate(test.id)}
+                                    loading={copyMutation.isPending && copyMutation.variables === test.id}
+                                >
+                                    Copy
+                                </Button>
+                                <Button
+                                    size="xs"
+                                    variant="light"
+                                    color="blue"
+                                    leftSection={<IconEdit size="0.8rem"/>}
+                                    onClick={() => navigate(`/tests/${test.id}/edit`)}
+                                >
+                                    Edit
+                                </Button>
+                                <Button
+                                    size="xs"
+                                    variant="light"
+                                    color="red"
+                                    leftSection={<IconTrash size="0.8rem"/>}
+                                    onClick={() => handleDelete(test.id)}
+                                    loading={deleteMutation.isPending && deleteMutation.variables === test.id}
+                                >
+                                    Delete
+                                </Button>
+                            </Group>
+                        </Card>
+                    ))}
+                </SimpleGrid>
+            )}
 
             {/* Batches and Sessions History */}
             <SimpleGrid cols={{base: 1, md: 2}} spacing="lg">
