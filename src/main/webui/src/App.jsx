@@ -1,5 +1,5 @@
 import React from 'react';
-import {HashRouter as Router, Route, Routes, useLocation, useNavigate} from 'react-router-dom';
+import {BrowserRouter as Router, Route, Routes, useLocation, useNavigate} from 'react-router-dom';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import {AppShell, Burger, createTheme, Group, MantineProvider, NavLink, Text} from '@mantine/core';
 import {useDisclosure} from '@mantine/hooks';
