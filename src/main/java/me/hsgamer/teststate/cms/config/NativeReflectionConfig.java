@@ -4,6 +4,7 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 import me.hsgamer.teststate.cms.core.TranslationSession;
 import me.hsgamer.teststate.cms.websocket.TestWebSocket;
 import me.hsgamer.teststate.cms.websocket.WSMessage;
+import me.hsgamer.teststate.cms.rest.TranslationWebResource;
 
 /**
  * Centralized reflection configuration for GraalVM Native Image.
@@ -26,7 +27,8 @@ import me.hsgamer.teststate.cms.websocket.WSMessage;
     TestWebSocket.AttachmentDTO.class,
 
     // Translation Results DTOs
-    TranslationSession.GeneratedPayload.class
+    TranslationSession.GeneratedPayload.class,
+    TranslationWebResource.GeneratedPayloadInfo.class
 })
 public class NativeReflectionConfig {
 }
