@@ -8,6 +8,7 @@ import lombok.Setter;
 import me.hsgamer.teststate.cms.util.ProtoUtil;
 import me.hsgamer.teststate.uap.v1.Attachment;
 import me.hsgamer.teststate.uap.v1.Payload;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Getter
@@ -30,6 +31,7 @@ public class PayloadEntity extends PanacheEntity {
     public String metadata;
 
     @ManyToMany(mappedBy = "payloads")
+    @JsonIgnore
     public java.util.List<TestEntity> tests = new java.util.ArrayList<>();
 
     @PreRemove

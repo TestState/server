@@ -1,8 +1,6 @@
 package me.hsgamer.teststate.cms.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.quarkus.qute.CheckedTemplate;
-import io.quarkus.qute.TemplateInstance;
 import io.smallrye.common.annotation.Blocking;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
@@ -10,6 +8,9 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import me.hsgamer.teststate.cms.core.BatchStatus;
 import me.hsgamer.teststate.cms.core.TestBatchSession;
 import me.hsgamer.teststate.cms.core.TestSession;
@@ -20,12 +21,10 @@ import me.hsgamer.teststate.cms.service.*;
 import me.hsgamer.teststate.cms.util.ProtoUtil;
 import me.hsgamer.teststate.uap.v1.Attachment;
 import me.hsgamer.teststate.uap.v1.TestResult;
-import org.jboss.resteasy.reactive.RestForm;
 
-import java.net.URI;
 import java.util.*;
 
-@Path("/tests")
+@Path("/api/tests")
 @Slf4j
 public class TestWebResource {
 
@@ -45,162 +44,190 @@ public class TestWebResource {
     BatchTestManager batchTestManager;
 
     @GET
-    @Produces(MediaType.TEXT_HTML)
+    @Produces(MediaType.APPLICATION_JSON)
     @Blocking
-    public TemplateInstance list() {
-        return Templates.tests_list(
-            testService.listAll(),
-            testSessionManager.getTestSessions(),
-            batchTestManager.getBatchSessions()
-        );
+    public List<TestEntity> list() {
+        return testService.listAll();
     }
 
     @GET
-    @Path("/new")
-    @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance createForm() {
-        return Templates.tests_edit(
-            new TestEntity(),
-            payloadService.listAll(),
-            agentManager.getAgentInfos(),
-            agentManager.getAvailableTestTypes()
-        );
+    @Path("/sessions")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Blocking
+    public List<Map<String, Object>> listSessions() {
+        return testSessionManager.getTestSessions().stream()
+            .map(s -> resultToMap(s, false))
+            .toList();
     }
 
     @GET
-    @Path("/{id}/edit")
-    @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance editForm(@PathParam("id") Long id) {
-        TestEntity entity = testService.findById(id)
+    @Path("/batches")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Blocking
+    public List<Map<String, Object>> listBatches() {
+        return batchTestManager.getBatchSessions().stream()
+            .map(batch -> {
+                Map<String, Object> b = new HashMap<>();
+                b.put("batchId", batch.getBatchId());
+                b.put("testName", batch.getTestName());
+                b.put("status", batch.getStatus());
+                b.put("totalIterations", batch.getTotalIterations());
+                b.put("completedCount", batch.getCompletedCount());
+                b.put("duration", batch.getDuration());
+                b.put("throughput", batch.getThroughput());
+                return b;
+            }).toList();
+    }
+
+    @GET
+    @Path("/available-types")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Collection<String> getAvailableTypes() {
+        return agentManager.getAvailableTestTypes();
+    }
+
+    @GET
+    @Path("/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public TestEntity getTest(@PathParam("id") Long id) {
+        return testService.findById(id)
             .orElseThrow(() -> new NotFoundException("Test not found: " + id));
-        return Templates.tests_edit(
-            entity,
-            payloadService.listAll(),
-            agentManager.getAgentInfos(),
-            agentManager.getAvailableTestTypes()
-        );
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class SaveTestRequest {
+        private String name;
+        private String description;
+        private String testType;
+        private List<Long> payloadIds;
     }
 
     @POST
-    @Path("/save")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response save(
-        @RestForm("id") Long id,
-        @RestForm("name") String name,
-        @RestForm("description") String description,
-        @RestForm("testType") String testType,
-        @RestForm("payloadIds") List<Long> payloadIds) {
-
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response create(SaveTestRequest req) {
         TestEntity entity = new TestEntity();
-        entity.setName(name);
-        entity.setDescription(description);
-        entity.setTestType(testType);
+        entity.setName(req.getName());
+        entity.setDescription(req.getDescription());
+        entity.setTestType(req.getTestType());
 
-        if (id != null) {
-            testService.update(id, entity, payloadIds);
-        } else {
-            testService.create(entity, payloadIds);
-        }
+        TestEntity saved = testService.create(entity, req.getPayloadIds());
+        return Response.status(Response.Status.CREATED).entity(saved).build();
+    }
 
-        return Response.seeOther(URI.create("/tests")).build();
+    @PUT
+    @Path("/{id}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response update(@PathParam("id") Long id, SaveTestRequest req) {
+        TestEntity entity = new TestEntity();
+        entity.setName(req.getName());
+        entity.setDescription(req.getDescription());
+        entity.setTestType(req.getTestType());
+
+        TestEntity saved = testService.update(id, entity, req.getPayloadIds());
+        return Response.ok(saved).build();
     }
 
     @POST
     @Path("/{id}/copy")
+    @Produces(MediaType.APPLICATION_JSON)
     public Response copy(@PathParam("id") Long id) {
         TestEntity copy = testService.copy(id);
-        return Response.seeOther(URI.create("/tests/" + copy.id + "/edit")).build();
+        return Response.ok(copy).build();
     }
 
-    @POST
-    @Path("/{id}/delete")
+    @DELETE
+    @Path("/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
     public Response delete(@PathParam("id") Long id) {
         testService.delete(id);
-        return Response.seeOther(URI.create("/tests")).build();
+        return Response.ok(Map.of("success", true)).build();
     }
 
-    @GET
-    @Path("/{id}/run")
-    @Produces(MediaType.TEXT_HTML)
-    @Blocking
-    public TemplateInstance runForm(@PathParam("id") Long id) {
-        TestEntity test = testService.findById(id)
-            .orElseThrow(() -> new NotFoundException("Test not found: " + id));
-
-        Set<Long> linkedIds = test.getPayloads().stream()
-            .map(p -> p.id)
-            .collect(java.util.stream.Collectors.toSet());
-
-        Set<String> compatibleTypes = agentManager.getCompatiblePayloadTypes(test.testType);
-        List<PayloadEntity> extraPayloads = payloadService.listAll().stream()
-            .filter(p -> !linkedIds.contains(p.id))
-            .filter(p -> compatibleTypes.contains(p.type))
-            .toList();
-
-        return Templates.tests_run(
-            test,
-            agentManager.getAgentInfos(),
-            extraPayloads
-        );
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class StartTestRequest {
+        private List<String> agentIds;
+        private List<Long> extraPayloadIds;
+        private int iterations = 1;
+        private boolean parallel = false;
     }
 
     @POST
-    @Path("/{id}/start")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Path("/{id}/runs")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Blocking
-    public Uni<Response> start(
-        @PathParam("id") Long id,
-        @RestForm("agentIds") List<String> agentIds,
-        @RestForm("extraPayloadIds") java.util.List<Long> extraPayloadIds,
-        @RestForm("iterations") @DefaultValue("1") int iterations,
-        @RestForm("parallel") @DefaultValue("false") boolean parallel) {
+    public Uni<Response> start(@PathParam("id") Long id, StartTestRequest req) {
+        List<String> agentIds = req.getAgentIds();
+        List<Long> extraPayloadIds = req.getExtraPayloadIds() != null ? req.getExtraPayloadIds() : Collections.emptyList();
+        int iterations = req.getIterations();
+        boolean parallel = req.isParallel();
 
         if (agentIds == null || agentIds.isEmpty()) {
-            return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST).entity("No agents selected").build());
+            return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST).entity(Map.of("error", "No agents selected")).build());
         }
 
         if (iterations > 1 || agentIds.size() > 1) {
             String batchId = batchTestManager.startBatchTest(id, agentIds, extraPayloadIds, iterations, parallel);
-            return Uni.createFrom().item(Response.seeOther(URI.create("/tests/batch/" + batchId + "/status")).build());
+            return Uni.createFrom().item(Response.ok(Map.of("batchId", batchId)).build());
         }
 
         String agentId = agentIds.get(0);
         return testSessionManager.startTest(id, agentId, extraPayloadIds)
             .map(result -> {
                 if (result.accepted()) {
-                    return Response.seeOther(URI.create("/tests/" + result.session().getSessionId() + "/status")).build();
+                    return Response.ok(Map.of("sessionId", result.session().getSessionId())).build();
                 } else {
                     return Response.status(Response.Status.BAD_REQUEST)
-                        .entity("Agent rejected test: " + result.reason())
+                        .entity(Map.of("error", "Agent rejected test: " + result.reason()))
                         .build();
                 }
             });
     }
 
     @GET
-    @Path("/{sessionId}/status")
-    @Produces(MediaType.TEXT_HTML)
+    @Path("/sessions/{sessionId}")
+    @Produces(MediaType.APPLICATION_JSON)
     @Blocking
-    public TemplateInstance status(@PathParam("sessionId") String sessionId) {
+    public Map<String, Object> status(@PathParam("sessionId") String sessionId) {
         TestSession session = testSessionManager.getTestSession(sessionId)
             .orElseThrow(() -> new NotFoundException("Test session not found: " + sessionId));
 
-        return Templates.tests_status(session);
+        return resultToMap(session, true);
     }
 
     @GET
-    @Path("/batch/{batchId}/status")
-    @Produces(MediaType.TEXT_HTML)
+    @Path("/batches/{batchId}")
+    @Produces(MediaType.APPLICATION_JSON)
     @Blocking
-    public TemplateInstance batchStatus(@PathParam("batchId") String batchId) {
+    public Map<String, Object> batchStatus(@PathParam("batchId") String batchId) {
         TestBatchSession batch = batchTestManager.getBatchSession(batchId)
             .orElseThrow(() -> new NotFoundException("Batch not found: " + batchId));
 
-        return Templates.tests_batch_status(batch);
+        Map<String, Object> report = new HashMap<>();
+        report.put("batchId", batch.getBatchId());
+        report.put("testName", batch.getTestName());
+        report.put("status", batch.getStatus());
+        report.put("iterations", batch.getTotalIterations());
+        report.put("completed", batch.getCompletedCount());
+        report.put("throughput", batch.getThroughput());
+        report.put("duration",  batch.getDuration());
+        report.put("averageNegotiationDuration", batch.getAverageNegotiationDuration());
+
+        var results = batch.getSessions().stream().map(s -> resultToMap(s, false)).toList();
+        report.put("sessions", results);
+
+        return report;
     }
 
     @POST
-    @Path("/batch/{batchId}/cancel")
+    @Path("/batches/{batchId}/cancel")
+    @Produces(MediaType.APPLICATION_JSON)
     @Blocking
     public Response cancelBatch(@PathParam("batchId") String batchId) {
         batchTestManager.getBatchSession(batchId).ifPresent(batch -> {
@@ -208,7 +235,7 @@ public class TestWebResource {
                 batch.setStatus(BatchStatus.CANCELLED);
             }
         });
-        return Response.seeOther(URI.create("/tests/batch/" + batchId + "/status")).build();
+        return Response.ok(Map.of("success", true)).build();
     }
 
     private Map<String, Object> resultToMap(TestSession session, boolean full) {
@@ -218,6 +245,9 @@ public class TestWebResource {
         entry.put("sessionId", session.getSessionId());
         entry.put("negotiationDurationMs", session.getNegotiationDurationMs());
         entry.put("status", session.getStatus() != null ? session.getStatus().getState().name() : "PENDING");
+        if (session.getStatus() != null && session.getStatus().getMessage() != null) {
+            entry.put("statusMessage", session.getStatus().getMessage());
+        }
         if (session.getResult() != null) {
             try {
                 var sessionResult = session.getResult();
@@ -237,7 +267,7 @@ public class TestWebResource {
     }
 
     @GET
-    @Path("/{sessionId}/report/json")
+    @Path("/sessions/{sessionId}/report")
     @Produces(MediaType.APPLICATION_JSON)
     @Blocking
     public Response downloadReport(@PathParam("sessionId") String sessionId, @QueryParam("full") @DefaultValue("false") boolean full) {
@@ -251,7 +281,7 @@ public class TestWebResource {
     }
 
     @GET
-    @Path("/batch/{batchId}/report/json")
+    @Path("/batches/{batchId}/report")
     @Produces(MediaType.APPLICATION_JSON)
     @Blocking
     public Response downloadBatchReport(@PathParam("batchId") String batchId, @QueryParam("full") @DefaultValue("false") boolean full) {
@@ -277,7 +307,7 @@ public class TestWebResource {
     }
 
     @GET
-    @Path("/{sessionId}/attachments/{index}")
+    @Path("/sessions/{sessionId}/attachments/{index}")
     @Blocking
     public Response getAttachment(@PathParam("sessionId") String sessionId, @PathParam("index") int index) {
         TestSession session = testSessionManager.getTestSession(sessionId)
@@ -293,18 +323,5 @@ public class TestWebResource {
             .type(attachment.getMimeType())
             .header("Content-Disposition", "attachment; filename=\"" + attachment.getName() + "\"")
             .build();
-    }
-
-    @CheckedTemplate(basePath = "")
-    public static class Templates {
-        public static native TemplateInstance tests_list(List<TestEntity> tests, Collection<TestSession> sessions, Collection<TestBatchSession> batches);
-
-        public static native TemplateInstance tests_edit(TestEntity test, List<PayloadEntity> allPayloads, List<AgentInfo> agents, Collection<String> testTypes);
-
-        public static native TemplateInstance tests_run(TestEntity test, List<AgentInfo> agents, List<PayloadEntity> extraPayloads);
-
-        public static native TemplateInstance tests_status(TestSession session);
-
-        public static native TemplateInstance tests_batch_status(TestBatchSession batch);
     }
 }

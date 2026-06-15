@@ -1,7 +1,5 @@
 package me.hsgamer.teststate.cms.rest;
 
-import io.quarkus.qute.CheckedTemplate;
-import io.quarkus.qute.TemplateInstance;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -14,15 +12,10 @@ import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.Files;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-
-@Path("/payloads")
+@Path("/api/payloads")
 @Slf4j
 public class PayloadWebResource {
 
@@ -33,46 +26,76 @@ public class PayloadWebResource {
     AgentManager agentManager;
 
     @GET
-    @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance list() {
-        return Templates.payloads_list(payloadService.listAll());
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<PayloadEntity> list() {
+        return payloadService.listAll();
     }
 
     @GET
-    @Path("/new")
-    @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance createForm() {
-        return Templates.payloads_edit(
-            new PayloadEntity(),
-            agentManager.getAvailablePayloadTypes(),
-            agentManager.getPayloadMimeTypeMapping()
-        );
+    @Path("/available-types")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Collection<String> getAvailableTypes() {
+        return agentManager.getAvailablePayloadTypes();
     }
 
     @GET
-    @Path("/{id}/edit")
-    @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance editForm(@PathParam("id") Long id) {
-        PayloadEntity entity = payloadService.findById(id)
+    @Path("/mime-mappings")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Set<String>> getMimeMappings() {
+        return agentManager.getPayloadMimeTypeMapping();
+    }
+
+    @GET
+    @Path("/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public PayloadEntity getPayload(@PathParam("id") Long id) {
+        return payloadService.findById(id)
             .orElseThrow(() -> new NotFoundException("Payload not found: " + id));
-        return Templates.payloads_edit(
-            entity,
-            agentManager.getAvailablePayloadTypes(),
-            agentManager.getPayloadMimeTypeMapping()
-        );
     }
 
     @POST
-    @Path("/save")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Response save(
-        @RestForm("id") Long id,
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response create(
         @RestForm("name") String name,
         @RestForm("description") String description,
         @RestForm("type") String type,
         @RestForm("metadata") String metadata,
         @RestForm("attachmentFile") FileUpload attachment) {
 
+        PayloadEntity entity = buildEntity(name, description, type, metadata, attachment);
+        if (entity == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                .entity(Map.of("error", "Failed to build payload entity")).build();
+        }
+
+        PayloadEntity saved = payloadService.create(entity);
+        return Response.status(Response.Status.CREATED).entity(saved).build();
+    }
+
+    @PUT
+    @Path("/{id}")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response update(
+        @PathParam("id") Long id,
+        @RestForm("name") String name,
+        @RestForm("description") String description,
+        @RestForm("type") String type,
+        @RestForm("metadata") String metadata,
+        @RestForm("attachmentFile") FileUpload attachment) {
+
+        PayloadEntity entity = buildEntity(name, description, type, metadata, attachment);
+        if (entity == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                .entity(Map.of("error", "Failed to build payload entity")).build();
+        }
+
+        PayloadEntity saved = payloadService.update(id, entity);
+        return Response.ok(saved).build();
+    }
+
+    private PayloadEntity buildEntity(String name, String description, String type, String metadata, FileUpload attachment) {
         PayloadEntity entity = new PayloadEntity();
         entity.setName(name);
         entity.setDescription(description);
@@ -85,9 +108,7 @@ public class PayloadWebResource {
             if (mapping.containsKey(type) && !mapping.get(type).isEmpty()) {
                 if (!mapping.get(type).contains(mimeType)) {
                     log.warn("MIME type '{}' is not supported for payload type '{}' by any registered agents", mimeType, type);
-                    return Response.status(Response.Status.BAD_REQUEST)
-                        .entity("Unsupported file type: " + mimeType + " for protocol " + type + ". Expected: " + mapping.get(type))
-                        .build();
+                    return null;
                 }
             }
 
@@ -97,26 +118,18 @@ public class PayloadWebResource {
                 entity.setAttachmentData(Files.readAllBytes(attachment.filePath()));
             } catch (IOException e) {
                 log.error("Failed to read uploaded file", e);
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Failed to upload attachment").build();
+                return null;
             }
         }
-
-
-        if (id != null) {
-            payloadService.update(id, entity);
-        } else {
-            payloadService.create(entity);
-        }
-
-        return Response.seeOther(URI.create("/payloads")).build();
+        return entity;
     }
 
-    @POST
-    @Path("/{id}/delete")
+    @DELETE
+    @Path("/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
     public Response delete(@PathParam("id") Long id) {
         payloadService.delete(id);
-        return Response.seeOther(URI.create("/payloads")).build();
+        return Response.ok(Map.of("success", true)).build();
     }
 
     @GET
@@ -133,12 +146,5 @@ public class PayloadWebResource {
             .type(entity.getAttachmentMimeType())
             .header("Content-Disposition", "attachment; filename=\"" + entity.getAttachmentName() + "\"")
             .build();
-    }
-
-    @CheckedTemplate(basePath = "")
-    public static class Templates {
-        public static native TemplateInstance payloads_list(List<PayloadEntity> payloads);
-
-        public static native TemplateInstance payloads_edit(PayloadEntity payload, Collection<String> availableTypes, Map<String, Set<String>> mimeTypeMapping);
     }
 }

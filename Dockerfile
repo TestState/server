@@ -1,6 +1,10 @@
 # --- Stage 1: Common Base ---
 FROM maven:3.9-eclipse-temurin-21 AS base
 WORKDIR /workspace/teststate-cms
+
+# Install Node.js 20 and npm for Quinoa compilation
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get update && apt-get install -y nodejs
  
 # 1. Cache Maven dependencies using BuildKit mount
 COPY implementation/server/teststate-cms/pom.xml .
@@ -22,6 +26,11 @@ USER root
 RUN microdnf install -y tar gzip && \
     curl -fsSL https://archive.apache.org/dist/maven/maven-3/3.9.6/binaries/apache-maven-3.9.6-bin.tar.gz | tar -xzC /opt && \
     ln -s /opt/apache-maven-3.9.6/bin/mvn /usr/bin/mvn
+
+# Install Node.js 20 and npm for native Quinoa build
+RUN curl -fsSL https://rpm.nodesource.com/setup_20.x | bash - && \
+    microdnf install -y nodejs
+
 WORKDIR /workspace
 COPY --from=base /specification /specification
 COPY --from=base /workspace/teststate-cms /workspace/teststate-cms
