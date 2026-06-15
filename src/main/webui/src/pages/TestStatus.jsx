@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {safeFetch} from '../utils/safeFetch';
 import {getCleanStatus, getDisplayDuration, getStatusColor} from '../utils/format';
 import {useNavigate, useParams} from 'react-router-dom';
@@ -84,6 +84,7 @@ export default function TestStatus() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [telemetryLogs, setTelemetryLogs] = useState([]);
+    const logsEndRef = useRef(null);
 
     const {data: session, isPending: loading, error} = useQuery({
         queryKey: ['testSession', sessionId],
@@ -127,6 +128,10 @@ export default function TestStatus() {
             if (ws) ws.close();
         };
     }, [sessionId, queryClient]);
+
+    useEffect(() => {
+        logsEndRef.current?.scrollIntoView({behavior: 'smooth'});
+    }, [telemetryLogs]);
 
     if (loading) {
         return (
@@ -371,6 +376,7 @@ export default function TestStatus() {
                             );
                         })
                     )}
+                    <div ref={logsEndRef}/>
                 </div>
             </Card>
         </Stack>

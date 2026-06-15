@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {safeFetch} from '../utils/safeFetch';
 import {getCleanStatus, getStatusColor} from '../utils/format';
 import {useNavigate, useParams} from 'react-router-dom';
@@ -84,6 +84,7 @@ export default function TranslationStatus() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [telemetryLogs, setTelemetryLogs] = useState([]);
+    const logsEndRef = useRef(null);
 
     const {data: session, isPending: loading, error} = useQuery({
         queryKey: ['translationSession', sessionId],
@@ -133,6 +134,10 @@ export default function TranslationStatus() {
             if (ws) ws.close();
         };
     }, [sessionId, queryClient]);
+
+    useEffect(() => {
+        logsEndRef.current?.scrollIntoView({behavior: 'smooth'});
+    }, [telemetryLogs]);
 
     const handleSaveSuccess = () => {
         queryClient.invalidateQueries({queryKey: ['translationSession', sessionId]});
@@ -285,6 +290,7 @@ export default function TranslationStatus() {
                             );
                         })
                     )}
+                    <div ref={logsEndRef}/>
                 </div>
             </Card>
         </Stack>
