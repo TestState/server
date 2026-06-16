@@ -22,9 +22,9 @@ RUN --mount=type=cache,target=/root/.m2 mvn package -DskipTests
 # --- Stage 2b: Native Build ---
 FROM quay.io/quarkus/ubi9-quarkus-mandrel-builder-image:jdk-25 AS build-native
 USER root
-RUN microdnf install -y tar gzip && \
-    curl -fsSL https://archive.apache.org/dist/maven/maven-3/3.9.6/binaries/apache-maven-3.9.6-bin.tar.gz | tar -xzC /opt && \
-    ln -s /opt/apache-maven-3.9.6/bin/mvn /usr/bin/mvn
+# Copy Maven from the base image
+COPY --from=base /usr/share/maven /usr/share/maven
+RUN ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
 
 # Copy Node.js 20 and npm from pre-built node image
 COPY --from=node:20 /usr/local /usr/local
