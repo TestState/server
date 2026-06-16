@@ -266,6 +266,16 @@ public class TestWebResource {
                 entry.put("result", null);
             }
         }
+        if (!session.getTelemetryHistory().isEmpty()) {
+            entry.put("logs", session.getTelemetryHistory().stream()
+                .map(t -> Map.of(
+                    "type", "TELEMETRY",
+                    "level", t.getSeverity().name(),
+                    "message", t.getMessage(),
+                    "timestamp", t.getTimestamp().getSeconds() * 1000 + t.getTimestamp().getNanos() / 1000000
+                ))
+                .toList());
+        }
         return entry;
     }
 

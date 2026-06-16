@@ -1,5 +1,6 @@
 package me.hsgamer.teststate.cms.core;
 
+import lombok.Getter;
 import me.hsgamer.teststate.uap.v1.Telemetry;
 
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.function.Consumer;
 
 public abstract class AbstractSession<R> implements Session<R> {
     protected final String sessionId;
+    @Getter
     protected final List<Telemetry> telemetryHistory = new CopyOnWriteArrayList<>();
     protected final Set<Consumer<Telemetry>> telemetryConsumers = new CopyOnWriteArraySet<>();
     protected final Set<Runnable> completionCallbacks = new CopyOnWriteArraySet<>();

@@ -61,7 +61,15 @@ export default function TestStatus() {
 
     createEffect(() => {
         const sess = session();
-        if (!sess || sess.terminal) return;
+        if (!sess) return;
+
+        // If terminal, load logs from the REST response
+        if (sess.terminal) {
+            if (sess.logs && sess.logs.length > 0) {
+                setTelemetryLogs(sess.logs);
+            }
+            return;
+        }
 
         let active = true;
         let ws;

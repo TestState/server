@@ -47,12 +47,13 @@ public class WSMessage {
                     s.getStatus() != null ? s.getStatus().getMessage() : "Waiting...",
                     s.getAgentId(),
                     s.getAgentName(),
-                    s.getNegotiationDurationMs()
+                    s.getNegotiationDurationMs(),
+                    s.getStatus() != null && me.hsgamer.teststate.cms.util.StatusUtil.isTerminal(s.getStatus().getState())
                 )).toList());
         }
     }
 
     public record SessionStatusDTO(String sessionId, String state, String message, String agentId, String agentName,
-                                   long negotiationDurationMs) {
+                                   long negotiationDurationMs, boolean terminal) {
     }
 }

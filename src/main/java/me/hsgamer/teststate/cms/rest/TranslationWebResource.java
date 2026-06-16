@@ -157,6 +157,16 @@ public class TranslationWebResource {
         }
         m.put("payloadsCount", session.getRawPayloads().size());
         m.put("format", session.getTicket() != null ? session.getTicket().targetFormat() : "");
+        if (!session.getTelemetryHistory().isEmpty()) {
+            m.put("logs", session.getTelemetryHistory().stream()
+                .map(t -> java.util.Map.of(
+                    "type", "TELEMETRY",
+                    "level", t.getSeverity().name(),
+                    "message", t.getMessage(),
+                    "timestamp", t.getTimestamp().getSeconds() * 1000 + t.getTimestamp().getNanos() / 1000000
+                ))
+                .toList());
+        }
         return m;
     }
 

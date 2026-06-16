@@ -60,7 +60,8 @@ export default function BatchStatus() {
                             message: s.message,
                             agentId: s.agentId,
                             agentName: s.agentName,
-                            negotiationDurationMs: s.negotiationDurationMs
+                            negotiationDurationMs: s.negotiationDurationMs,
+                            terminal: s.terminal
                         })) || []
                     });
                 }
@@ -277,12 +278,17 @@ export default function BatchStatus() {
                                             </div>
                                             <div class="h-[1px] bg-base-200 my-2" />
                                             <div class="flex justify-end">
-                                                <button 
-                                                    class="btn btn-ghost btn-xs text-primary"
-                                                    onClick={() => navigate(`/tests/session/${session.sessionId}/status`)}
-                                                >
-                                                    View
-                                                </button>
+                                                <Show when={session.terminal}>
+                                                    <button 
+                                                        class="btn btn-ghost btn-xs text-primary"
+                                                        onClick={() => navigate(`/tests/session/${session.sessionId}/status`)}
+                                                    >
+                                                        View
+                                                    </button>
+                                                </Show>
+                                                <Show when={!session.terminal}>
+                                                    <span class="text-xs text-base-content/30 italic">In progress...</span>
+                                                </Show>
                                             </div>
                                         </div>
                                     )}
