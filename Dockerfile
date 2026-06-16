@@ -1,5 +1,5 @@
 # --- Stage 1: Common Base ---
-FROM maven:3.9-eclipse-temurin-21 AS base
+FROM maven:3.9-eclipse-temurin-25 AS base
 WORKDIR /workspace/teststate-cms
 
 # Copy Node.js 20 and npm from pre-built node image
@@ -20,7 +20,7 @@ FROM base AS build-jvm
 RUN --mount=type=cache,target=/root/.m2 mvn package -DskipTests
 
 # --- Stage 2b: Native Build ---
-FROM quay.io/quarkus/ubi9-quarkus-mandrel-builder-image:jdk-21 AS build-native
+FROM quay.io/quarkus/ubi9-quarkus-mandrel-builder-image:jdk-25 AS build-native
 USER root
 RUN microdnf install -y tar gzip && \
     curl -fsSL https://archive.apache.org/dist/maven/maven-3/3.9.6/binaries/apache-maven-3.9.6-bin.tar.gz | tar -xzC /opt && \
@@ -36,7 +36,7 @@ WORKDIR /workspace/teststate-cms
 RUN --mount=type=cache,target=/root/.m2 mvn package -Dnative -DskipTests
 
 # --- Stage 3a: JVM Runtime (Target: jvm) ---
-FROM eclipse-temurin:21-jre-alpine AS jvm
+FROM eclipse-temurin:25-jre-alpine AS jvm
 WORKDIR /work/
 COPY --from=build-jvm /workspace/teststate-cms/target/quarkus-app/ /work/
 EXPOSE 8080 9000
