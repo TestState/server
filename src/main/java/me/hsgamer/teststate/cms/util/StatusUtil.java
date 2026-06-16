@@ -11,4 +11,8 @@ public class StatusUtil {
     public static boolean isTerminal(TestState state) {
         return state == TestState.TEST_STATE_COMPLETED || state == TestState.TEST_STATE_FAILED || state == TestState.TEST_STATE_INVALID;
     }
+
+    public static boolean isTerminal(me.hsgamer.teststate.cms.core.BatchStatus state) {
+        return state == me.hsgamer.teststate.cms.core.BatchStatus.COMPLETED || state == me.hsgamer.teststate.cms.core.BatchStatus.FAILED || state == me.hsgamer.teststate.cms.core.BatchStatus.CANCELLED;
+    }
 }

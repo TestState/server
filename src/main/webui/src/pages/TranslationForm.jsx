@@ -1,30 +1,30 @@
-import React, {useEffect, useState} from 'react';
-import {safeFetch} from '../utils/safeFetch';
-import {useNavigate} from 'react-router-dom';
-import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
-import {Alert, Badge, Button, Card, Center, Checkbox, Group, Loader, Select, Stack, Text, Title} from '@mantine/core';
-import {IconArrowLeft, IconPlayerPlay} from '@tabler/icons-react';
+import { createSignal, createEffect, Show, For } from 'solid-js';
+import { Title } from '@solidjs/meta';
+import { safeFetch } from '../utils/safeFetch';
+import { useNavigate } from '@solidjs/router';
+import { createMutation, createQuery, useQueryClient } from '@tanstack/solid-query';
+import { ArrowLeft, Play } from 'lucide-solid';
 
 export default function TranslationForm() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
-    const [formError, setFormError] = useState(null);
+    const [formError, setFormError] = createSignal(null);
 
-    const [agentId, setAgentId] = useState('');
-    const [type, setType] = useState('');
-    const [payloadIds, setPayloadIds] = useState([]);
+    const [agentId, setAgentId] = createSignal('');
+    const [type, setType] = createSignal('');
+    const [payloadIds, setPayloadIds] = createSignal([]);
 
-    const {data: agents = [], isPending: loadingAgents} = useQuery({
+    const agentsQuery = createQuery(() => ({
         queryKey: ['agents'],
         queryFn: () => safeFetch('/api/agents')
-    });
+    }));
 
-    const {data: payloads = [], isPending: loadingPayloads} = useQuery({
+    const payloadsQuery = createQuery(() => ({
         queryKey: ['payloads'],
         queryFn: () => safeFetch('/api/payloads')
-    });
+    }));
 
-    const mutation = useMutation({
+    const mutation = createMutation(() => ({
         mutationFn: (body) => safeFetch('/api/translations/sessions', {
             method: 'POST',
             headers: {
@@ -33,7 +33,7 @@ export default function TranslationForm() {
             body: JSON.stringify(body)
         }),
         onSuccess: (res) => {
-            queryClient.invalidateQueries({queryKey: ['translationsSessions']});
+            queryClient.invalidateQueries({ queryKey: ['translationsSessions'] });
             if (res.sessionId) {
                 navigate(`/translations/${res.sessionId}/status`);
             }
@@ -41,15 +41,21 @@ export default function TranslationForm() {
         onError: (err) => {
             setFormError(err.message);
         }
-    });
+    }));
 
-    const currentAgent = agents.find(a => a.id === agentId);
-    const currentTranslation = currentAgent?.supportedTranslations?.find(t => t.type === type);
-    const allowedSources = currentTranslation?.sourcePayloadTypes || [];
+    const agents = () => agentsQuery.data || [];
+    const payloads = () => payloadsQuery.data || [];
 
-    const filteredPayloads = type
-        ? payloads.filter(p => allowedSources.includes(p.type))
-        : payloads;
+    const currentAgent = () => agents().find(a => a.id === agentId());
+    const currentTranslation = () => currentAgent()?.supportedTranslations?.find(t => t.type === type());
+    const allowedSources = () => currentTranslation()?.sourcePayloadTypes || [];
+
+    const filteredPayloads = () => {
+        const t = type();
+        const pl = payloads();
+        const sources = allowedSources();
+        return t ? pl.filter(p => sources.includes(p.type)) : pl;
+    };
 
     const handleAgentChange = (value) => {
         setAgentId(value || '');
@@ -62,33 +68,40 @@ export default function TranslationForm() {
         setPayloadIds([]);
     };
 
-    useEffect(() => {
-        if (type && payloadIds.length > 0) {
-            const validIds = payloadIds.filter(id => {
-                const p = payloads.find(x => x.id === id);
-                return p && allowedSources.includes(p.type);
+    createEffect(() => {
+        const t = type();
+        const ids = payloadIds();
+        const pl = payloads();
+        const sources = allowedSources();
+
+        if (t && ids.length > 0) {
+            const validIds = ids.filter(id => {
+                const p = pl.find(x => x.id === id);
+                return p && sources.includes(p.type);
             });
-            if (validIds.length !== payloadIds.length) {
+            if (validIds.length !== ids.length) {
                 setPayloadIds(validIds);
             }
         }
-    }, [type, allowedSources, payloads, payloadIds]);
+    });
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!agentId) {
+        const agId = agentId();
+        const t = type();
+        if (!agId) {
             setFormError('Please select a translation node.');
             return;
         }
-        if (!type) {
+        if (!t) {
             setFormError('Please select a translation type.');
             return;
         }
         setFormError(null);
         mutation.mutate({
-            agentId,
-            type,
-            payloadIds
+            agentId: agId,
+            type: t,
+            payloadIds: payloadIds()
         });
     };
 
@@ -100,130 +113,146 @@ export default function TranslationForm() {
         }
     };
 
-    const loading = loadingAgents || loadingPayloads;
-    if (loading) {
-        return (
-            <Center style={{height: '50vh'}}>
-                <Stack align="center" gap="sm">
-                    <Loader size="md"/>
-                    <Text size="sm" c="dimmed">Loading translation profiles...</Text>
-                </Stack>
-            </Center>
-        );
-    }
-
-    const error = formError || mutation.error?.message;
+    const isLoading = () => agentsQuery.isPending || payloadsQuery.isPending;
+    const error = () => formError() || mutation.error?.message;
 
     return (
-        <Stack gap="xl" style={{maxWidth: 800, margin: '0 auto', width: '100%'}}>
+        <div class="max-w-3xl mx-auto w-full space-y-6">
+            <Title>Create Translation | TestState</Title>
             {/* Header */}
-            <Group justify="space-between" align="center">
-                <Title order={2}>New Translation</Title>
-                <Button variant="light" leftSection={<IconArrowLeft size="1rem"/>}
-                        onClick={() => navigate('/translations')}>
-                    Cancel
-                </Button>
-            </Group>
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-bold">New Translation</h1>
+                <button
+                    class="btn btn-outline btn-sm flex items-center gap-1.5"
+                    onClick={() => navigate('/translations')}
+                >
+                    <ArrowLeft size={16} />
+                    <span>Cancel</span>
+                </button>
+            </div>
 
-            {error && (
-                <Alert title="Translation Request Error" color="red" withCloseButton onClose={() => setFormError(null)}>
-                    {error}
-                </Alert>
-            )}
+            <Show when={error()}>
+                <div class="alert alert-error flex justify-between items-center">
+                    <span>{error()}</span>
+                    <button class="btn btn-ghost btn-xs text-error-content" onClick={() => setFormError(null)}>✕</button>
+                </div>
+            </Show>
 
-            <form onSubmit={handleSubmit}>
-                <Stack gap="md">
-                    <Card withBorder shadow="sm" radius="md" p="md">
-                        <Card.Section withBorder inheritPadding py="xs">
-                            <Text fw={600}>Task</Text>
-                        </Card.Section>
+            <Show when={isLoading()}>
+                <div class="flex flex-col items-center justify-center min-h-[30vh] gap-3">
+                    <span class="loading loading-spinner loading-md text-primary"></span>
+                    <p class="text-sm text-base-content/60">Loading translation profiles...</p>
+                </div>
+            </Show>
 
-                        <Stack gap="md" mt="md">
-                            <Select
-                                label="Node"
-                                placeholder="Select translation node"
-                                required
-                                data={agents.map(agent => ({value: agent.id, label: agent.name}))}
-                                value={agentId}
-                                onChange={handleAgentChange}
-                            />
+            <Show when={!isLoading()}>
+                <form onSubmit={handleSubmit} class="space-y-6">
+                    {/* Task Card */}
+                    <div class="card bg-base-100 border border-base-200 shadow-sm">
+                        <div class="card-body p-5 space-y-4">
+                            <h2 class="card-title text-base font-semibold border-b border-base-200 pb-2">Task</h2>
 
-                            <Select
-                                label="Type"
-                                placeholder={agentId ? "Select translation format type" : "Select node first"}
-                                required
-                                disabled={!agentId}
-                                data={currentAgent?.supportedTranslations?.map(trans => ({
-                                    value: trans.type,
-                                    label: trans.type
-                                })) || []}
-                                value={type}
-                                onChange={handleTypeChange}
-                            />
+                            <div class="form-control w-full">
+                                <label class="label">
+                                    <span class="label-text font-semibold">Node <span class="text-error">*</span></span>
+                                </label>
+                                <select 
+                                    class="select select-bordered w-full"
+                                    value={agentId()}
+                                    onChange={(e) => handleAgentChange(e.currentTarget.value)}
+                                >
+                                    <option value="" disabled selected>Select translation node</option>
+                                    <For each={agents()}>
+                                        {(agent) => <option value={agent.id}>{agent.name}</option>}
+                                    </For>
+                                </select>
+                            </div>
 
-                            {currentTranslation && (
-                                <Group gap="xs" style={{fontSize: '12px', fontFamily: 'monospace'}}>
-                                    <Badge color="cyan" variant="light">{allowedSources.join(', ')}</Badge>
+                            <div class="form-control w-full">
+                                <label class="label">
+                                    <span class="label-text font-semibold">Type <span class="text-error">*</span></span>
+                                </label>
+                                <select 
+                                    class="select select-bordered w-full"
+                                    disabled={!agentId()}
+                                    value={type()}
+                                    onChange={(e) => handleTypeChange(e.currentTarget.value)}
+                                >
+                                    <option value="" disabled selected>
+                                        {agentId() ? "Select translation format type" : "Select node first"}
+                                    </option>
+                                    <For each={currentAgent()?.supportedTranslations || []}>
+                                        {(trans) => <option value={trans.type}>{trans.type}</option>}
+                                    </For>
+                                </select>
+                            </div>
+
+                            <Show when={currentTranslation()}>
+                                <div class="flex items-center gap-2 font-mono text-xs mt-2">
+                                    <span class="badge badge-accent badge-sm">{allowedSources().join(', ')}</span>
                                     <span>&rarr;</span>
-                                    <Badge color="grape"
-                                           variant="light">{currentTranslation.targetPayloadTypes?.join(', ')}</Badge>
-                                </Group>
-                            )}
-                        </Stack>
-                    </Card>
+                                    <span class="badge badge-secondary badge-sm">{currentTranslation().targetPayloadTypes?.join(', ')}</span>
+                                </div>
+                            </Show>
+                        </div>
+                    </div>
 
-                    <Card withBorder shadow="sm" radius="md" p="md">
-                        <Card.Section withBorder inheritPadding py="xs">
-                            <Text fw={600}>Payloads</Text>
-                        </Card.Section>
-
-                        <Stack gap="sm" mt="md" style={{maxHeight: '240px', overflowY: 'auto', padding: '4px'}}>
-                            {filteredPayloads.length === 0 ? (
-                                <Text size="sm" c="dimmed" style={{textAlign: 'center', padding: '12px 0'}}>No
-                                    compatible payloads.</Text>
-                            ) : (
-                                filteredPayloads.map(payload => {
-                                    const checked = payloadIds.includes(payload.id);
-                                    return (
-                                        <Group
-                                            key={payload.id}
-                                            p="xs"
-                                            style={{
-                                                borderRadius: '4px',
-                                                backgroundColor: checked ? 'rgba(28, 126, 214, 0.05)' : 'transparent',
-                                                border: '1px solid rgba(255, 255, 255, 0.03)'
+                    {/* Payloads Card */}
+                    <div class="card bg-base-100 border border-base-200 shadow-sm">
+                        <div class="card-body p-5 space-y-4">
+                            <h2 class="card-title text-base font-semibold border-b border-base-200 pb-2">Payloads</h2>
+                            <div class="space-y-2 max-h-[240px] overflow-y-auto pr-1">
+                                <Show when={filteredPayloads().length === 0}>
+                                    <p class="text-center text-sm text-base-content/50 py-4">No compatible payloads.</p>
+                                </Show>
+                                <Show when={filteredPayloads().length > 0}>
+                                    <div class="space-y-2">
+                                        <For each={filteredPayloads()}>
+                                            {(payload) => {
+                                                const isChecked = () => payloadIds().includes(payload.id);
+                                                return (
+                                                    <div 
+                                                        class={`flex items-center justify-between p-3 rounded-lg border border-base-200 transition-colors ${
+                                                            isChecked() ? 'bg-primary/5 border-primary/20' : 'bg-base-300/40'
+                                                        }`}
+                                                    >
+                                                        <label class="label cursor-pointer flex justify-start items-center gap-3 w-full">
+                                                            <input 
+                                                                type="checkbox" 
+                                                                class="checkbox checkbox-primary checkbox-sm"
+                                                                checked={isChecked()}
+                                                                onChange={(e) => handlePayloadCheck(payload.id, e.currentTarget.checked)}
+                                                            />
+                                                            <div class="flex flex-col">
+                                                                <span class="font-semibold text-sm">{payload.name}</span>
+                                                                <span class="font-mono text-xs text-base-content/50">{payload.type}</span>
+                                                            </div>
+                                                        </label>
+                                                    </div>
+                                                );
                                             }}
-                                        >
-                                            <Checkbox
-                                                checked={checked}
-                                                onChange={(e) => handlePayloadCheck(payload.id, e.currentTarget.checked)}
-                                                label={
-                                                    <Stack gap={0}>
-                                                        <Text fw={600} size="sm">{payload.name}</Text>
-                                                        <Text style={{fontFamily: 'monospace', fontSize: '11px'}}
-                                                              c="dimmed">{payload.type}</Text>
-                                                    </Stack>
-                                                }
-                                            />
-                                        </Group>
-                                    );
-                                })
-                            )}
-                        </Stack>
-                    </Card>
+                                        </For>
+                                    </div>
+                                </Show>
+                            </div>
+                        </div>
+                    </div>
 
-                    <Button
+                    <button
                         type="submit"
-                        leftSection={<IconPlayerPlay size="1rem"/>}
-                        loading={mutation.isPending}
-                        disabled={!type}
-                        size="md"
-                        mt="md"
+                        class="btn btn-primary w-full flex items-center gap-2"
+                        disabled={!type() || mutation.isPending}
                     >
-                        Start Translation
-                    </Button>
-                </Stack>
-            </form>
-        </Stack>
+                        <Show when={mutation.isPending}>
+                            <span class="loading loading-spinner loading-sm"></span>
+                        </Show>
+                        <Show when={!mutation.isPending}>
+                            <Play size={18} />
+                        </Show>
+                        <span>Start Translation</span>
+                    </button>
+                </form>
+            </Show>
+        </div>
     );
 }

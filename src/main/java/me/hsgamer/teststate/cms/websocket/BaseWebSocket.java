@@ -24,9 +24,18 @@ public abstract class BaseWebSocket<S extends Session<?>> {
     protected abstract Optional<S> getSession(String id);
 
     protected void send(WebSocketConnection conn, Object msg) {
+        if (conn == null || !conn.isOpen()) {
+            return;
+        }
         try {
             conn.sendText(mapper.writeValueAsString(msg)).subscribe().with(v -> {
-            }, e -> log.error("WS send failed", e));
+            }, e -> {
+                if (conn.isOpen()) {
+                    log.error("WS send failed", e);
+                } else {
+                    log.debug("WS send failed because connection is closed", e);
+                }
+            });
         } catch (Exception e) {
             log.error("WS serialization failed", e);
         }

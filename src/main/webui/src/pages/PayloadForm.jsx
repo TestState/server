@@ -1,240 +1,263 @@
-import React, {useEffect, useState} from 'react';
-import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
-import {safeFetch} from '../utils/safeFetch';
-import {useNavigate, useParams} from 'react-router-dom';
-import {
-    Alert,
-    Autocomplete,
-    Button,
-    Card,
-    Center,
-    Group,
-    Loader,
-    Stack,
-    Text,
-    Textarea,
-    TextInput,
-    Title
-} from '@mantine/core';
-import {IconArrowLeft, IconDeviceFloppy} from '@tabler/icons-react';
+import { createMutation, createQuery, useQueryClient } from '@tanstack/solid-query';
+import { safeFetch } from '../utils/safeFetch';
+import { useNavigate, useParams } from '@solidjs/router';
+import { ArrowLeft, Save } from 'lucide-solid';
+import { createSignal, createEffect, Show, For } from 'solid-js';
+import { Title } from '@solidjs/meta';
 
 export default function PayloadForm() {
-    const {id} = useParams();
+    const params = useParams();
     const navigate = useNavigate();
-    const isEdit = !!id;
+    const isEdit = () => !!params.id;
     const queryClient = useQueryClient();
 
-    const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
-    const [type, setType] = useState('');
-    const [metadata, setMetadata] = useState('');
-    const [attachmentFile, setAttachmentFile] = useState(null);
-    const [errorMsg, setErrorMsg] = useState(null);
+    const [name, setName] = createSignal('');
+    const [description, setDescription] = createSignal('');
+    const [type, setType] = createSignal('');
+    const [metadata, setMetadata] = createSignal('');
+    const [attachmentFile, setAttachmentFile] = createSignal(null);
+    const [errorMsg, setErrorMsg] = createSignal(null);
 
     // Queries
-    const {data: availableTypes = [], isLoading: loadingTypes} = useQuery({
+    const availableTypesQuery = createQuery(() => ({
         queryKey: ['payloadAvailableTypes'],
         queryFn: () => safeFetch('/api/payloads/available-types')
-    });
+    }));
 
-    const {data: mimeMappings = {}, isLoading: loadingMappings} = useQuery({
+    const mimeMappingsQuery = createQuery(() => ({
         queryKey: ['payloadMimeMappings'],
         queryFn: () => safeFetch('/api/payloads/mime-mappings')
-    });
+    }));
 
-    const {data: entity, isLoading: loadingEntity} = useQuery({
-        queryKey: ['payload', id],
-        queryFn: () => safeFetch(`/api/payloads/${id}`),
-        enabled: isEdit
-    });
+    const entityQuery = createQuery(() => ({
+        queryKey: ['payload', params.id],
+        queryFn: () => safeFetch(`/api/payloads/${params.id}`),
+        enabled: isEdit()
+    }));
 
-    const saveMutation = useMutation({
+    const saveMutation = createMutation(() => ({
         mutationFn: (payloadForm) => {
-            const url = isEdit ? `/api/payloads/${id}` : '/api/payloads';
-            const method = isEdit ? 'PUT' : 'POST';
+            const url = isEdit() ? `/api/payloads/${params.id}` : '/api/payloads';
+            const method = isEdit() ? 'PUT' : 'POST';
             return safeFetch(url, {
                 method: method,
                 body: payloadForm
             });
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ['payloads']});
+            queryClient.invalidateQueries({ queryKey: ['payloads'] });
             navigate('/payloads');
         },
         onError: (err) => {
             setErrorMsg(err.message);
         }
-    });
+    }));
 
-    useEffect(() => {
-        if (entity) {
-            setName(entity.name || '');
-            setDescription(entity.description || '');
-            setType(entity.type || '');
-            setMetadata(entity.metadata || '');
-        } else if (availableTypes.length > 0 && !type) {
-            setType(availableTypes[0]);
+    const availableTypes = () => availableTypesQuery.data || [];
+    const mimeMappings = () => mimeMappingsQuery.data || {};
+    const entity = () => entityQuery.data;
+
+    createEffect(() => {
+        const ent = entity();
+        if (ent) {
+            setName(ent.name || '');
+            setDescription(ent.description || '');
+            setType(ent.type || '');
+            setMetadata(ent.metadata || '');
+        } else if (availableTypes().length > 0 && !type()) {
+            setType(availableTypes()[0]);
         }
-    }, [entity, availableTypes]);
+    });
 
     const handleSubmit = (e) => {
         e.preventDefault();
         setErrorMsg(null);
 
-        if (!name) {
+        if (!name()) {
             setErrorMsg("Name is required");
             return;
         }
-        if (!type) {
+        if (!type()) {
             setErrorMsg("Type is required");
             return;
         }
 
+        const file = attachmentFile();
+        const mappings = mimeMappings();
+        const t = type();
+
         // Validation: check MIME type mapping
-        if (attachmentFile && type && mimeMappings[type]) {
-            const allowedMimeTypes = mimeMappings[type];
-            if (allowedMimeTypes.length > 0 && !allowedMimeTypes.includes(attachmentFile.type)) {
-                setErrorMsg(`Unsupported file type: ${attachmentFile.type} for type ${type}. Expected: ${allowedMimeTypes.join(', ')}`);
+        if (file && t && mappings[t]) {
+            const allowedMimeTypes = mappings[t];
+            if (allowedMimeTypes.length > 0 && !allowedMimeTypes.includes(file.type)) {
+                setErrorMsg(`Unsupported file type: ${file.type} for type ${t}. Expected: ${allowedMimeTypes.join(', ')}`);
                 return;
             }
         }
 
         const payloadForm = new FormData();
-        payloadForm.append('name', name);
-        payloadForm.append('description', description);
-        payloadForm.append('type', type);
-        payloadForm.append('metadata', metadata);
-        if (attachmentFile) {
-            payloadForm.append('attachmentFile', attachmentFile);
+        payloadForm.append('name', name());
+        payloadForm.append('description', description());
+        payloadForm.append('type', t);
+        payloadForm.append('metadata', metadata());
+        if (file) {
+            payloadForm.append('attachmentFile', file);
         }
 
         saveMutation.mutate(payloadForm);
     };
 
-    const loading = loadingTypes || loadingMappings || (isEdit && loadingEntity);
-    if (loading) {
-        return (
-            <Center style={{height: '50vh'}}>
-                <Stack align="center" gap="sm">
-                    <Loader size="md"/>
-                    <Text size="sm" c="dimmed">Loading Form data...</Text>
-                </Stack>
-            </Center>
-        );
-    }
+    const isLoading = () => availableTypesQuery.isPending || mimeMappingsQuery.isPending || (isEdit() && entityQuery.isPending);
 
     return (
-        <Stack gap="xl" style={{maxWidth: 800, margin: '0 auto', width: '100%'}}>
+        <div class="max-w-3xl mx-auto w-full space-y-6">
+            <Title>{isEdit() ? 'Edit' : 'Create'} Payload | TestState</Title>
             {/* Header */}
-            <Group justify="space-between" align="center">
-                <Title order={2}>{isEdit ? 'Edit Payload' : 'New Payload'}</Title>
-                <Button variant="light" leftSection={<IconArrowLeft size="1rem"/>}
-                        onClick={() => navigate('/payloads')}>
-                    Return
-                </Button>
-            </Group>
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-bold">{isEdit() ? 'Edit Payload' : 'New Payload'}</h1>
+                <button
+                    class="btn btn-outline btn-sm flex items-center gap-1.5"
+                    onClick={() => navigate('/payloads')}
+                >
+                    <ArrowLeft size={16} />
+                    <span>Return</span>
+                </button>
+            </div>
 
-            {errorMsg && (
-                <Alert title="Validation Error" color="red" withCloseButton onClose={() => setErrorMsg(null)}>
-                    {errorMsg}
-                </Alert>
-            )}
+            <Show when={errorMsg()}>
+                <div class="alert alert-error flex justify-between items-center">
+                    <span>{errorMsg()}</span>
+                    <button class="btn btn-ghost btn-xs text-error-content" onClick={() => setErrorMsg(null)}>✕</button>
+                </div>
+            </Show>
 
-            <form onSubmit={handleSubmit}>
-                <Stack gap="md">
-                    <Card withBorder shadow="sm" radius="md" p="md">
-                        <Card.Section withBorder inheritPadding py="xs">
-                            <Text fw={600}>Settings</Text>
-                        </Card.Section>
+            <Show when={isLoading()}>
+                <div class="flex flex-col items-center justify-center min-h-[30vh] gap-3">
+                    <span class="loading loading-spinner loading-md text-primary"></span>
+                    <p class="text-sm text-base-content/60">Loading Form data...</p>
+                </div>
+            </Show>
 
-                        <Stack gap="md" mt="md">
-                            <TextInput
-                                label="Name"
-                                placeholder="Enter payload name"
-                                required
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                            />
+            <Show when={!isLoading()}>
+                <form onSubmit={handleSubmit} class="space-y-6">
+                    {/* Settings Card */}
+                    <div class="card bg-base-100 border border-base-200 shadow-sm">
+                        <div class="card-body p-5 space-y-4">
+                            <h2 class="card-title text-base font-semibold border-b border-base-200 pb-2">Settings</h2>
 
-                            <Textarea
-                                label="Description"
-                                placeholder="Enter description"
-                                rows={2}
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                            />
+                            <div class="form-control w-full">
+                                <label class="label">
+                                    <span class="label-text font-semibold">Name <span class="text-error">*</span></span>
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder="Enter payload name"
+                                    required
+                                    class="input input-bordered w-full"
+                                    value={name()}
+                                    onInput={(e) => setName(e.currentTarget.value)}
+                                />
+                            </div>
 
-                            <Autocomplete
-                                label="Type"
-                                placeholder="Select or enter payload type"
-                                required
-                                data={availableTypes}
-                                value={type}
-                                onChange={setType}
-                            />
+                            <div class="form-control w-full">
+                                <label class="label">
+                                    <span class="label-text font-semibold">Description</span>
+                                </label>
+                                <textarea
+                                    placeholder="Enter description"
+                                    rows="2"
+                                    class="textarea textarea-bordered w-full"
+                                    value={description()}
+                                    onInput={(e) => setDescription(e.currentTarget.value)}
+                                />
+                            </div>
 
-                            <Textarea
-                                label="Metadata"
-                                placeholder='{ "key": "value" }'
-                                rows={5}
-                                styles={{input: {fontFamily: 'monospace', fontSize: '12px'}}}
-                                value={metadata}
-                                onChange={(e) => setMetadata(e.target.value)}
-                            />
-                        </Stack>
-                    </Card>
+                            <div class="form-control w-full">
+                                <label class="label">
+                                    <span class="label-text font-semibold">Type <span class="text-error">*</span></span>
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder="Select or enter payload type"
+                                    required
+                                    class="input input-bordered w-full"
+                                    list="available-types"
+                                    value={type()}
+                                    onInput={(e) => setType(e.currentTarget.value)}
+                                />
+                                <datalist id="available-types">
+                                    <For each={availableTypes()}>
+                                        {(item) => <option value={item} />}
+                                    </For>
+                                </datalist>
+                            </div>
 
-                    <Card withBorder shadow="sm" radius="md" p="md">
-                        <Card.Section withBorder inheritPadding py="xs">
-                            <Text fw={600}>File</Text>
-                        </Card.Section>
+                            <div class="form-control w-full">
+                                <label class="label">
+                                    <span class="label-text font-semibold">Metadata</span>
+                                </label>
+                                <textarea
+                                    placeholder='{ "key": "value" }'
+                                    rows="5"
+                                    class="textarea textarea-bordered w-full font-mono text-xs"
+                                    value={metadata()}
+                                    onInput={(e) => setMetadata(e.currentTarget.value)}
+                                />
+                            </div>
+                        </div>
+                    </div>
 
-                        <Stack gap="sm" mt="md">
-                            {isEdit && entity?.attachmentName && (
-                                <Group gap="xs">
-                                    <Text size="sm" c="dimmed">Current Asset:</Text>
-                                    <Text size="sm" fw={600}>{entity.attachmentName}</Text>
-                                </Group>
-                            )}
+                    {/* File Card */}
+                    <div class="card bg-base-100 border border-base-200 shadow-sm">
+                        <div class="card-body p-5 space-y-4">
+                            <h2 class="card-title text-base font-semibold border-b border-base-200 pb-2">File</h2>
 
-                            <Text size="sm" fw={500}>Upload File</Text>
-                            <input
-                                type="file"
-                                onChange={(e) => {
-                                    if (e.target.files && e.target.files[0]) {
-                                        setAttachmentFile(e.target.files[0]);
-                                    }
-                                }}
-                                style={{
-                                    display: 'block',
-                                    width: '100%',
-                                    padding: '6px 12px',
-                                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                                    borderRadius: '6px',
-                                    color: 'inherit',
-                                    cursor: 'pointer'
-                                }}
-                            />
-                            {type && mimeMappings[type] && mimeMappings[type].length > 0 && (
-                                <Text size="xs" c="dimmed">
-                                    Supported formats for {type}: {mimeMappings[type].join(', ')}
-                                </Text>
-                            )}
-                        </Stack>
-                    </Card>
+                            <Show when={isEdit() && entity()?.attachmentName}>
+                                <div class="flex items-center gap-2 text-sm">
+                                    <span class="text-base-content/60">Current Asset:</span>
+                                    <span class="font-semibold">{entity().attachmentName}</span>
+                                </div>
+                            </Show>
 
-                    <Button
+                            <div class="form-control w-full">
+                                <label class="label">
+                                    <span class="label-text font-semibold">Upload File</span>
+                                </label>
+                                <input
+                                    type="file"
+                                    class="file-input file-input-bordered w-full"
+                                    onChange={(e) => {
+                                        if (e.target.files && e.target.files[0]) {
+                                            setAttachmentFile(e.target.files[0]);
+                                        }
+                                    }}
+                                />
+                                <Show when={type() && mimeMappings()[type()] && mimeMappings()[type()].length > 0}>
+                                    <label class="label">
+                                        <span class="label-text-alt text-base-content/50">
+                                            Supported formats for {type()}: {mimeMappings()[type()].join(', ')}
+                                        </span>
+                                    </label>
+                                </Show>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button
                         type="submit"
-                        leftSection={<IconDeviceFloppy size="1rem"/>}
-                        loading={saveMutation.isPending}
-                        size="md"
-                        mt="md"
+                        class="btn btn-primary w-full flex items-center gap-2"
+                        disabled={saveMutation.isPending}
                     >
-                        Save
-                    </Button>
-                </Stack>
-            </form>
-        </Stack>
+                        <Show when={saveMutation.isPending}>
+                            <span class="loading loading-spinner loading-sm"></span>
+                        </Show>
+                        <Show when={!saveMutation.isPending}>
+                            <Save size={18} />
+                        </Show>
+                        <span>Save</span>
+                    </button>
+                </form>
+            </Show>
+        </div>
     );
 }

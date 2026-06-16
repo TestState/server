@@ -1,35 +1,21 @@
-import React, {useState} from 'react';
-import {useMutation, useQuery} from '@tanstack/react-query';
-import {safeFetch} from '../utils/safeFetch';
-import {useNavigate, useParams} from 'react-router-dom';
-import {
-    Alert,
-    Badge,
-    Button,
-    Card,
-    Center,
-    Checkbox,
-    Group,
-    Loader,
-    NumberInput,
-    Radio,
-    Stack,
-    Text,
-    Title
-} from '@mantine/core';
-import {IconArrowLeft, IconPlayerPlay} from '@tabler/icons-react';
+import { createMutation, createQuery } from '@tanstack/solid-query';
+import { safeFetch } from '../utils/safeFetch';
+import { useNavigate, useParams } from '@solidjs/router';
+import { ArrowLeft, Play } from 'lucide-solid';
+import { createSignal, createEffect, Show, For } from 'solid-js';
+import { Title } from '@solidjs/meta';
 
-function TestRunInner({id, test, agents, extraPayloads}) {
+function TestRunInner(props) {
     const navigate = useNavigate();
 
-    const [agentIds, setAgentIds] = useState([]);
-    const [extraPayloadIds, setExtraPayloadIds] = useState([]);
-    const [iterations, setIterations] = useState(1);
-    const [strategy, setStrategy] = useState('sequential');
-    const [errorMsg, setErrorMsg] = useState(null);
+    const [agentIds, setAgentIds] = createSignal([]);
+    const [extraPayloadIds, setExtraPayloadIds] = createSignal([]);
+    const [iterations, setIterations] = createSignal(1);
+    const [strategy, setStrategy] = createSignal('sequential');
+    const [errorMsg, setErrorMsg] = createSignal(null);
 
-    const runMutation = useMutation({
-        mutationFn: (body) => safeFetch(`/api/tests/${id}/runs`, {
+    const runMutation = createMutation(() => ({
+        mutationFn: (body) => safeFetch(`/api/tests/${props.id}/runs`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -46,15 +32,17 @@ function TestRunInner({id, test, agents, extraPayloads}) {
         onError: (err) => {
             setErrorMsg('Failed to trigger run: ' + err.message);
         }
-    });
+    }));
 
     const getPayloadRequirement = (payloadType) => {
-        if (!agents || !test) return null;
+        const ags = props.agents;
+        const t = props.test;
+        if (!ags || !t) return null;
         const requirements = new Map(); // type -> 'REQUIRED' | 'RECOMMENDED'
-        agents.forEach(agent => {
-            if (agentIds.length > 0 && !agentIds.includes(agent.id)) return;
+        ags.forEach(agent => {
+            if (agentIds().length > 0 && !agentIds().includes(agent.id)) return;
 
-            const st = agent.supportedTests?.find(tt => tt.testType === test.testType);
+            const st = agent.supportedTests?.find(tt => tt.testType === t.testType);
             if (st) {
                 st.requiredPayloadTypes?.forEach(r => requirements.set(r, 'REQUIRED'));
                 st.optionalPayloadTypes?.forEach(o => {
@@ -71,16 +59,16 @@ function TestRunInner({id, test, agents, extraPayloads}) {
         e.preventDefault();
         setErrorMsg(null);
 
-        if (agentIds.length === 0) {
+        if (agentIds().length === 0) {
             setErrorMsg('Please select at least one agent node.');
             return;
         }
 
         runMutation.mutate({
-            agentIds,
-            extraPayloadIds,
-            iterations: parseInt(iterations) || 1,
-            parallel: strategy === 'parallel'
+            agentIds: agentIds(),
+            extraPayloadIds: extraPayloadIds(),
+            iterations: parseInt(iterations()) || 1,
+            parallel: strategy() === 'parallel'
         });
     };
 
@@ -101,207 +89,230 @@ function TestRunInner({id, test, agents, extraPayloads}) {
     };
 
     return (
-        <Stack gap="xl" w="100%">
+        <div class="space-y-6 w-full">
             {/* Header */}
-            <Group justify="space-between" align="center">
-                <Stack gap={0}>
-                    <Title order={2}>Run Test</Title>
-                    <Text size="xs" style={{fontFamily: 'monospace'}} c="dimmed">{test.name}</Text>
-                </Stack>
-                <Button variant="light" leftSection={<IconArrowLeft size="1rem"/>} onClick={() => navigate('/tests')}>
-                    Return
-                </Button>
-            </Group>
+            <div class="flex justify-between items-center">
+                <div class="space-y-0.5">
+                    <h1 class="text-2xl font-bold">Run Test</h1>
+                    <p class="font-mono text-xs text-base-content/50">{props.test.name}</p>
+                </div>
+                <button
+                    class="btn btn-outline btn-sm flex items-center gap-1.5"
+                    onClick={() => navigate('/tests')}
+                >
+                    <ArrowLeft size={16} />
+                    <span>Return</span>
+                </button>
+            </div>
 
-            {errorMsg && (
-                <Alert title="Execution Failed" color="red" withCloseButton onClose={() => setErrorMsg(null)}>
-                    {errorMsg}
-                </Alert>
-            )}
+            <Show when={errorMsg()}>
+                <div class="alert alert-error flex justify-between items-center">
+                    <span>{errorMsg()}</span>
+                    <button class="btn btn-ghost btn-xs text-error-content" onClick={() => setErrorMsg(null)}>✕</button>
+                </div>
+            </Show>
 
-            <form onSubmit={handleSubmit}>
-                <Stack gap="md">
-                    {/* Nodes Selection */}
-                    <Card withBorder shadow="sm" radius="md" p="md">
-                        <Card.Section withBorder inheritPadding py="xs">
-                            <Text fw={600}>Nodes</Text>
-                        </Card.Section>
-
-                        <Stack gap="sm" mt="md" style={{maxHeight: '200px', overflowY: 'auto', padding: '4px'}}>
-                            {agents.length === 0 ? (
-                                <Text size="sm" c="dimmed" style={{textAlign: 'center', padding: '12px 0'}}>No active
-                                    agents.</Text>
-                            ) : (
-                                agents.map(agent => {
-                                    const supportsType = agent.supportedTestTypes?.includes(test.testType);
-                                    const checked = agentIds.includes(agent.id);
-                                    return (
-                                        <Group
-                                            key={agent.id}
-                                            justify="space-between"
-                                            align="center"
-                                            p="xs"
-                                            style={{
-                                                borderRadius: '4px',
-                                                backgroundColor: checked ? 'rgba(28, 126, 214, 0.05)' : 'transparent',
-                                                border: '1px solid rgba(255, 255, 255, 0.03)',
-                                                opacity: supportsType ? 1 : 0.5
-                                            }}
-                                        >
-                                            <Checkbox
-                                                disabled={!supportsType}
-                                                checked={checked}
-                                                onChange={(e) => handleAgentCheck(agent.id, e.currentTarget.checked)}
-                                                label={
-                                                    <Stack gap={0}>
-                                                        <Text fw={600} size="sm">{agent.name}</Text>
-                                                        <Text style={{fontFamily: 'monospace', fontSize: '11px'}}
-                                                              c="dimmed">{agent.id}</Text>
-                                                    </Stack>
-                                                }
-                                            />
-                                            <Badge color={supportsType ? 'green' : 'red'} variant="light">
-                                                {supportsType ? 'Ready' : 'Incompatible'}
-                                            </Badge>
-                                        </Group>
-                                    );
-                                })
-                            )}
-                        </Stack>
-                    </Card>
-
-                    {/* Settings */}
-                    <Card withBorder shadow="sm" radius="md" p="md">
-                        <Card.Section withBorder inheritPadding py="xs">
-                            <Text fw={600}>Settings</Text>
-                        </Card.Section>
-
-                        <Stack gap="md" mt="md">
-                            <NumberInput
-                                label="Iterations"
-                                min={1}
-                                max={1000}
-                                required
-                                value={iterations}
-                                onChange={setIterations}
-                            />
-
-                            <Radio.Group
-                                label="Strategy"
-                                value={strategy}
-                                onChange={setStrategy}
-                            >
-                                <Group mt="xs">
-                                    <Radio value="sequential" label="Sequential"/>
-                                    <Radio value="parallel" label="Parallel"/>
-                                </Group>
-                            </Radio.Group>
-                        </Stack>
-                    </Card>
-
-                    {/* Linked Payloads */}
-                    <Card withBorder shadow="sm" radius="md" p="md">
-                        <Card.Section withBorder inheritPadding py="xs">
-                            <Text fw={600}>Payloads</Text>
-                        </Card.Section>
-
-                        <Stack gap="xs" mt="md" style={{maxHeight: '200px', overflowY: 'auto', padding: '4px'}}>
-                            {(!test.payloads || test.payloads.length === 0) ? (
-                                <Text size="sm" c="dimmed" style={{textAlign: 'center', padding: '12px 0'}}>No linked
-                                    payloads.</Text>
-                            ) : (
-                                test.payloads.map(payload => (
-                                    <Group
-                                        key={payload.id}
-                                        justify="space-between"
-                                        align="center"
-                                        p="xs"
-                                        style={{
-                                            borderRadius: '4px',
-                                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
+            <form onSubmit={handleSubmit} class="space-y-6">
+                {/* Nodes Selection Card */}
+                <div class="card bg-base-100 border border-base-200 shadow-sm">
+                    <div class="card-body p-5 space-y-4">
+                        <h2 class="card-title text-base font-semibold border-b border-base-200 pb-2">Nodes</h2>
+                        <div class="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+                            <Show when={props.agents.length === 0}>
+                                <p class="text-center text-sm text-base-content/50 py-4">No active agents.</p>
+                            </Show>
+                            <Show when={props.agents.length > 0}>
+                                <div class="space-y-2">
+                                    <For each={props.agents}>
+                                        {(agent) => {
+                                            const supportsType = () => agent.supportedTestTypes?.includes(props.test.testType);
+                                            const isChecked = () => agentIds().includes(agent.id);
+                                            return (
+                                                <div 
+                                                    class={`flex items-center justify-between p-3 rounded-lg border border-base-200 transition-colors ${
+                                                        isChecked() ? 'bg-primary/5 border-primary/20' : 'bg-base-300/40'
+                                                    }`}
+                                                    style={{ opacity: supportsType() ? 1 : 0.5 }}
+                                                >
+                                                    <label class="label cursor-pointer flex justify-start items-center gap-3 w-full">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            class="checkbox checkbox-primary checkbox-sm"
+                                                            disabled={!supportsType()}
+                                                            checked={isChecked()}
+                                                            onChange={(e) => handleAgentCheck(agent.id, e.currentTarget.checked)}
+                                                        />
+                                                        <div class="flex flex-col">
+                                                            <span class="font-semibold text-sm">{agent.name}</span>
+                                                            <span class="font-mono text-xs text-base-content/50">{agent.id}</span>
+                                                        </div>
+                                                    </label>
+                                                    <span class={`badge badge-sm font-bold ${
+                                                        supportsType() ? 'badge-success text-success-content' : 'badge-error text-error-content'
+                                                    }`}>
+                                                        {supportsType() ? 'Ready' : 'Incompatible'}
+                                                    </span>
+                                                </div>
+                                            );
                                         }}
-                                    >
-                                        <Text fw={600} size="sm">{payload.name}</Text>
-                                        <Badge color="orange" variant="light"
-                                               style={{fontFamily: 'monospace'}}>{payload.type}</Badge>
-                                    </Group>
-                                ))
-                            )}
-                        </Stack>
-                    </Card>
+                                    </For>
+                                </div>
+                            </Show>
+                        </div>
+                    </div>
+                </div>
 
-                    {/* Extra Payloads */}
-                    <Card withBorder shadow="sm" radius="md" p="md">
-                        <Card.Section withBorder inheritPadding py="xs">
-                            <Text fw={600}>Extras</Text>
-                        </Card.Section>
+                {/* Settings Card */}
+                <div class="card bg-base-100 border border-base-200 shadow-sm">
+                    <div class="card-body p-5 space-y-4">
+                        <h2 class="card-title text-base font-semibold border-b border-base-200 pb-2">Settings</h2>
 
-                        <Stack gap="sm" mt="md" style={{maxHeight: '200px', overflowY: 'auto', padding: '4px'}}>
-                            {extraPayloads.length === 0 ? (
-                                <Text size="sm" c="dimmed" style={{textAlign: 'center', padding: '12px 0'}}>No
-                                    compatible extras available.</Text>
-                            ) : (
-                                extraPayloads.map(payload => {
-                                    const reqState = getPayloadRequirement(payload.type);
-                                    const checked = extraPayloadIds.includes(payload.id);
-                                    return (
-                                        <Group
-                                            key={payload.id}
-                                            justify="space-between"
-                                            align="center"
-                                            p="xs"
-                                            style={{
-                                                borderRadius: '4px',
-                                                backgroundColor: checked ? 'rgba(28, 126, 214, 0.05)' : 'transparent',
-                                                border: '1px solid rgba(255, 255, 255, 0.03)'
-                                            }}
-                                        >
-                                            <Checkbox
-                                                checked={checked}
-                                                onChange={(e) => handleExtraCheck(payload.id, e.currentTarget.checked)}
-                                                label={
-                                                    <Stack gap={0}>
-                                                        <Text fw={600} size="sm">{payload.name}</Text>
-                                                        <Text style={{fontFamily: 'monospace', fontSize: '11px'}}
-                                                              c="dimmed">{payload.type}</Text>
-                                                    </Stack>
-                                                }
-                                            />
-                                            {reqState && (
-                                                <Badge color={reqState === 'REQUIRED' ? 'red' : 'green'} size="xs">
-                                                    {reqState}
-                                                </Badge>
-                                            )}
-                                        </Group>
-                                    );
-                                })
-                            )}
-                        </Stack>
-                    </Card>
+                        <div class="form-control w-full">
+                            <label class="label">
+                                <span class="label-text font-semibold">Iterations</span>
+                            </label>
+                            <input
+                                type="number"
+                                min="1"
+                                max="1000"
+                                required
+                                class="input input-bordered w-full"
+                                value={iterations()}
+                                onInput={(e) => setIterations(parseInt(e.currentTarget.value) || 1)}
+                            />
+                        </div>
 
-                    <Button
-                        type="submit"
-                        leftSection={<IconPlayerPlay size="1rem"/>}
-                        loading={runMutation.isPending}
-                        size="md"
-                        mt="md"
-                    >
-                        Start Run
-                    </Button>
-                </Stack>
+                        <div class="form-control">
+                            <label class="label font-semibold">
+                                <span class="label-text">Strategy</span>
+                            </label>
+                            <div class="flex items-center gap-6 mt-1">
+                                <label class="label cursor-pointer flex items-center gap-2">
+                                    <input 
+                                        type="radio" 
+                                        name="strategy" 
+                                        class="radio radio-primary" 
+                                        value="sequential"
+                                        checked={strategy() === 'sequential'} 
+                                        onChange={() => setStrategy('sequential')}
+                                    />
+                                    <span class="label-text">Sequential</span>
+                                </label>
+                                <label class="label cursor-pointer flex items-center gap-2">
+                                    <input 
+                                        type="radio" 
+                                        name="strategy" 
+                                        class="radio radio-primary" 
+                                        value="parallel"
+                                        checked={strategy() === 'parallel'} 
+                                        onChange={() => setStrategy('parallel')}
+                                    />
+                                    <span class="label-text">Parallel</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Linked Payloads Card */}
+                <div class="card bg-base-100 border border-base-200 shadow-sm">
+                    <div class="card-body p-5 space-y-4">
+                        <h2 class="card-title text-base font-semibold border-b border-base-200 pb-2">Payloads</h2>
+                        <div class="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+                            <Show when={!props.test.payloads || props.test.payloads.length === 0}>
+                                <p class="text-center text-sm text-base-content/50 py-4">No linked payloads.</p>
+                            </Show>
+                            <Show when={props.test.payloads && props.test.payloads.length > 0}>
+                                <div class="divide-y divide-base-200">
+                                    <For each={props.test.payloads}>
+                                        {(payload) => (
+                                            <div class="flex justify-between items-center py-2.5 first:pt-0 last:pb-0">
+                                                <span class="font-semibold text-sm">{payload.name}</span>
+                                                <span class="badge badge-warning badge-sm font-mono">{payload.type}</span>
+                                            </div>
+                                        )}
+                                    </For>
+                                </div>
+                            </Show>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Extra Payloads Card */}
+                <div class="card bg-base-100 border border-base-200 shadow-sm">
+                    <div class="card-body p-5 space-y-4">
+                        <h2 class="card-title text-base font-semibold border-b border-base-200 pb-2">Extras</h2>
+                        <div class="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+                            <Show when={props.extraPayloads.length === 0}>
+                                <p class="text-center text-sm text-base-content/50 py-4">No compatible extras available.</p>
+                            </Show>
+                            <Show when={props.extraPayloads.length > 0}>
+                                <div class="space-y-2">
+                                    <For each={props.extraPayloads}>
+                                        {(payload) => {
+                                            const reqState = () => getPayloadRequirement(payload.type);
+                                            const isChecked = () => extraPayloadIds().includes(payload.id);
+                                            return (
+                                                <div 
+                                                    class={`flex items-center justify-between p-3 rounded-lg border border-base-200 transition-colors ${
+                                                        isChecked() ? 'bg-primary/5 border-primary/20' : 'bg-base-300/40'
+                                                    }`}
+                                                >
+                                                    <label class="label cursor-pointer flex justify-start items-center gap-3 w-full">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            class="checkbox checkbox-primary checkbox-sm"
+                                                            checked={isChecked()}
+                                                            onChange={(e) => handleExtraCheck(payload.id, e.currentTarget.checked)}
+                                                        />
+                                                        <div class="flex flex-col">
+                                                            <span class="font-semibold text-sm">{payload.name}</span>
+                                                            <span class="font-mono text-xs text-base-content/50">{payload.type}</span>
+                                                        </div>
+                                                    </label>
+                                                    <Show when={reqState()}>
+                                                        <span class={`badge badge-sm shrink-0 font-bold ${
+                                                            reqState() === 'REQUIRED' ? 'badge-error text-error-content' : 'badge-success text-success-content'
+                                                        }`}>
+                                                            {reqState()}
+                                                        </span>
+                                                    </Show>
+                                                </div>
+                                            );
+                                        }}
+                                    </For>
+                                </div>
+                            </Show>
+                        </div>
+                    </div>
+                </div>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary w-full flex items-center gap-2"
+                    disabled={runMutation.isPending}
+                >
+                    <Show when={runMutation.isPending}>
+                        <span class="loading loading-spinner loading-sm"></span>
+                    </Show>
+                    <Show when={!runMutation.isPending}>
+                        <Play size={18} />
+                    </Show>
+                    <span>Start Run</span>
+                </button>
             </form>
-        </Stack>
+        </div>
     );
 }
 
 export default function TestRun() {
-    const {id} = useParams();
+    const params = useParams();
 
-    const {data, isPending: loading, error} = useQuery({
-        queryKey: ['test-run-context', id],
+    const runContextQuery = createQuery(() => ({
+        queryKey: ['test-run-context', params.id],
         queryFn: async () => {
             const [test, agents, payloads] = await Promise.all([
-                safeFetch(`/api/tests/${id}`),
+                safeFetch(`/api/tests/${params.id}`),
                 safeFetch('/api/agents'),
                 safeFetch('/api/payloads')
             ]);
@@ -318,37 +329,38 @@ export default function TestRun() {
             const linkedIds = new Set(test.payloads?.map(p => p.id) || []);
             const extraPayloads = payloads.filter(p => !linkedIds.has(p.id) && compatibleTypes.has(p.type));
 
-            return {test, agents, extraPayloads};
+            return { test, agents, extraPayloads };
         }
-    });
+    }));
 
-    if (loading) {
-        return (
-            <Center style={{height: '50vh'}}>
-                <Stack align="center" gap="sm">
-                    <Loader size="md"/>
-                    <Text size="sm" c="dimmed">Loading Run context...</Text>
-                </Stack>
-            </Center>
-        );
-    }
-
-    if (error) {
-        return (
-            <Card withBorder style={{borderColor: 'red'}} radius="md" p="md">
-                <Text c="red" fw={600}>Error: {error.message}</Text>
-            </Card>
-        );
-    }
+    const isLoading = () => runContextQuery.isPending;
+    const hasError = () => runContextQuery.error;
+    const errorMessage = () => runContextQuery.error?.message || String(runContextQuery.error);
 
     return (
-        <div style={{maxWidth: 800, margin: '0 auto', width: '100%'}}>
-            <TestRunInner
-                id={id}
-                test={data.test}
-                agents={data.agents}
-                extraPayloads={data.extraPayloads}
-            />
+        <div class="max-w-3xl mx-auto w-full">
+            <Title>Run Test | TestState</Title>
+            <Show when={isLoading()}>
+                <div class="flex flex-col items-center justify-center min-h-[30vh] gap-3">
+                    <span class="loading loading-spinner loading-md text-primary"></span>
+                    <p class="text-sm text-base-content/60">Loading Run context...</p>
+                </div>
+            </Show>
+
+            <Show when={hasError()}>
+                <div class="alert alert-error">
+                    <span>Error: {errorMessage()}</span>
+                </div>
+            </Show>
+
+            <Show when={!isLoading() && !hasError()}>
+                <TestRunInner
+                    id={params.id}
+                    test={runContextQuery.data.test}
+                    agents={runContextQuery.data.agents}
+                    extraPayloads={runContextQuery.data.extraPayloads}
+                />
+            </Show>
         </div>
     );
 }

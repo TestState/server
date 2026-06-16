@@ -1,115 +1,86 @@
-import React, {useEffect, useRef, useState} from 'react';
-import {safeFetch} from '../utils/safeFetch';
-import {getCleanStatus, getDisplayDuration, getStatusColor} from '../utils/format';
-import {useNavigate, useParams} from 'react-router-dom';
-import {useQuery, useQueryClient} from '@tanstack/react-query';
-import {
-    Accordion,
-    Alert,
-    Badge,
-    Button,
-    Card,
-    Center,
-    Group,
-    Image,
-    Loader,
-    SimpleGrid,
-    Stack,
-    Text,
-    Title
-} from '@mantine/core';
-import {IconArrowLeft, IconCode, IconDownload, IconExternalLink} from '@tabler/icons-react';
+import { createSignal, createEffect, onCleanup, Show, For } from 'solid-js';
+import { Title } from '@solidjs/meta';
+import { safeFetch } from '../utils/safeFetch';
+import { getCleanStatus, getDisplayDuration, getStatusColor } from '../utils/format';
+import { useNavigate, useParams } from '@solidjs/router';
+import { createQuery, useQueryClient } from '@tanstack/solid-query';
+import { ArrowLeft, ExternalLink, Code, Download } from 'lucide-solid';
 
+function StepCard(props) {
+    const status = () => props.step.status || 'PENDING';
+    const displayStatus = () => getCleanStatus(status());
 
-function StepCard({step}) {
-    const status = step.status || 'PENDING';
-    const displayStatus = getCleanStatus(status);
-
-    const metadata = step.summary?.metadata || {};
-    const hasMetadata = Object.keys(metadata).length > 0;
-    const hasSubSteps = step.steps && step.steps.length > 0;
-    const duration = step.summary?.totalDuration ?? 0;
+    const metadata = () => props.step.summary?.metadata || {};
+    const hasMetadata = () => Object.keys(metadata()).length > 0;
+    const hasSubSteps = () => props.step.steps && props.step.steps.length > 0;
+    const duration = () => props.step.summary?.totalDuration ?? 0;
 
     return (
-        <Accordion variant="contained" radius="md" style={{marginBottom: 8}}>
-            <Accordion.Item value={step.name || 'Unnamed Step'}>
-                <Accordion.Control>
-                    <Group justify="space-between" style={{width: '100%'}} wrap="wrap">
-                        <Group gap="xs">
-                            <Badge color={getStatusColor(status)} size="xs" variant="filled">
-                                {displayStatus}
-                            </Badge>
-                            <Text fw={600} size="xs">{step.name || 'Unnamed Step'}</Text>
-                        </Group>
-                        <Text size="xs" style={{fontFamily: 'monospace'}}
-                              c="dimmed">{getDisplayDuration(duration)}</Text>
-                    </Group>
-                </Accordion.Control>
-                <Accordion.Panel>
-                    <Stack gap="xs">
-                        {hasMetadata && (
-                            <pre style={{
-                                backgroundColor: '#141414',
-                                color: '#1c7ed6',
-                                padding: '8px 12px',
-                                borderRadius: '6px',
-                                overflowX: 'auto',
-                                fontSize: '11px',
-                                fontFamily: 'monospace',
-                                margin: 0
-                            }}>
-                {JSON.stringify(metadata, null, 2)}
-              </pre>
-                        )}
-                        {hasSubSteps && (
-                            <div style={{
-                                paddingLeft: 12,
-                                borderLeft: '1px solid rgba(255, 255, 255, 0.1)',
-                                marginTop: 8
-                            }}>
-                                {step.steps.map((subStep, idx) => (
-                                    <StepCard key={idx} step={subStep}/>
-                                ))}
-                            </div>
-                        )}
-                    </Stack>
-                </Accordion.Panel>
-            </Accordion.Item>
-        </Accordion>
+        <div class="collapse collapse-arrow bg-base-300 border border-base-200 shadow-sm rounded-lg mb-2">
+            <input type="checkbox" />
+            <div class="collapse-title text-sm font-bold flex justify-between items-center pr-10">
+                <div class="flex items-center gap-2">
+                    <span class={`badge badge-sm ${getStatusColor(status())}`}>
+                        {displayStatus()}
+                    </span>
+                    <span>{props.step.name || 'Unnamed Step'}</span>
+                </div>
+                <span class="font-mono text-xs text-base-content/50">{getDisplayDuration(duration())}</span>
+            </div>
+            <div class="collapse-content space-y-3">
+                <Show when={hasMetadata()}>
+                    <pre class="bg-black text-primary p-3 rounded-lg overflow-x-auto text-xs font-mono">
+                        {JSON.stringify(metadata(), null, 2)}
+                    </pre>
+                </Show>
+                <Show when={hasSubSteps()}>
+                    <div class="pl-3 border-l-2 border-base-200 mt-2 space-y-2">
+                        <For each={props.step.steps}>
+                            {(subStep, idx) => (
+                                <StepCard step={subStep} />
+                            )}
+                        </For>
+                    </div>
+                </Show>
+            </div>
+        </div>
     );
 }
 
 export default function TestStatus() {
-    const {sessionId} = useParams();
+    const params = useParams();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
-    const [telemetryLogs, setTelemetryLogs] = useState([]);
-    const logsEndRef = useRef(null);
+    const [telemetryLogs, setTelemetryLogs] = createSignal([]);
+    let logsEndRef;
 
-    const {data: session, isPending: loading, error} = useQuery({
-        queryKey: ['testSession', sessionId],
-        queryFn: () => safeFetch(`/api/tests/sessions/${sessionId}`)
-    });
+    const sessionQuery = createQuery(() => ({
+        queryKey: ['testSession', params.sessionId],
+        queryFn: () => safeFetch(`/api/tests/sessions/${params.sessionId}`)
+    }));
 
-    useEffect(() => {
+    createEffect(() => {
+        const sess = session();
+        if (!sess || sess.terminal) return;
+
         let active = true;
         let ws;
 
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const host = window.location.host;
-        ws = new WebSocket(`${protocol}//${host}/telemetry/test/${sessionId}`);
+        ws = new WebSocket(`${protocol}//${host}/telemetry/test/${params.sessionId}`);
 
         ws.onmessage = (event) => {
             if (!active) return;
             try {
                 const msg = JSON.parse(event.data);
                 if (msg.type === 'STATUS') {
-                    queryClient.setQueryData(['testSession', sessionId], prev =>
-                        prev ? {...prev, status: msg.state, statusMessage: msg.message} : null
+                    queryClient.setQueryData(['testSession', params.sessionId], prev =>
+                        prev ? { ...prev, status: msg.state, statusMessage: msg.message } : null
                     );
                 } else if (msg.type === 'RESULT') {
-                    queryClient.setQueryData(['testSession', sessionId], prev =>
-                        prev ? {...prev, result: msg.result} : null
+                    queryClient.setQueryData(['testSession', params.sessionId], prev =>
+                        prev ? { ...prev, result: msg.result } : null
                     );
                 } else if (msg.type === 'TELEMETRY') {
                     setTelemetryLogs(prev => [...prev, msg]);
@@ -123,262 +94,233 @@ export default function TestStatus() {
             console.warn("WebSocket encountered error", err);
         };
 
-        return () => {
+        onCleanup(() => {
             active = false;
             if (ws) ws.close();
-        };
-    }, [sessionId, queryClient]);
+        });
+    });
 
-    useEffect(() => {
-        logsEndRef.current?.scrollIntoView({behavior: 'smooth'});
-    }, [telemetryLogs]);
+    createEffect(() => {
+        telemetryLogs();
+        if (logsEndRef) {
+            logsEndRef.scrollIntoView({ behavior: 'smooth' });
+        }
+    });
 
-    if (loading) {
-        return (
-            <Center style={{height: '50vh'}}>
-                <Stack align="center" gap="sm">
-                    <Loader size="md"/>
-                    <Text size="sm" c="dimmed">Waiting...</Text>
-                </Stack>
-            </Center>
-        );
-    }
-
-    if (error) {
-        return (
-            <Card withBorder style={{borderColor: 'red'}} radius="md" p="md">
-                <Text c="red" fw={600}>Error: {error.message}</Text>
-            </Card>
-        );
-    }
-
-    if (!session) {
-        return (
-            <Card withBorder style={{borderColor: 'red'}} radius="md" p="md">
-                <Stack gap="md">
-                    <Text c="red" fw={600}>Session not found.</Text>
-                    <Button leftSection={<IconArrowLeft size="1rem"/>} onClick={() => navigate('/tests')}>
-                        Back to Tests
-                    </Button>
-                </Stack>
-            </Card>
-        );
-    }
+    const session = () => sessionQuery.data;
+    const isLoading = () => sessionQuery.isPending;
+    const hasError = () => sessionQuery.error;
+    const errorMessage = () => sessionQuery.error?.message || String(sessionQuery.error);
 
     const getAttachmentDownloadUrl = (index) => {
-        return `/api/tests/sessions/${sessionId}/attachments/${index}`;
+        return `/api/tests/sessions/${params.sessionId}/attachments/${index}`;
     };
 
-    const hasResult = !!session.result;
-    const resultData = session.result;
-    const reports = resultData?.reports || [];
-    const attachments = resultData?.attachments || [];
-    const summary = resultData?.summary;
+    const hasResult = () => !!session()?.result;
+    const resultData = () => session()?.result;
+    const reports = () => resultData()?.reports || [];
+    const attachments = () => resultData()?.attachments || [];
+    const summary = () => resultData()?.summary;
 
     return (
-        <Stack gap="xl" w="100%">
+        <div class="space-y-6 w-full">
+            <Title>Session {params.sessionId} Status | TestState</Title>
             {/* Header */}
-            <Group justify="space-between" align="center" wrap="wrap">
-                <Stack gap={0}>
-                    <Title order={2}>Session Status</Title>
-                    <Text size="xs" style={{fontFamily: 'monospace'}} c="dimmed">{sessionId}</Text>
-                </Stack>
-                <Group gap="sm">
-                    <Button
-                        variant="light"
-                        leftSection={<IconExternalLink size="1rem"/>}
-                        component="a"
-                        href={`/api/tests/sessions/${sessionId}/report`}
-                        target="_blank"
-                        rel="noreferrer"
-                    >
-                        Export
-                    </Button>
-                    <Button
-                        variant="light"
-                        leftSection={<IconCode size="1rem"/>}
-                        component="a"
-                        href={`/api/tests/sessions/${sessionId}/report?full=true`}
-                        target="_blank"
-                        rel="noreferrer"
-                    >
-                        JSON
-                    </Button>
-                    <Button variant="light" leftSection={<IconArrowLeft size="1rem"/>}
-                            onClick={() => navigate('/tests')}>
-                        Return
-                    </Button>
-                </Group>
-            </Group>
-
-            {/* Progress Section */}
-            <Card withBorder shadow="sm" radius="md" p="md">
-                <Card.Section withBorder inheritPadding py="xs">
-                    <Group justify="space-between" align="center">
-                        <Text fw={600}>Progress</Text>
-                        <Badge color={getStatusColor(session.status)} variant="filled">
-                            {getCleanStatus(session.status)}
-                        </Badge>
-                    </Group>
-                </Card.Section>
-
-                <SimpleGrid cols={{base: 1, sm: 3}} spacing="md" mt="md" mb="md"
-                            style={{borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: 16}}>
-                    <Stack gap={0}>
-                        <Text size="xs" c="dimmed">Agent Name</Text>
-                        <Text fw={600}>{session.agentName || 'N/A'}</Text>
-                    </Stack>
-                    <Stack gap={0}>
-                        <Text size="xs" c="dimmed">Agent ID</Text>
-                        <Text style={{fontFamily: 'monospace', fontSize: '11px'}}>{session.agentId || 'N/A'}</Text>
-                    </Stack>
-                    <Stack gap={0}>
-                        <Text size="xs" c="dimmed">Negotiation Time</Text>
-                        <Text
-                            fw={600}>{session.negotiationDurationMs ? `${session.negotiationDurationMs} ms` : 'N/A'}</Text>
-                    </Stack>
-                </SimpleGrid>
-
-                {session.statusMessage && (
-                    <Alert color="blue" title="Status Message" mb="md">
-                        {session.statusMessage}
-                    </Alert>
-                )}
-
-                {reports.length > 0 && (
-                    <Stack gap="xs" mt="md">
-                        <Text fw={600} size="sm">Execution Steps</Text>
-                        <div>
-                            {reports.map((report, idx) => (
-                                <StepCard key={idx} step={report}/>
-                            ))}
-                        </div>
-                    </Stack>
-                )}
-            </Card>
-
-            {/* Summary Section */}
-            {hasResult && summary && (
-                <Card withBorder shadow="sm" radius="md" p="md">
-                    <Card.Section withBorder inheritPadding py="xs">
-                        <Text fw={600}>Summary</Text>
-                    </Card.Section>
-                    <Stack gap="xs" mt="md">
-                        <Group gap="xs">
-                            <Text size="sm" c="dimmed">Duration:</Text>
-                            <Text fw={600}
-                                  style={{fontFamily: 'monospace'}}>{getDisplayDuration(summary.totalDuration)}</Text>
-                        </Group>
-                        {summary.metadata && Object.keys(summary.metadata).length > 0 && (
-                            <pre style={{
-                                backgroundColor: '#141414',
-                                color: '#1c7ed6',
-                                padding: 16,
-                                borderRadius: '8px',
-                                overflowX: 'auto',
-                                fontSize: '12px',
-                                fontFamily: 'monospace',
-                                margin: 0
-                            }}>
-                {JSON.stringify(summary.metadata, null, 2)}
-              </pre>
-                        )}
-                    </Stack>
-                </Card>
-            )}
-
-            {/* Assets Section */}
-            {hasResult && attachments.length > 0 && (
-                <Card withBorder shadow="sm" radius="md" p="md">
-                    <Card.Section withBorder inheritPadding py="xs">
-                        <Text fw={600}>Assets</Text>
-                    </Card.Section>
-
-                    <SimpleGrid cols={{base: 1, sm: 2, md: 3}} spacing="md" mt="md">
-                        {attachments.map((attachment, index) => {
-                            const url = getAttachmentDownloadUrl(index);
-                            const isImage = attachment.mimeType?.startsWith('image/');
-                            return (
-                                <Card key={index} withBorder p="xs"
-                                      style={{textAlign: 'center', backgroundColor: 'rgba(255,255,255,0.01)'}}>
-                                    <Text fw={600} size="sm" truncate title={attachment.name} mb="xs">
-                                        {attachment.name}
-                                    </Text>
-                                    <Text size="xs" c="dimmed" mb="md">
-                                        {attachment.mimeType}
-                                    </Text>
-                                    {isImage && (
-                                        <div style={{
-                                            display: 'flex',
-                                            justifyContent: 'center',
-                                            height: 120,
-                                            alignItems: 'center',
-                                            backgroundColor: '#141414',
-                                            borderRadius: '4px',
-                                            overflow: 'hidden',
-                                            marginBottom: 12
-                                        }}>
-                                            <Image
-                                                src={url}
-                                                alt={attachment.name}
-                                                fit="contain"
-                                                height={110}
-                                            />
-                                        </div>
-                                    )}
-                                    <Button
-                                        variant="light"
-                                        size="xs"
-                                        leftSection={<IconDownload size="0.8rem"/>}
-                                        component="a"
-                                        href={url}
-                                        download={attachment.name}
-                                    >
-                                        Download
-                                    </Button>
-                                </Card>
-                            );
-                        })}
-                    </SimpleGrid>
-                </Card>
-            )}
-
-            {/* Logs Section */}
-            <Card withBorder shadow="sm" radius="md" p="md">
-                <Card.Section withBorder inheritPadding py="xs">
-                    <Text fw={600}>Logs</Text>
-                </Card.Section>
-                <div
-                    style={{
-                        backgroundColor: '#141414',
-                        padding: '12px 16px',
-                        borderRadius: '8px',
-                        border: '1px solid #303030',
-                        maxHeight: '250px',
-                        overflowY: 'auto',
-                        fontFamily: 'monospace',
-                        fontSize: '11px',
-                        marginTop: '12px'
-                    }}
-                >
-                    {telemetryLogs.length === 0 ? (
-                        <div style={{color: 'rgba(255,255,255,0.3)', fontStyle: 'italic'}}>Awaiting telemetry
-                            logs...</div>
-                    ) : (
-                        telemetryLogs.map((log, idx) => {
-                            let logColor = '#b7eb8f'; // Info color
-                            if (log.level === 'ERROR') logColor = '#ff4d4f';
-                            else if (log.level === 'WARNING') logColor = '#ffc069';
-                            return (
-                                <div key={idx} style={{color: logColor, marginBottom: 4}}>
-                                    [{new Date(log.timestamp).toLocaleTimeString()}] [{log.level}] {log.message}
-                                </div>
-                            );
-                        })
-                    )}
-                    <div ref={logsEndRef}/>
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div class="space-y-0.5">
+                    <h1 class="text-2xl font-bold">Session Status</h1>
+                    <p class="font-mono text-xs text-base-content/50">{params.sessionId}</p>
                 </div>
-            </Card>
-        </Stack>
+                <div class="flex flex-wrap gap-2">
+                    <a
+                        href={`/api/tests/sessions/${params.sessionId}/report`}
+                        target="_blank"
+                        rel="noreferrer"
+                        class="btn btn-outline btn-sm flex items-center gap-1"
+                    >
+                        <ExternalLink size={14} />
+                        <span>Export</span>
+                    </a>
+                    <a
+                        href={`/api/tests/sessions/${params.sessionId}/report?full=true`}
+                        target="_blank"
+                        rel="noreferrer"
+                        class="btn btn-outline btn-sm flex items-center gap-1"
+                    >
+                        <Code size={14} />
+                        <span>JSON</span>
+                    </a>
+                    <button
+                        class="btn btn-outline btn-sm flex items-center gap-1.5"
+                        onClick={() => navigate('/tests')}
+                    >
+                        <ArrowLeft size={16} />
+                        <span>Return</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Content states */}
+            <Show when={isLoading()}>
+                <div class="flex flex-col items-center justify-center min-h-[30vh] gap-3">
+                    <span class="loading loading-spinner loading-md text-primary"></span>
+                    <p class="text-sm text-base-content/60">Waiting...</p>
+                </div>
+            </Show>
+
+            <Show when={!isLoading() && hasError()}>
+                <div class="alert alert-error">
+                    <span>Error: {errorMessage()}</span>
+                </div>
+            </Show>
+
+            <Show when={!isLoading() && !hasError() && !session()}>
+                <div class="alert alert-error flex flex-col items-start gap-4">
+                    <span>Session not found.</span>
+                    <button class="btn btn-sm" onClick={() => navigate('/tests')}>
+                        Back to Tests
+                    </button>
+                </div>
+            </Show>
+
+            <Show when={!isLoading() && !hasError() && session()}>
+                {/* Progress Section */}
+                <div class="card bg-base-100 border border-base-200 shadow-sm">
+                    <div class="card-body p-5 space-y-4">
+                        <div class="flex justify-between items-center border-b border-base-200 pb-2">
+                            <h2 class="card-title text-base font-semibold">Progress</h2>
+                            <span class={`badge ${getStatusColor(session().status)}`}>
+                                {getCleanStatus(session().status)}
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pb-4 border-b border-base-200">
+                            <div class="flex flex-col gap-0.5">
+                                <span class="text-xs text-base-content/50">Agent Name</span>
+                                <span class="font-semibold">{session().agentName || 'N/A'}</span>
+                            </div>
+                            <div class="flex flex-col gap-0.5">
+                                <span class="text-xs text-base-content/50">Agent ID</span>
+                                <span class="font-mono text-xs">{session().agentId || 'N/A'}</span>
+                            </div>
+                            <div class="flex flex-col gap-0.5">
+                                <span class="text-xs text-base-content/50">Negotiation Time</span>
+                                <span class="font-semibold">{session().negotiationDurationMs ? `${session().negotiationDurationMs} ms` : 'N/A'}</span>
+                            </div>
+                        </div>
+
+                        <Show when={session().statusMessage}>
+                            <div class="alert alert-info py-3 text-sm">
+                                <span>{session().statusMessage}</span>
+                            </div>
+                        </Show>
+
+                        <Show when={reports().length > 0}>
+                            <div class="space-y-2 pt-2">
+                                <h3 class="font-semibold text-sm">Execution Steps</h3>
+                                <div>
+                                    <For each={reports()}>
+                                        {(report) => (
+                                            <StepCard step={report} />
+                                        )}
+                                    </For>
+                                </div>
+                            </div>
+                        </Show>
+                    </div>
+                </div>
+
+                {/* Summary Section */}
+                <Show when={hasResult() && summary()}>
+                    <div class="card bg-base-100 border border-base-200 shadow-sm">
+                        <div class="card-body p-5 space-y-4">
+                            <h2 class="card-title text-base font-semibold border-b border-base-200 pb-2">Summary</h2>
+                            <div class="space-y-2">
+                                <div class="flex items-center gap-2 text-sm">
+                                    <span class="text-base-content/50">Duration:</span>
+                                    <span class="font-mono font-semibold">{getDisplayDuration(summary().totalDuration)}</span>
+                                </div>
+                                <Show when={summary().metadata && Object.keys(summary().metadata).length > 0}>
+                                    <pre class="bg-black text-primary p-4 rounded-lg overflow-x-auto text-xs font-mono">
+                                        {JSON.stringify(summary().metadata, null, 2)}
+                                    </pre>
+                                </Show>
+                            </div>
+                        </div>
+                    </div>
+                </Show>
+
+                {/* Assets Section */}
+                <Show when={hasResult() && attachments().length > 0}>
+                    <div class="card bg-base-100 border border-base-200 shadow-sm">
+                        <div class="card-body p-5 space-y-4">
+                            <h2 class="card-title text-base font-semibold border-b border-base-200 pb-2">Assets</h2>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                <For each={attachments()}>
+                                    {(attachment, index) => {
+                                        const url = getAttachmentDownloadUrl(index());
+                                        const isImage = attachment.mimeType?.startsWith('image/');
+                                        return (
+                                            <div class="card bg-base-300 border border-base-200 p-4 text-center flex flex-col justify-between items-center gap-2">
+                                                <div class="w-full text-center">
+                                                    <h3 class="font-semibold text-sm truncate w-full" title={attachment.name}>
+                                                        {attachment.name}
+                                                    </h3>
+                                                    <p class="text-xs text-base-content/50 mt-0.5">{attachment.mimeType}</p>
+                                                </div>
+                                                <Show when={isImage}>
+                                                    <div class="w-full h-28 bg-black flex items-center justify-center rounded overflow-hidden mt-1">
+                                                        <img
+                                                            src={url}
+                                                            alt={attachment.name}
+                                                            class="max-h-full max-w-full object-contain"
+                                                        />
+                                                    </div>
+                                                </Show>
+                                                <a
+                                                    href={url}
+                                                    download={attachment.name}
+                                                    class="btn btn-xs btn-outline flex items-center gap-1.5 w-full mt-2"
+                                                >
+                                                    <Download size={12} />
+                                                    <span>Download</span>
+                                                </a>
+                                            </div>
+                                        );
+                                    }}
+                                </For>
+                            </div>
+                        </div>
+                    </div>
+                </Show>
+
+                {/* Logs Section */}
+                <div class="card bg-base-100 border border-base-200 shadow-sm">
+                    <div class="card-body p-5 space-y-3">
+                        <h2 class="card-title text-base font-semibold border-b border-base-200 pb-2">Logs</h2>
+                        <div class="bg-black p-4 rounded-lg border border-base-200 max-h-[250px] overflow-y-auto font-mono text-xs">
+                            <Show when={telemetryLogs().length === 0}>
+                                <div class="text-base-content/30 italic">Awaiting telemetry logs...</div>
+                            </Show>
+                            <Show when={telemetryLogs().length > 0}>
+                                <For each={telemetryLogs()}>
+                                    {(log) => {
+                                        let logColor = 'text-success'; // Info color
+                                        if (log.level === 'ERROR') logColor = 'text-error';
+                                        else if (log.level === 'WARNING') logColor = 'text-warning';
+                                        return (
+                                            <div class={`${logColor} mb-1`}>
+                                                [{new Date(log.timestamp).toLocaleTimeString()}] [{log.level}] {log.message}
+                                            </div>
+                                        );
+                                    }}
+                                </For>
+                            </Show>
+                            <div ref={logsEndRef} />
+                        </div>
+                    </div>
+                </div>
+            </Show>
+        </div>
     );
 }

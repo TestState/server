@@ -19,6 +19,7 @@ import me.hsgamer.teststate.cms.persistence.PayloadEntity;
 import me.hsgamer.teststate.cms.persistence.TestEntity;
 import me.hsgamer.teststate.cms.service.*;
 import me.hsgamer.teststate.cms.util.ProtoUtil;
+import me.hsgamer.teststate.cms.util.StatusUtil;
 import me.hsgamer.teststate.uap.v1.Attachment;
 import me.hsgamer.teststate.uap.v1.TestResult;
 
@@ -218,6 +219,7 @@ public class TestWebResource {
         report.put("throughput", batch.getThroughput());
         report.put("duration",  batch.getDuration());
         report.put("averageNegotiationDuration", batch.getAverageNegotiationDuration());
+        report.put("terminal", StatusUtil.isTerminal(batch.getStatus()));
 
         var results = batch.getSessions().stream().map(s -> resultToMap(s, false)).toList();
         report.put("sessions", results);
@@ -245,6 +247,7 @@ public class TestWebResource {
         entry.put("sessionId", session.getSessionId());
         entry.put("negotiationDurationMs", session.getNegotiationDurationMs());
         entry.put("status", session.getStatus() != null ? session.getStatus().getState().name() : "PENDING");
+        entry.put("terminal", session.getStatus() != null && StatusUtil.isTerminal(session.getStatus().getState()));
         if (session.getStatus() != null && session.getStatus().getMessage() != null) {
             entry.put("statusMessage", session.getStatus().getMessage());
         }

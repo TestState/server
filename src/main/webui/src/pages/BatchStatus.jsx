@@ -1,59 +1,49 @@
-import React, {useEffect} from 'react';
-import {safeFetch} from '../utils/safeFetch';
-import {getCleanStatus, getStatusColor} from '../utils/format';
-import {useNavigate, useParams} from 'react-router-dom';
-import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
-import {
-    Badge,
-    Button,
-    Card,
-    Center,
-    Group,
-    Loader,
-    Progress,
-    SimpleGrid,
-    Stack,
-    Table,
-    Text,
-    Title
-} from '@mantine/core';
-import {IconArrowLeft, IconCircleX, IconCode, IconDownload} from '@tabler/icons-react';
+import { createSignal, createEffect, onCleanup, Show, For } from 'solid-js';
+import { Title } from '@solidjs/meta';
+import { safeFetch } from '../utils/safeFetch';
+import { getCleanStatus, getStatusColor } from '../utils/format';
+import { useNavigate, useParams } from '@solidjs/router';
+import { createMutation, createQuery, useQueryClient } from '@tanstack/solid-query';
+import { ArrowLeft, Download, Code, XCircle } from 'lucide-solid';
 
 export default function BatchStatus() {
-    const {batchId} = useParams();
+    const params = useParams();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
 
-    const {data: batch, isPending: loading, error} = useQuery({
-        queryKey: ['batch', batchId],
-        queryFn: () => safeFetch(`/api/tests/batches/${batchId}`)
-    });
+    const batchQuery = createQuery(() => ({
+        queryKey: ['batch', params.batchId],
+        queryFn: () => safeFetch(`/api/tests/batches/${params.batchId}`)
+    }));
 
-    const cancelMutation = useMutation({
-        mutationFn: () => safeFetch(`/api/tests/batches/${batchId}/cancel`, {method: 'POST'}),
+    const cancelMutation = createMutation(() => ({
+        mutationFn: () => safeFetch(`/api/tests/batches/${params.batchId}/cancel`, { method: 'POST' }),
         onSuccess: () => {
             alert('Batch execution stop request sent');
-            queryClient.invalidateQueries({queryKey: ['batch', batchId]});
+            queryClient.invalidateQueries({ queryKey: ['batch', params.batchId] });
         },
         onError: (err) => {
             alert('Failed to cancel batch: ' + err.message);
         }
-    });
+    }));
 
-    useEffect(() => {
+    createEffect(() => {
+        const b = batch();
+        if (!b || b.terminal) return;
+
         let active = true;
         let ws;
 
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const host = window.location.host;
-        ws = new WebSocket(`${protocol}//${host}/telemetry/test/batch/${batchId}`);
+        ws = new WebSocket(`${protocol}//${host}/telemetry/test/batch/${params.batchId}`);
 
         ws.onmessage = (event) => {
             if (!active) return;
             try {
                 const msg = JSON.parse(event.data);
                 if (msg.type === 'BATCH_UPDATE') {
-                    queryClient.setQueryData(['batch', batchId], {
+                    queryClient.setQueryData(['batch', params.batchId], {
                         batchId: msg.batchId,
                         status: msg.status,
                         completed: msg.completed,
@@ -83,45 +73,35 @@ export default function BatchStatus() {
             console.warn("WebSocket encountered error", err);
         };
 
-        return () => {
+        onCleanup(() => {
             active = false;
             if (ws) ws.close();
-        };
-    }, [batchId, queryClient]);
+        });
+    });
 
-    if (loading) {
-        return (
-            <Center style={{height: '50vh'}}>
-                <Stack align="center" gap="sm">
-                    <Loader size="md"/>
-                    <Text size="sm" c="dimmed">Waiting...</Text>
-                </Stack>
-            </Center>
-        );
-    }
+    const batch = () => batchQuery.data;
+    const isLoading = () => batchQuery.isPending;
+    const hasError = () => batchQuery.error;
+    const errorMessage = () => batchQuery.error?.message || String(batchQuery.error);
 
-    if (error) {
-        return (
-            <Card withBorder style={{borderColor: 'red'}} radius="md" p="md">
-                <Text c="red" fw={600}>Error: {error.message}</Text>
-            </Card>
-        );
-    }
+    const cancelling = () => cancelMutation.isPending;
+    const isCancelable = () => batch() && (batch().status === 'PENDING' || batch().status === 'RUNNING');
 
-    const cancelling = cancelMutation.isPending;
-    const isCancelable = batch.status === 'PENDING' || batch.status === 'RUNNING';
+    const sessions = () => batch()?.sessions || [];
+    const total = () => batch()?.iterations || 0;
+    const passed = () => batch()?.passedCount !== undefined ? batch().passedCount : sessions().filter(s => s.status?.includes('COMPLETED') || s.status?.includes('SUCCESS')).length;
+    const failed = () => batch()?.failedCount !== undefined ? batch().failedCount : sessions().filter(s => s.status?.includes('FAILED') || s.status?.includes('ERROR')).length;
+    const running = () => batch()?.runningCount !== undefined ? batch().runningCount : sessions().filter(s => s.status?.includes('RUNNING')).length;
+    const pending = () => batch()?.pendingCount !== undefined ? batch().pendingCount : Math.max(0, total() - (passed() + failed()) - running());
 
-    // getStatusColor and getCleanStatus are imported from utils/format
-
-    const sessions = batch.sessions || [];
-    const total = batch.iterations || 0;
-    const passed = batch.passedCount !== undefined ? batch.passedCount : sessions.filter(s => s.status?.includes('COMPLETED') || s.status?.includes('SUCCESS')).length;
-    const failed = batch.failedCount !== undefined ? batch.failedCount : sessions.filter(s => s.status?.includes('FAILED') || s.status?.includes('ERROR')).length;
-    const running = batch.runningCount !== undefined ? batch.runningCount : sessions.filter(s => s.status?.includes('RUNNING')).length;
-    const pending = batch.pendingCount !== undefined ? batch.pendingCount : Math.max(0, total - (passed + failed) - running);
-
-    const rate = typeof batch.throughput === 'number' ? batch.throughput.toFixed(2) : batch.throughput || '0.00';
-    const time = typeof batch.averageNegotiationDuration === 'number' ? batch.averageNegotiationDuration.toFixed(2) : batch.averageNegotiationDuration || '0.00';
+    const rate = () => {
+        const r = batch()?.throughput;
+        return typeof r === 'number' ? r.toFixed(2) : r || '0.00';
+    };
+    const time = () => {
+        const t = batch()?.averageNegotiationDuration;
+        return typeof t === 'number' ? t.toFixed(2) : t || '0.00';
+    };
 
     const handleCancel = () => {
         if (window.confirm('Are you sure you want to stop this batch run?')) {
@@ -130,160 +110,188 @@ export default function BatchStatus() {
     };
 
     return (
-        <Stack gap="xl" w="100%">
+        <div class="space-y-6 w-full">
+            <Title>Batch {params.batchId} Status | TestState</Title>
             {/* Header */}
-            <Group justify="space-between" align="center" wrap="wrap">
-                <Stack gap={0}>
-                    <Title order={2}>Batch Hub</Title>
-                    <Text size="xs" style={{fontFamily: 'monospace'}} c="dimmed">{batchId}</Text>
-                </Stack>
-                <Group gap="sm">
-                    <Button
-                        variant="light"
-                        leftSection={<IconDownload size="1rem"/>}
-                        component="a"
-                        href={`/api/tests/batches/${batchId}/report`}
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div class="space-y-0.5">
+                    <h1 class="text-2xl font-bold">Batch Hub</h1>
+                    <p class="font-mono text-xs text-base-content/50">{params.batchId}</p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <a
+                        href={`/api/tests/batches/${params.batchId}/report`}
                         target="_blank"
                         rel="noreferrer"
+                        class="btn btn-outline btn-sm flex items-center gap-1"
                     >
-                        Export
-                    </Button>
-                    <Button
-                        variant="light"
-                        leftSection={<IconCode size="1rem"/>}
-                        component="a"
-                        href={`/api/tests/batches/${batchId}/report?full=true`}
+                        <Download size={14} />
+                        <span>Export</span>
+                    </a>
+                    <a
+                        href={`/api/tests/batches/${params.batchId}/report?full=true`}
                         target="_blank"
                         rel="noreferrer"
+                        class="btn btn-outline btn-sm flex items-center gap-1"
                     >
-                        JSON
-                    </Button>
-                    {isCancelable && (
-                        <Button
-                            color="red"
-                            leftSection={<IconCircleX size="1rem"/>}
+                        <Code size={14} />
+                        <span>JSON</span>
+                    </a>
+                    <Show when={isCancelable()}>
+                        <button
+                            class="btn btn-error btn-sm text-error-content flex items-center gap-1"
                             onClick={handleCancel}
-                            loading={cancelling}
+                            disabled={cancelling()}
                         >
-                            Stop
-                        </Button>
-                    )}
-                    <Button variant="light" leftSection={<IconArrowLeft size="1rem"/>}
-                            onClick={() => navigate('/tests')}>
-                        Return
-                    </Button>
-                </Group>
-            </Group>
+                            <Show when={cancelling()}>
+                                <span class="loading loading-spinner loading-xs"></span>
+                            </Show>
+                            <Show when={!cancelling()}>
+                                <XCircle size={14} />
+                            </Show>
+                            <span>Stop</span>
+                        </button>
+                    </Show>
+                    <button
+                        class="btn btn-outline btn-sm flex items-center gap-1.5"
+                        onClick={() => navigate('/tests')}
+                    >
+                        <ArrowLeft size={16} />
+                        <span>Return</span>
+                    </button>
+                </div>
+            </div>
 
-            {/* Progress Card */}
-            <Card withBorder shadow="sm" radius="md" p="md">
-                <Card.Section withBorder inheritPadding py="xs">
-                    <Text fw={600}>Progress</Text>
-                </Card.Section>
+            {/* Content states */}
+            <Show when={isLoading()}>
+                <div class="flex flex-col items-center justify-center min-h-[30vh] gap-3">
+                    <span class="loading loading-spinner loading-md text-primary"></span>
+                    <p class="text-sm text-base-content/60">Waiting...</p>
+                </div>
+            </Show>
 
-                <SimpleGrid cols={{base: 2, sm: 4, lg: 8}} spacing="md" mt="md" mb="md">
-                    <Card withBorder p="xs" style={{textAlign: 'center', backgroundColor: 'rgba(255,255,255,0.01)'}}>
-                        <Text c="dimmed" size="xs" tt="uppercase" fw={700}>Status</Text>
-                        <Center mt="xs">
-                            <Badge color={getStatusColor(batch.status)} variant="filled">
-                                {getCleanStatus(batch.status)}
-                            </Badge>
-                        </Center>
-                    </Card>
+            <Show when={!isLoading() && hasError()}>
+                <div class="alert alert-error">
+                    <span>Error: {errorMessage()}</span>
+                </div>
+            </Show>
 
-                    <Card withBorder p="xs" style={{textAlign: 'center', backgroundColor: 'rgba(255,255,255,0.01)'}}>
-                        <Text c="dimmed" size="xs" tt="uppercase" fw={700}>Total</Text>
-                        <Text fw={700} size="md" mt="xs">{total}</Text>
-                    </Card>
+            <Show when={!isLoading() && !hasError() && batch()}>
+                {/* Progress Card */}
+                <div class="card bg-base-100 border border-base-200 shadow-sm">
+                    <div class="card-body p-5 space-y-4">
+                        <h2 class="card-title text-base font-semibold border-b border-base-200 pb-2">Progress</h2>
 
-                    <Card withBorder p="xs" style={{textAlign: 'center', backgroundColor: 'rgba(255,255,255,0.01)'}}>
-                        <Text c="green" size="xs" tt="uppercase" fw={700}>Passed</Text>
-                        <Text fw={700} size="md" mt="xs" c="green">{passed}</Text>
-                    </Card>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
+                            <div class="card bg-base-300 border border-base-200 p-3 text-center">
+                                <span class="text-xs uppercase font-bold text-base-content/50">Status</span>
+                                <div class="flex justify-center mt-1">
+                                    <span class={`badge badge-sm ${getStatusColor(batch().status)}`}>
+                                        {getCleanStatus(batch().status)}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="card bg-base-300 border border-base-200 p-3 text-center">
+                                <span class="text-xs uppercase font-bold text-base-content/50">Total</span>
+                                <span class="font-bold text-md mt-1">{total()}</span>
+                            </div>
+                            <div class="card bg-base-300 border border-base-200 p-3 text-center">
+                                <span class="text-xs uppercase font-bold text-success">Passed</span>
+                                <span class="font-bold text-md mt-1 text-success">{passed()}</span>
+                            </div>
+                            <div class="card bg-base-300 border border-base-200 p-3 text-center">
+                                <span class="text-xs uppercase font-bold text-error">Failed</span>
+                                <span class="font-bold text-md mt-1 text-error">{failed()}</span>
+                            </div>
+                            <div class="card bg-base-300 border border-base-200 p-3 text-center">
+                                <span class="text-xs uppercase font-bold text-warning">Running</span>
+                                <span class="font-bold text-md mt-1 text-warning">{running()}</span>
+                            </div>
+                            <div class="card bg-base-300 border border-base-200 p-3 text-center">
+                                <span class="text-xs uppercase font-bold text-base-content/50">Pending</span>
+                                <span class="font-bold text-md mt-1">{pending()}</span>
+                            </div>
+                            <div class="card bg-base-300 border border-base-200 p-3 text-center">
+                                <span class="text-xs uppercase font-bold text-base-content/50">Rate</span>
+                                <span class="font-bold text-md mt-1">{rate()}/m</span>
+                            </div>
+                            <div class="card bg-base-300 border border-base-200 p-3 text-center">
+                                <span class="text-xs uppercase font-bold text-base-content/50">Time</span>
+                                <span class="font-bold text-md mt-1">{time()}ms</span>
+                            </div>
+                        </div>
 
-                    <Card withBorder p="xs" style={{textAlign: 'center', backgroundColor: 'rgba(255,255,255,0.01)'}}>
-                        <Text c="red" size="xs" tt="uppercase" fw={700}>Failed</Text>
-                        <Text fw={700} size="md" mt="xs" c="red">{failed}</Text>
-                    </Card>
+                        <Show when={total() > 0}>
+                            <div class="w-full h-3.5 bg-base-300 rounded-full overflow-hidden flex mt-4 border border-base-200 shadow-inner">
+                                <Show when={passed() > 0}>
+                                    <div style={{ width: `${(passed() / total()) * 100}%` }} class="bg-success h-full" title={`Passed: ${passed()}`} />
+                                </Show>
+                                <Show when={failed() > 0}>
+                                    <div style={{ width: `${(failed() / total()) * 100}%` }} class="bg-error h-full" title={`Failed: ${failed()}`} />
+                                </Show>
+                                <Show when={running() > 0}>
+                                    <div style={{ width: `${(running() / total()) * 100}%` }} class="bg-warning h-full" title={`Running: ${running()}`} />
+                                </Show>
+                                <Show when={pending() > 0}>
+                                    <div style={{ width: `${(pending() / total()) * 100}%` }} class="bg-base-content/20 h-full" title={`Pending: ${pending()}`} />
+                                </Show>
+                            </div>
+                        </Show>
+                    </div>
+                </div>
 
-                    <Card withBorder p="xs" style={{textAlign: 'center', backgroundColor: 'rgba(255,255,255,0.01)'}}>
-                        <Text c="yellow" size="xs" tt="uppercase" fw={700}>Running</Text>
-                        <Text fw={700} size="md" mt="xs" c="yellow">{running}</Text>
-                    </Card>
-
-                    <Card withBorder p="xs" style={{textAlign: 'center', backgroundColor: 'rgba(255,255,255,0.01)'}}>
-                        <Text c="dimmed" size="xs" tt="uppercase" fw={700}>Pending</Text>
-                        <Text fw={700} size="md" mt="xs">{pending}</Text>
-                    </Card>
-
-                    <Card withBorder p="xs" style={{textAlign: 'center', backgroundColor: 'rgba(255,255,255,0.01)'}}>
-                        <Text c="dimmed" size="xs" tt="uppercase" fw={700}>Rate</Text>
-                        <Text fw={700} size="md" mt="xs">{rate}/m</Text>
-                    </Card>
-
-                    <Card withBorder p="xs" style={{textAlign: 'center', backgroundColor: 'rgba(255,255,255,0.01)'}}>
-                        <Text c="dimmed" size="xs" tt="uppercase" fw={700}>Time</Text>
-                        <Text fw={700} size="md" mt="xs">{time}ms</Text>
-                    </Card>
-                </SimpleGrid>
-
-                {total > 0 && (
-                    <Progress.Root size="lg" radius="xl" mt="md">
-                        {passed > 0 && <Progress.Section value={(passed / total) * 100} color="green"
-                                                         title={`Passed: ${passed}`}/>}
-                        {failed > 0 &&
-                            <Progress.Section value={(failed / total) * 100} color="red" title={`Failed: ${failed}`}/>}
-                        {running > 0 && <Progress.Section value={(running / total) * 100} color="yellow"
-                                                          title={`Running: ${running}`}/>}
-                        {pending > 0 && <Progress.Section value={(pending / total) * 100} color="gray"
-                                                          title={`Pending: ${pending}`}/>}
-                    </Progress.Root>
-                )}
-            </Card>
-
-            {/* Sessions Grid */}
-            <Card withBorder shadow="sm" radius="md" p="md">
-                <Card.Section withBorder inheritPadding py="xs" mb="md">
-                    <Text fw={600}>Sessions</Text>
-                </Card.Section>
-                {sessions.length === 0 ? (
-                    <Text c="dimmed" size="sm" style={{textAlign: 'center', padding: '16px 0'}}>No sessions active for this batch.</Text>
-                ) : (
-                    <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
-                        {sessions.map((session) => (
-                            <Card key={session.sessionId} withBorder p="md" shadow="xs" radius="md" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%', backgroundColor: 'rgba(255, 255, 255, 0.01)' }}>
-                                <Stack gap="xs" style={{ flexGrow: 1 }}>
-                                    <Group justify="space-between" align="center" wrap="nowrap">
-                                        <Text fw={600} size="sm" truncate>{session.agentName}</Text>
-                                        <Text size="xs" style={{fontFamily: 'monospace', opacity: 0.65}} truncate>{session.sessionId}</Text>
-                                    </Group>
-                                    <Group gap="xs">
-                                        <Badge color={getStatusColor(session.status)} variant="filled" size="xs">
-                                            {getCleanStatus(session.status)}
-                                        </Badge>
-                                        {session.negotiationDurationMs > 0 && (
-                                            <Badge color="gray" variant="light" size="xs">
-                                                {session.negotiationDurationMs}ms
-                                            </Badge>
-                                        )}
-                                    </Group>
-                                    {session.statusMessage && (
-                                        <Text size="xs" c="dimmed" lineClamp={2} title={session.statusMessage}>
-                                            {session.statusMessage}
-                                        </Text>
+                {/* Sessions Grid */}
+                <div class="card bg-base-100 border border-base-200 shadow-sm">
+                    <div class="card-body p-5">
+                        <h2 class="card-title text-base font-semibold border-b border-base-200 pb-2 mb-4">Sessions</h2>
+                        <Show when={sessions().length === 0}>
+                            <p class="text-center text-sm text-base-content/50 py-4">No sessions active for this batch.</p>
+                        </Show>
+                        <Show when={sessions().length > 0}>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <For each={sessions()}>
+                                    {(session) => (
+                                        <div class="card bg-base-300 border border-base-200 p-4 flex flex-col justify-between min-h-[140px]">
+                                            <div class="space-y-2 flex-grow">
+                                                <div class="flex justify-between items-start gap-4">
+                                                    <h3 class="font-semibold text-sm truncate" title={session.agentName}>{session.agentName}</h3>
+                                                    <span class="font-mono text-xs text-base-content/50 truncate shrink-0" title={session.sessionId}>
+                                                        {session.sessionId.slice(0, 8)}...
+                                                    </span>
+                                                </div>
+                                                <div class="flex flex-wrap gap-1.5">
+                                                    <span class={`badge badge-sm ${getStatusColor(session.status)}`}>
+                                                        {getCleanStatus(session.status)}
+                                                    </span>
+                                                    <Show when={session.negotiationDurationMs > 0}>
+                                                        <span class="badge badge-neutral badge-sm">
+                                                            {session.negotiationDurationMs}ms
+                                                        </span>
+                                                    </Show>
+                                                </div>
+                                                <Show when={session.message}>
+                                                    <p class="text-xs text-base-content/60 line-clamp-2" title={session.message}>
+                                                        {session.message}
+                                                    </p>
+                                                </Show>
+                                            </div>
+                                            <div class="h-[1px] bg-base-200 my-2" />
+                                            <div class="flex justify-end">
+                                                <button 
+                                                    class="btn btn-ghost btn-xs text-primary"
+                                                    onClick={() => navigate(`/tests/session/${session.sessionId}/status`)}
+                                                >
+                                                    View
+                                                </button>
+                                            </div>
+                                        </div>
                                     )}
-                                </Stack>
-                                <div style={{height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.06)', margin: '12px 0 8px 0'}}/>
-                                <Group justify="flex-end">
-                                    <Button size="xs" variant="light" onClick={() => navigate(`/tests/session/${session.sessionId}/status`)}>
-                                        View
-                                    </Button>
-                                </Group>
-                            </Card>
-                        ))}
-                    </SimpleGrid>
-                )}
-            </Card>
-        </Stack>
+                                </For>
+                            </div>
+                        </Show>
+                    </div>
+                </div>
+            </Show>
+        </div>
     );
 }

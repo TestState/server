@@ -1,16 +1,16 @@
-import React from 'react';
-import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
-import {safeFetch} from '../utils/safeFetch';
-import {getCleanStatus, getStatusColor} from '../utils/format';
-import {useNavigate} from 'react-router-dom';
-import {Badge, Box, Button, Card, Center, Group, Loader, SimpleGrid, Stack, Table, Text, Title} from '@mantine/core';
-import {IconCopy, IconEdit, IconPlayerPlay, IconPlus, IconTrash} from '@tabler/icons-react';
+import { createMutation, createQuery, useQueryClient } from '@tanstack/solid-query';
+import { safeFetch } from '../utils/safeFetch';
+import { getCleanStatus, getStatusColor } from '../utils/format';
+import { useNavigate } from '@solidjs/router';
+import { Plus, Play, Copy, Edit, Trash } from 'lucide-solid';
+import { Show, For, createEffect } from 'solid-js';
+import { Title } from '@solidjs/meta';
 
 export default function Tests() {
     const queryClient = useQueryClient();
     const navigate = useNavigate();
 
-    const {data, isPending: loading, error} = useQuery({
+    const testsDataQuery = createQuery(() => ({
         queryKey: ['tests-data'],
         queryFn: async () => {
             const [tests, sessions, batches] = await Promise.all([
@@ -18,31 +18,31 @@ export default function Tests() {
                 safeFetch('/api/tests/sessions'),
                 safeFetch('/api/tests/batches')
             ]);
-            return {tests, sessions, batches};
+            return { tests, sessions, batches };
         }
-    });
+    }));
 
-    const deleteMutation = useMutation({
-        mutationFn: (id) => safeFetch(`/api/tests/${id}`, {method: 'DELETE'}),
+    const deleteMutation = createMutation(() => ({
+        mutationFn: (id) => safeFetch(`/api/tests/${id}`, { method: 'DELETE' }),
         onSuccess: () => {
             alert('Test configuration deleted successfully');
-            queryClient.invalidateQueries({queryKey: ['tests-data']});
+            queryClient.invalidateQueries({ queryKey: ['tests-data'] });
         },
         onError: (err) => {
             alert('Failed to delete test: ' + err.message);
         }
-    });
+    }));
 
-    const copyMutation = useMutation({
-        mutationFn: (id) => safeFetch(`/api/tests/${id}/copy`, {method: 'POST'}),
+    const copyMutation = createMutation(() => ({
+        mutationFn: (id) => safeFetch(`/api/tests/${id}/copy`, { method: 'POST' }),
         onSuccess: () => {
             alert('Test configuration duplicated successfully');
-            queryClient.invalidateQueries({queryKey: ['tests-data']});
+            queryClient.invalidateQueries({ queryKey: ['tests-data'] });
         },
         onError: (err) => {
             alert('Failed to duplicate test: ' + err.message);
         }
-    });
+    }));
 
     const handleDelete = (id) => {
         if (window.confirm('Are you sure you want to delete this test configuration?')) {
@@ -50,193 +50,197 @@ export default function Tests() {
         }
     };
 
+    const isLoading = () => testsDataQuery.isPending;
+    const hasError = () => testsDataQuery.error;
+    const errorMessage = () => testsDataQuery.error?.message || String(testsDataQuery.error);
+    const data = () => testsDataQuery.data || { tests: [], sessions: [], batches: [] };
 
-    if (loading) {
-        return (
-            <Center style={{height: '50vh'}}>
-                <Stack align="center" gap="sm">
-                    <Loader size="md"/>
-                    <Text size="sm" c="dimmed">Loading test suites...</Text>
-                </Stack>
-            </Center>
-        );
-    }
-
-    if (error) {
-        return (
-            <Card withBorder style={{borderColor: 'red'}} radius="md" p="md">
-                <Text c="red" fw={600}>Error: {error.message || String(error)}</Text>
-            </Card>
-        );
-    }
-
-    const hasBatches = data.batches && data.batches.length > 0;
-    const hasSessions = data.sessions && data.sessions.length > 0;
+    const hasBatches = () => data().batches && data().batches.length > 0;
+    const hasSessions = () => data().sessions && data().sessions.length > 0;
 
     return (
-        <Stack gap="xl" w="100%">
+        <div class="space-y-6 w-full">
+            <Title>Tests | TestState</Title>
             {/* Header */}
-            <Group justify="space-between" align="center">
-                <Title order={2}>Test Configurations</Title>
-                <Button leftSection={<IconPlus size="1rem"/>} onClick={() => navigate('/tests/new')}>
-                    New
-                </Button>
-            </Group>
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-bold">Test Configurations</h1>
+                <button 
+                    class="btn btn-primary btn-sm flex items-center gap-1.5" 
+                    onClick={() => navigate('/tests/new')}
+                >
+                    <Plus size={16} />
+                    <span>New</span>
+                </button>
+            </div>
 
-            {/* Tests Grid */}
-            {(data.tests || []).length === 0 ? (
-                <Card withBorder p="xl" radius="md" style={{textAlign: 'center'}}>
-                    <Text c="dimmed" size="sm" mb="xs">No tests configured.</Text>
-                    <Center>
-                        <Button size="xs" variant="subtle" onClick={() => navigate('/tests/new')}>
-                            Create New
-                        </Button>
-                    </Center>
-                </Card>
-            ) : (
-                <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
-                    {(data.tests || []).map((test) => (
-                        <Card key={test.id} withBorder p="md" shadow="xs" radius="md" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
-                            <Stack gap="xs" style={{ flexGrow: 1 }}>
-                                <Group justify="space-between" align="flex-start" wrap="nowrap">
-                                    <Text fw={600} size="sm" truncate>{test.name}</Text>
-                                    <Badge color="blue" variant="light" style={{fontFamily: 'monospace'}}>
-                                        {test.testType}
-                                    </Badge>
-                                </Group>
-                                <Text size="xs" c="dimmed">
-                                    {test.payloads?.length || 0} linked
-                                </Text>
-                                {test.description && (
-                                    <Text size="xs" c="dimmed" lineClamp={3} style={{ flexGrow: 1 }}>
-                                        {test.description}
-                                    </Text>
-                                )}
-                            </Stack>
-                            <div style={{height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.06)', margin: '12px 0 8px 0'}}/>
-                            <Group gap="xs" justify="flex-end">
-                                <Button
-                                    size="xs"
-                                    leftSection={<IconPlayerPlay size="0.8rem"/>}
-                                    onClick={() => navigate(`/tests/${test.id}/run`)}
-                                >
-                                    Run
-                                </Button>
-                                <Button
-                                    size="xs"
-                                    variant="light"
-                                    color="gray"
-                                    leftSection={<IconCopy size="0.8rem"/>}
-                                    onClick={() => copyMutation.mutate(test.id)}
-                                    loading={copyMutation.isPending && copyMutation.variables === test.id}
-                                >
-                                    Copy
-                                </Button>
-                                <Button
-                                    size="xs"
-                                    variant="light"
-                                    color="blue"
-                                    leftSection={<IconEdit size="0.8rem"/>}
-                                    onClick={() => navigate(`/tests/${test.id}/edit`)}
-                                >
-                                    Edit
-                                </Button>
-                                <Button
-                                    size="xs"
-                                    variant="light"
-                                    color="red"
-                                    leftSection={<IconTrash size="0.8rem"/>}
-                                    onClick={() => handleDelete(test.id)}
-                                    loading={deleteMutation.isPending && deleteMutation.variables === test.id}
-                                >
-                                    Delete
-                                </Button>
-                            </Group>
-                        </Card>
-                    ))}
-                </SimpleGrid>
-            )}
+            {/* Content states */}
+            <Show when={isLoading()}>
+                <div class="flex flex-col items-center justify-center min-h-[30vh] gap-3">
+                    <span class="loading loading-spinner loading-md text-primary"></span>
+                    <p class="text-sm text-base-content/60">Loading test suites...</p>
+                </div>
+            </Show>
 
-            {/* Batches and Sessions History */}
-            <SimpleGrid cols={{base: 1, md: 2}} spacing="lg">
-                {hasBatches && (
-                    <Card withBorder shadow="sm" radius="md" p="md">
-                        <Card.Section withBorder inheritPadding py="xs">
-                            <Text fw={600}>Recent Batches</Text>
-                        </Card.Section>
+            <Show when={!isLoading() && hasError()}>
+                <div class="alert alert-error">
+                    <span>Error: {errorMessage()}</span>
+                </div>
+            </Show>
 
-                        <Stack gap="md" mt="md">
-                            {data.batches.map((batch, index) => (
-                                <div key={batch.batchId}>
-                                    {index > 0 && <div style={{
-                                        height: '1px',
-                                        backgroundColor: 'rgba(255, 255, 255, 0.06)',
-                                        marginBottom: '12px'
-                                    }}/>}
-                                    <Group justify="space-between" align="center" wrap="nowrap">
-                                        <Stack gap="xs" style={{flex: 1, minWidth: 0}}>
-                                            <Text fw={600} size="sm" truncate>{batch.testName}</Text>
-                                            <Group gap="xs">
-                                                <Text size="xs" style={{
-                                                    fontFamily: 'monospace',
-                                                    opacity: 0.65
-                                                }}>{batch.batchId}</Text>
-                                                <Badge color={getStatusColor(batch.status)} size="xs" variant="filled">
-                                                    {getCleanStatus(batch.status)}
-                                                </Badge>
-                                            </Group>
-                                        </Stack>
-                                        <Button size="xs" variant="subtle"
-                                                onClick={() => navigate(`/tests/batch/${batch.batchId}/status`)}>
-                                            Monitor
-                                        </Button>
-                                    </Group>
+            <Show when={!isLoading() && !hasError()}>
+                {/* Tests Grid */}
+                <Show when={(data().tests || []).length === 0}>
+                    <div class="card bg-base-100 border border-base-200 shadow-sm p-8 text-center space-y-3">
+                        <p class="text-base-content/60 text-sm">No tests configured.</p>
+                        <div class="flex justify-center">
+                            <button class="btn btn-ghost btn-sm text-primary" onClick={() => navigate('/tests/new')}>
+                                Create New
+                            </button>
+                        </div>
+                    </div>
+                </Show>
+
+                <Show when={(data().tests || []).length > 0}>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <For each={data().tests || []}>
+                            {(test) => (
+                                <div class="card bg-base-100 border border-base-200 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+                                    <div class="card-body p-5 gap-3 flex-grow">
+                                        <div class="flex justify-between items-start gap-4">
+                                            <h2 class="card-title text-base font-bold truncate" title={test.name}>
+                                                {test.name}
+                                            </h2>
+                                            <span class="badge badge-info badge-sm font-mono shrink-0">
+                                                {test.testType}
+                                            </span>
+                                        </div>
+                                        <p class="text-xs text-base-content/50">
+                                            {test.payloads?.length || 0} linked
+                                        </p>
+                                        <Show when={test.description}>
+                                            <p class="text-xs text-base-content/60 line-clamp-3 flex-grow">
+                                                {test.description}
+                                            </p>
+                                        </Show>
+                                    </div>
+                                    <div class="px-5 pb-5">
+                                        <div class="h-[1px] bg-base-200 mb-4" />
+                                        <div class="flex flex-wrap justify-end items-center gap-2">
+                                            <button
+                                                class="btn btn-xs btn-primary flex items-center gap-1"
+                                                onClick={() => navigate(`/tests/${test.id}/run`)}
+                                            >
+                                                <Play size={12} />
+                                                <span>Run</span>
+                                            </button>
+                                            <button
+                                                class="btn btn-xs btn-outline flex items-center gap-1"
+                                                onClick={() => copyMutation.mutate(test.id)}
+                                                disabled={copyMutation.isPending && copyMutation.variables === test.id}
+                                            >
+                                                <Show when={copyMutation.isPending && copyMutation.variables === test.id}>
+                                                    <span class="loading loading-spinner loading-xs"></span>
+                                                </Show>
+                                                <Show when={!(copyMutation.isPending && copyMutation.variables === test.id)}>
+                                                    <Copy size={12} />
+                                                </Show>
+                                                <span>Copy</span>
+                                            </button>
+                                            <button
+                                                class="btn btn-xs btn-info flex items-center gap-1"
+                                                onClick={() => navigate(`/tests/${test.id}/edit`)}
+                                            >
+                                                <Edit size={12} />
+                                                <span>Edit</span>
+                                            </button>
+                                            <button
+                                                class="btn btn-xs btn-error flex items-center gap-1"
+                                                onClick={() => handleDelete(test.id)}
+                                                disabled={deleteMutation.isPending && deleteMutation.variables === test.id}
+                                            >
+                                                <Show when={deleteMutation.isPending && deleteMutation.variables === test.id}>
+                                                    <span class="loading loading-spinner loading-xs"></span>
+                                                </Show>
+                                                <Show when={!(deleteMutation.isPending && deleteMutation.variables === test.id)}>
+                                                    <Trash size={12} />
+                                                </Show>
+                                                <span>Delete</span>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
-                            ))}
-                        </Stack>
-                    </Card>
-                )}
+                            )}
+                        </For>
+                    </div>
+                </Show>
 
-                {hasSessions && (
-                    <Card withBorder shadow="sm" radius="md" p="md">
-                        <Card.Section withBorder inheritPadding py="xs">
-                            <Text fw={600}>Recent Sessions</Text>
-                        </Card.Section>
-
-                        <Stack gap="md" mt="md">
-                            {data.sessions.map((session, index) => (
-                                <div key={session.sessionId}>
-                                    {index > 0 && <div style={{
-                                        height: '1px',
-                                        backgroundColor: 'rgba(255, 255, 255, 0.06)',
-                                        marginBottom: '12px'
-                                    }}/>}
-                                    <Group justify="space-between" align="center" wrap="nowrap">
-                                        <Stack gap="xs" style={{flex: 1, minWidth: 0}}>
-                                            <Text fw={600} size="sm"
-                                                  truncate>{session.ticket?.testType || session.agentName}</Text>
-                                            <Group gap="xs">
-                                                <Text size="xs" style={{
-                                                    fontFamily: 'monospace',
-                                                    opacity: 0.65
-                                                }}>{session.sessionId}</Text>
-                                                <Badge color={getStatusColor(session.status)} size="xs"
-                                                       variant="filled">
-                                                    {getCleanStatus(session.status)}
-                                                </Badge>
-                                            </Group>
-                                        </Stack>
-                                        <Button size="xs" variant="subtle"
-                                                onClick={() => navigate(`/tests/session/${session.sessionId}/status`)}>
-                                            Inspect
-                                        </Button>
-                                    </Group>
+                {/* Batches and Sessions History */}
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Show when={hasBatches()}>
+                        <div class="card bg-base-100 border border-base-200 shadow-sm">
+                            <div class="card-body p-4">
+                                <h2 class="card-title text-base font-semibold border-b border-base-200 pb-2 mb-3">Recent Batches</h2>
+                                <div class="divide-y divide-base-200">
+                                    <For each={data().batches}>
+                                        {(batch) => (
+                                            <div class="flex justify-between items-center py-3 first:pt-0 last:pb-0 gap-4">
+                                                <div class="min-w-0 flex-1">
+                                                    <h3 class="font-semibold text-sm truncate" title={batch.testName}>{batch.testName}</h3>
+                                                    <div class="flex items-center gap-2 mt-1">
+                                                        <span class="font-mono text-xs text-base-content/50">{batch.batchId}</span>
+                                                        <span class={`badge badge-sm ${getStatusColor(batch.status)}`}>
+                                                            {getCleanStatus(batch.status)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <button 
+                                                    class="btn btn-ghost btn-xs text-primary"
+                                                    onClick={() => navigate(`/tests/batch/${batch.batchId}/status`)}
+                                                >
+                                                    Monitor
+                                                </button>
+                                            </div>
+                                        )}
+                                    </For>
                                 </div>
-                            ))}
-                        </Stack>
-                    </Card>
-                )}
-            </SimpleGrid>
-        </Stack>
+                            </div>
+                        </div>
+                    </Show>
+
+                    <Show when={hasSessions()}>
+                        <div class="card bg-base-100 border border-base-200 shadow-sm">
+                            <div class="card-body p-4">
+                                <h2 class="card-title text-base font-semibold border-b border-base-200 pb-2 mb-3">Recent Sessions</h2>
+                                <div class="divide-y divide-base-200">
+                                    <For each={data().sessions}>
+                                        {(session) => (
+                                            <div class="flex justify-between items-center py-3 first:pt-0 last:pb-0 gap-4">
+                                                <div class="min-w-0 flex-1">
+                                                    <h3 class="font-semibold text-sm truncate" title={session.ticket?.testType || session.agentName}>
+                                                        {session.ticket?.testType || session.agentName}
+                                                    </h3>
+                                                    <div class="flex items-center gap-2 mt-1">
+                                                        <span class="font-mono text-xs text-base-content/50">{session.sessionId}</span>
+                                                        <span class={`badge badge-sm ${getStatusColor(session.status)}`}>
+                                                            {getCleanStatus(session.status)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <button 
+                                                    class="btn btn-ghost btn-xs text-primary"
+                                                    onClick={() => navigate(`/tests/session/${session.sessionId}/status`)}
+                                                >
+                                                    Inspect
+                                                </button>
+                                            </div>
+                                        )}
+                                    </For>
+                                </div>
+                            </div>
+                        </div>
+                    </Show>
+                </div>
+            </Show>
+        </div>
     );
 }

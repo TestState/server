@@ -17,6 +17,7 @@ import me.hsgamer.teststate.cms.persistence.PayloadEntity;
 import me.hsgamer.teststate.cms.service.AgentManager;
 import me.hsgamer.teststate.cms.service.PayloadService;
 import me.hsgamer.teststate.cms.service.TranslationManager;
+import me.hsgamer.teststate.cms.util.StatusUtil;
 import me.hsgamer.teststate.uap.v1.Payload;
 
 import java.util.*;
@@ -150,6 +151,7 @@ public class TranslationWebResource {
         Map<String, Object> m = new HashMap<>();
         m.put("sessionId", session.getSessionId());
         m.put("status", session.getStatus() != null ? session.getStatus().getState().name() : "PENDING");
+        m.put("terminal", session.getStatus() != null && StatusUtil.isTerminal(session.getStatus().getState()));
         if (session.getStatus() != null && session.getStatus().getMessage() != null) {
             m.put("statusMessage", session.getStatus().getMessage());
         }
