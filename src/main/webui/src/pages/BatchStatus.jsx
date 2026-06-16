@@ -1,4 +1,4 @@
-import { createSignal, createEffect, onCleanup, Show, For } from 'solid-js';
+import { createSignal, createEffect, onCleanup, Show, For, Index } from 'solid-js';
 import { Title } from '@solidjs/meta';
 import { safeFetch } from '../utils/safeFetch';
 import { getCleanStatus, getStatusColor } from '../utils/format';
@@ -27,57 +27,80 @@ export default function BatchStatus() {
         }
     }));
 
+    let ws = null;
+    let isConnectingOrConnected = false;
+
     createEffect(() => {
         const b = batch();
-        if (!b || b.terminal) return;
+        if (!b) return;
 
-        let active = true;
-        let ws;
+        // If terminal, and we haven't connected, we don't need WebSocket
+        if (b.terminal && !isConnectingOrConnected) {
+            return;
+        }
 
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const host = window.location.host;
-        ws = new WebSocket(`${protocol}//${host}/telemetry/test/batch/${params.batchId}`);
+        // If not terminal, and not connected yet, open the WebSocket
+        if (!b.terminal && !isConnectingOrConnected) {
+            isConnectingOrConnected = true;
 
-        ws.onmessage = (event) => {
-            if (!active) return;
-            try {
-                const msg = JSON.parse(event.data);
-                if (msg.type === 'BATCH_UPDATE') {
-                    queryClient.setQueryData(['batch', params.batchId], {
-                        batchId: msg.batchId,
-                        status: msg.status,
-                        completed: msg.completed,
-                        iterations: msg.totalIterations,
-                        passedCount: msg.passedCount,
-                        failedCount: msg.failedCount,
-                        runningCount: msg.runningCount,
-                        pendingCount: msg.pendingCount,
-                        throughput: parseFloat(msg.throughput) || 0,
-                        averageNegotiationDuration: parseFloat(msg.avgNegotiate) || 0,
-                        sessions: msg.sessions?.map(s => ({
-                            sessionId: s.sessionId,
-                            status: s.state,
-                            message: s.message,
-                            agentId: s.agentId,
-                            agentName: s.agentName,
-                            negotiationDurationMs: s.negotiationDurationMs,
-                            terminal: s.terminal
-                        })) || []
-                    });
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.host;
+            ws = new WebSocket(`${protocol}//${host}/telemetry/test/batch/${params.batchId}`);
+
+            ws.onmessage = (event) => {
+                try {
+                    const msg = JSON.parse(event.data);
+                    if (msg.type === 'BATCH_UPDATE') {
+                        queryClient.setQueryData(['batch', params.batchId], {
+                            batchId: msg.batchId,
+                            status: msg.status,
+                            completed: msg.completed,
+                            iterations: msg.totalIterations,
+                            passedCount: msg.passedCount,
+                            failedCount: msg.failedCount,
+                            runningCount: msg.runningCount,
+                            pendingCount: msg.pendingCount,
+                            throughput: parseFloat(msg.throughput) || 0,
+                            averageNegotiationDuration: parseFloat(msg.avgNegotiate) || 0,
+                            sessions: msg.sessions?.map(s => ({
+                                id: s.sessionId,
+                                sessionId: s.sessionId,
+                                status: s.state,
+                                message: s.message,
+                                agentId: s.agentId,
+                                agentName: s.agentName,
+                                negotiationDurationMs: s.negotiationDurationMs,
+                                terminal: s.terminal
+                            })) || []
+                        });
+                        
+                        if (msg.terminal) {
+                            queryClient.invalidateQueries({ queryKey: ['batch', params.batchId] });
+                        }
+                    }
+                } catch (e) {
+                    console.error("Failed to parse WS message", e);
                 }
-            } catch (e) {
-                console.error("Failed to parse WS message", e);
-            }
-        };
+            };
 
-        ws.onerror = (err) => {
-            console.warn("WebSocket encountered error", err);
-        };
+            ws.onerror = (err) => {
+                console.warn("WebSocket encountered error", err);
+            };
+        }
 
-        onCleanup(() => {
-            active = false;
-            if (ws) ws.close();
-        });
+        // Close WebSocket if batch transitions to terminal during our watch
+        if (b.terminal && ws) {
+            ws.close();
+            ws = null;
+        }
+    });
+
+    onCleanup(() => {
+        if (ws) {
+            ws.close();
+            ws = null;
+        }
+        isConnectingOrConnected = false;
     });
 
     const batch = () => batchQuery.data;
@@ -250,49 +273,44 @@ export default function BatchStatus() {
                         </Show>
                         <Show when={sessions().length > 0}>
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                <For each={sessions()}>
-                                    {(session) => (
+                                <Index each={sessions()}>
+                                    {(sessionAccessor) => (
                                         <div class="card bg-base-300 border border-base-200 p-4 flex flex-col justify-between min-h-[140px]">
                                             <div class="space-y-2 flex-grow">
                                                 <div class="flex justify-between items-start gap-4">
-                                                    <h3 class="font-semibold text-sm truncate" title={session.agentName}>{session.agentName}</h3>
-                                                    <span class="font-mono text-xs text-base-content/50 truncate shrink-0" title={session.sessionId}>
-                                                        {session.sessionId.slice(0, 8)}...
+                                                    <h3 class="font-semibold text-sm truncate" title={sessionAccessor().agentName}>{sessionAccessor().agentName}</h3>
+                                                    <span class="font-mono text-xs text-base-content/50 truncate shrink-0" title={sessionAccessor().sessionId}>
+                                                        {sessionAccessor().sessionId.slice(0, 8)}...
                                                     </span>
                                                 </div>
                                                 <div class="flex flex-wrap gap-1.5">
-                                                    <span class={`badge badge-sm ${getStatusColor(session.status)}`}>
-                                                        {getCleanStatus(session.status)}
+                                                    <span class={`badge badge-sm ${getStatusColor(sessionAccessor().status)}`}>
+                                                        {getCleanStatus(sessionAccessor().status)}
                                                     </span>
-                                                    <Show when={session.negotiationDurationMs > 0}>
+                                                    <Show when={sessionAccessor().negotiationDurationMs > 0}>
                                                         <span class="badge badge-neutral badge-sm">
-                                                            {session.negotiationDurationMs}ms
+                                                            {sessionAccessor().negotiationDurationMs}ms
                                                         </span>
                                                     </Show>
                                                 </div>
-                                                <Show when={session.message}>
-                                                    <p class="text-xs text-base-content/60 line-clamp-2" title={session.message}>
-                                                        {session.message}
+                                                <Show when={sessionAccessor().message}>
+                                                    <p class="text-xs text-base-content/60 line-clamp-2" title={sessionAccessor().message}>
+                                                        {sessionAccessor().message}
                                                     </p>
                                                 </Show>
                                             </div>
                                             <div class="h-[1px] bg-base-200 my-2" />
                                             <div class="flex justify-end">
-                                                <Show when={session.terminal}>
-                                                    <button 
-                                                        class="btn btn-ghost btn-xs text-primary"
-                                                        onClick={() => navigate(`/tests/session/${session.sessionId}/status`)}
-                                                    >
-                                                        View
-                                                    </button>
-                                                </Show>
-                                                <Show when={!session.terminal}>
-                                                    <span class="text-xs text-base-content/30 italic">In progress...</span>
-                                                </Show>
+                                                <button 
+                                                    class="btn btn-ghost btn-xs text-primary"
+                                                    onClick={() => navigate(`/tests/session/${sessionAccessor().sessionId}/status`)}
+                                                >
+                                                    View
+                                                </button>
                                             </div>
                                         </div>
                                     )}
-                                </For>
+                                </Index>
                             </div>
                         </Show>
                     </div>

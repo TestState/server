@@ -60,7 +60,11 @@ public class TestSession extends AbstractSession<TestResponse> {
     public void handleResponse(TestResponse response) {
         switch (response.getEventCase()) {
             case STATUS -> updateStatus(response.getStatus());
-            case TELEMETRY -> dispatchTelemetry(response.getTelemetry());
+            case TELEMETRY -> {
+                if (status == null || !StatusUtil.isTerminal(status.getState())) {
+                    dispatchTelemetry(response.getTelemetry());
+                }
+            }
             case RESULT -> completeWithResult(response.getResult());
         }
     }

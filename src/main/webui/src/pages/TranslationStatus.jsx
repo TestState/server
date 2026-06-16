@@ -82,72 +82,85 @@ export default function TranslationStatus() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [telemetryLogs, setTelemetryLogs] = createSignal([]);
-    let logsEndRef;
+    let logsContainerRef;
 
     const sessionQuery = createQuery(() => ({
         queryKey: ['translationSession', params.sessionId],
         queryFn: () => safeFetch(`/api/translations/sessions/${params.sessionId}`)
     }));
 
+    let ws = null;
+    let isConnectingOrConnected = false;
+
     createEffect(() => {
         const sess = session();
         if (!sess) return;
 
-        // If terminal, load logs from the REST response
-        if (sess.terminal) {
-            if (sess.logs && sess.logs.length > 0) {
-                setTelemetryLogs(sess.logs);
-            }
+        // If the session is already terminal, and we haven't connected to WS,
+        // we just load logs from REST response and don't open WebSocket.
+        if (sess.terminal && !isConnectingOrConnected) {
+            setTelemetryLogs(sess.logs || []);
             return;
         }
 
-        let active = true;
-        let ws;
+        // If the session is not terminal, and we haven't started connecting yet, open the WebSocket.
+        if (!sess.terminal && !isConnectingOrConnected) {
+            isConnectingOrConnected = true;
 
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const host = window.location.host;
-        ws = new WebSocket(`${protocol}//${host}/telemetry/translation/${params.sessionId}`);
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.host;
+            ws = new WebSocket(`${protocol}//${host}/telemetry/translation/${params.sessionId}`);
 
-        ws.onmessage = (event) => {
-            if (!active) return;
-            try {
-                const msg = JSON.parse(event.data);
-                if (msg.type === 'STATUS') {
-                    queryClient.setQueryData(['translationSession', params.sessionId], (prev) => {
-                        return prev ? { ...prev, status: msg.state, statusMessage: msg.message } : null;
-                    });
-                } else if (msg.type === 'RESULT') {
-                    const items = msg.result.map(item => ({
-                        index: item.index,
-                        name: item.name,
-                        type: item.type,
-                        databaseId: null
-                    }));
-                    queryClient.setQueryData(['translationSession', params.sessionId], (prev) => {
-                        return prev ? { ...prev, generatedItems: items } : null;
-                    });
-                } else if (msg.type === 'TELEMETRY') {
-                    setTelemetryLogs(prev => [...prev, msg]);
+            ws.onmessage = (event) => {
+                try {
+                    const msg = JSON.parse(event.data);
+                    if (msg.type === 'STATUS') {
+                        queryClient.setQueryData(['translationSession', params.sessionId], (prev) => {
+                            return prev ? { ...prev, status: msg.state, statusMessage: msg.message } : null;
+                        });
+                    } else if (msg.type === 'RESULT') {
+                        const items = msg.result.map(item => ({
+                            index: item.index,
+                            name: item.name,
+                            type: item.type,
+                            databaseId: null
+                        }));
+                        queryClient.setQueryData(['translationSession', params.sessionId], (prev) => {
+                            return prev ? { ...prev, generatedItems: items } : null;
+                        });
+                        queryClient.invalidateQueries({ queryKey: ['translationSession', params.sessionId] });
+                    } else if (msg.type === 'TELEMETRY') {
+                        setTelemetryLogs(prev => [...prev, msg]);
+                    }
+                } catch (e) {
+                    console.error("Failed to parse WS message", e);
                 }
-            } catch (e) {
-                console.error("Failed to parse WS message", e);
-            }
-        };
+            };
 
-        ws.onerror = (err) => {
-            console.warn("WebSocket encountered error", err);
-        };
+            ws.onerror = (err) => {
+                console.warn("WebSocket encountered error", err);
+            };
+        }
 
-        onCleanup(() => {
-            active = false;
-            if (ws) ws.close();
-        });
+        // Close WebSocket if session transitions to terminal during our watch
+        if (sess.terminal && ws) {
+            ws.close();
+            ws = null;
+        }
+    });
+
+    onCleanup(() => {
+        if (ws) {
+            ws.close();
+            ws = null;
+        }
+        isConnectingOrConnected = false;
     });
 
     createEffect(() => {
         telemetryLogs();
-        if (logsEndRef) {
-            logsEndRef.scrollIntoView({ behavior: 'smooth' });
+        if (logsContainerRef) {
+            logsContainerRef.scrollTop = logsContainerRef.scrollHeight;
         }
     });
 
@@ -278,7 +291,7 @@ export default function TranslationStatus() {
                 <div class="card bg-base-100 border border-base-200 shadow-sm">
                     <div class="card-body p-5 space-y-3">
                         <h2 class="card-title text-base font-semibold border-b border-base-200 pb-2">Logs</h2>
-                        <div class="bg-black p-4 rounded-lg border border-base-200 max-h-[250px] overflow-y-auto font-mono text-xs">
+                        <div ref={logsContainerRef} class="bg-black p-4 rounded-lg border border-base-200 max-h-[250px] overflow-y-auto font-mono text-xs">
                             <Show when={telemetryLogs().length === 0}>
                                 <div class="text-base-content/30 italic">Awaiting telemetry logs...</div>
                             </Show>
@@ -296,7 +309,6 @@ export default function TranslationStatus() {
                                     }}
                                 </For>
                             </Show>
-                            <div ref={logsEndRef} />
                         </div>
                     </div>
                 </div>

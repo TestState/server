@@ -34,13 +34,14 @@ public class WSMessage {
 
     public record BatchUpdateMsg(String type, String batchId, String status, long completed, int totalIterations,
                                  long passedCount, long failedCount, long runningCount, long pendingCount,
-                                 String throughput, String avgNegotiate,
+                                 String throughput, String avgNegotiate, boolean terminal,
                                  java.util.List<SessionStatusDTO> sessions) {
         public static BatchUpdateMsg from(me.hsgamer.teststate.cms.core.TestBatchSession batch) {
             return new BatchUpdateMsg("BATCH_UPDATE", batch.getBatchId(), batch.getStatus().name(),
                 batch.getCompletedCount(), batch.getTotalIterations(),
                 batch.getPassedCount(), batch.getFailedCount(), batch.getRunningCount(), batch.getPendingCount(),
                 batch.getThroughputFormatted(), batch.getAverageNegotiationDurationFormatted(),
+                me.hsgamer.teststate.cms.util.StatusUtil.isTerminal(batch.getStatus()),
                 batch.getSessions().stream().map(s -> new SessionStatusDTO(
                     s.getSessionId(),
                     s.getStatus() != null ? s.getStatus().getState().name() : "PENDING",
