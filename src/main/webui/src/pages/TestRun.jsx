@@ -93,7 +93,7 @@ function TestRunInner(props) {
             {/* Header */}
             <div class="flex justify-between items-center">
                 <div class="space-y-0.5">
-                    <h1 class="text-2xl font-bold">Run Test</h1>
+                    <h1 class="text-2xl font-bold">New Test Session</h1>
                     <p class="font-mono text-xs text-base-content/50">{props.test.name}</p>
                 </div>
                 <button

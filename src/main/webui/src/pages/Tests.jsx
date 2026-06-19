@@ -63,7 +63,7 @@ export default function Tests() {
             <Title>Tests | TestState</Title>
             {/* Header */}
             <div class="flex justify-between items-center">
-                <h1 class="text-2xl font-bold">Test Configurations</h1>
+                <h1 class="text-2xl font-bold">Tests</h1>
                 <button 
                     class="btn btn-primary btn-sm flex items-center gap-1.5" 
                     onClick={() => navigate('/tests/new')}

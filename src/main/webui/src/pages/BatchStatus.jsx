@@ -139,7 +139,7 @@ export default function BatchStatus() {
             {/* Header */}
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div class="space-y-0.5">
-                    <h1 class="text-2xl font-bold">Batch Hub</h1>
+                    <h1 class="text-2xl font-bold">Batch Status</h1>
                     <p class="font-mono text-xs text-base-content/50">{params.batchId}</p>
                 </div>
                 <div class="flex flex-wrap gap-2">

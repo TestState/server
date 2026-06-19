@@ -59,17 +59,10 @@ export default function Dashboard() {
                 <div class="flex gap-2">
                     <button
                         class="btn btn-primary btn-sm flex items-center gap-1.5"
-                        onClick={() => navigate('/tests/new')}
+                        onClick={() => navigate('/tests/')}
                     >
                         <Play size={16} />
-                        <span>New Test</span>
-                    </button>
-                    <button
-                        class="btn btn-outline btn-primary btn-sm flex items-center gap-1.5"
-                        onClick={() => navigate('/payloads/new')}
-                    >
-                        <Plus size={16} />
-                        <span>New Payload</span>
+                        <span>New Run</span>
                     </button>
                 </div>
             </div>

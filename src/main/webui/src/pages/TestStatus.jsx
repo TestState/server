@@ -149,7 +149,7 @@ export default function TestStatus() {
             {/* Header */}
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div class="space-y-0.5">
-                    <h1 class="text-2xl font-bold">Session Status</h1>
+                    <h1 class="text-2xl font-bold">Test Session</h1>
                     <p class="font-mono text-xs text-base-content/50">{params.sessionId}</p>
                 </div>
                 <div class="flex flex-wrap gap-2">
