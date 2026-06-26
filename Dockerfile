@@ -2,8 +2,8 @@
 FROM maven:3.9-eclipse-temurin-25 AS base
 WORKDIR /workspace/teststate-cms
 
-# Copy Node.js 20 and npm from pre-built node image
-COPY --from=node:20 /usr/local /usr/local
+# Copy Node.js 24 and npm from pre-built node image
+COPY --from=node:24 /usr/local /usr/local
  
 # 1. Cache Maven dependencies using BuildKit mount
 COPY implementation/server/teststate-cms/pom.xml .
@@ -26,8 +26,8 @@ USER root
 COPY --from=base /usr/share/maven /usr/share/maven
 RUN ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
 
-# Copy Node.js 20 and npm from pre-built node image
-COPY --from=node:20 /usr/local /usr/local
+# Copy Node.js 24 and npm from pre-built node image
+COPY --from=node:24 /usr/local /usr/local
 
 WORKDIR /workspace
 COPY --from=base /specification /specification
