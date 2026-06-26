@@ -150,7 +150,10 @@ const strategyOptions = [
       v-if="isLoading"
       class="flex flex-col items-center justify-center min-h-[30vh] gap-3"
     >
-      <UIcon name="i-lucide-loader-2" class="animate-spin w-10 h-10 text-primary-500" />
+      <UIcon
+        name="i-lucide-loader-2"
+        class="animate-spin w-10 h-10 text-primary-500"
+      />
       <p class="text-sm text-gray-500">
         Loading Run context...
       </p>

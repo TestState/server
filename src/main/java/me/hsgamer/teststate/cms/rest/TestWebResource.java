@@ -44,11 +44,40 @@ public class TestWebResource {
     @Inject
     BatchTestManager batchTestManager;
 
+    @Inject
+    StatisticsService statisticsService;
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Blocking
     public List<TestEntity> list() {
         return testService.listAll();
+    }
+
+    @GET
+    @Path("/count")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Blocking
+    public long count() {
+        return testService.listAll().size();
+    }
+
+    @GET
+    @Path("/sessions/count")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Blocking
+    public long countSessions() {
+        return testSessionManager.getTestSessions().size();
+    }
+
+    @GET
+    @Path("/statistics")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Object> getPerformanceStats() {
+        Map<String, Object> data = new HashMap<>();
+        data.put("avgNegotiationTime", String.format("%.2f", statisticsService.getAvgNegotiationTime()));
+        data.put("throughput", String.format("%.2f", statisticsService.getThroughputPerMinute()));
+        return data;
     }
 
     @GET

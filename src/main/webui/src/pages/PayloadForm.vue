@@ -149,7 +149,10 @@ const isLoading = computed(() => isEdit.value && isEntityPending.value);
       v-if="isLoading"
       class="flex flex-col items-center justify-center min-h-[30vh] gap-3"
     >
-      <UIcon name="i-lucide-loader-2" class="animate-spin w-10 h-10 text-primary-500" />
+      <UIcon
+        name="i-lucide-loader-2"
+        class="animate-spin w-10 h-10 text-primary-500"
+      />
       <p class="text-sm text-gray-500">
         Loading Form data...
       </p>
@@ -169,7 +172,10 @@ const isLoading = computed(() => isEdit.value && isEntityPending.value);
         </template>
 
         <div class="space-y-4">
-          <UFormField label="Name" required>
+          <UFormField
+            label="Name"
+            required
+          >
             <UInput
               v-model="name"
               placeholder="Enter payload name"
@@ -187,7 +193,10 @@ const isLoading = computed(() => isEdit.value && isEntityPending.value);
             />
           </UFormField>
 
-          <UFormField label="Type" required>
+          <UFormField
+            label="Type"
+            required
+          >
             <UInput
               v-model="type"
               placeholder="Select or enter payload type"
@@ -207,7 +216,7 @@ const isLoading = computed(() => isEdit.value && isEntityPending.value);
           <UFormField label="Metadata">
             <UTextarea
               v-model="metadata"
-              placeholder='{ "key": "value" }'
+              placeholder="{ &quot;key&quot;: &quot;value&quot; }"
               :rows="5"
               class="w-full font-mono text-xs"
             />

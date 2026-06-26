@@ -35,6 +35,13 @@ public class AgentWebResource {
     }
 
     @GET
+    @Path("/count")
+    @Produces(MediaType.APPLICATION_JSON)
+    public long count() {
+        return agentManager.getAgents().size();
+    }
+
+    @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<AgentResponse> list() {
         return agentManager.getAgents().stream().map(a -> {

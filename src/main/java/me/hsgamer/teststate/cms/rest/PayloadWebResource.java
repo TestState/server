@@ -1,5 +1,6 @@
 package me.hsgamer.teststate.cms.rest;
 
+import io.smallrye.common.annotation.Blocking;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -29,6 +30,14 @@ public class PayloadWebResource {
     @Produces(MediaType.APPLICATION_JSON)
     public List<PayloadEntity> list() {
         return payloadService.listAll();
+    }
+
+    @GET
+    @Path("/count")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Blocking
+    public long count() {
+        return payloadService.listAll().size();
     }
 
     @GET

@@ -150,7 +150,10 @@ const typeOptions = computed(() => (currentAgent.value?.supportedTranslations ||
       v-if="isLoading"
       class="flex flex-col items-center justify-center min-h-[30vh] gap-3"
     >
-      <UIcon name="i-lucide-loader-2" class="animate-spin w-10 h-10 text-primary-500" />
+      <UIcon
+        name="i-lucide-loader-2"
+        class="animate-spin w-10 h-10 text-primary-500"
+      />
       <p class="text-sm text-gray-500">
         Loading translation profiles...
       </p>
@@ -170,7 +173,10 @@ const typeOptions = computed(() => (currentAgent.value?.supportedTranslations ||
         </template>
 
         <div class="space-y-4">
-          <UFormField label="Node" required>
+          <UFormField
+            label="Node"
+            required
+          >
             <USelect 
               v-model="agentId"
               :items="agentOptions"
@@ -180,7 +186,10 @@ const typeOptions = computed(() => (currentAgent.value?.supportedTranslations ||
             />
           </UFormField>
 
-          <UFormField label="Type" required>
+          <UFormField
+            label="Type"
+            required
+          >
             <USelect 
               v-model="type"
               :items="typeOptions"
