@@ -1,25 +1,13 @@
 import { defineConfig } from 'vite';
-import solid from 'vite-plugin-solid';
-import tailwind from '@tailwindcss/vite';
+import vue from '@vitejs/plugin-vue';
+import ui from '@nuxt/ui/vite';
+import path from 'path';
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [solid(), tailwind()],
-  server: {
-    port: 5173,
-    strictPort: true,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-        secure: false,
-      },
-      '/telemetry': {
-        target: 'ws://localhost:8080',
-        ws: true,
-        changeOrigin: true,
-        secure: false,
-      }
-    }
-  }
+  plugins: [vue(), ui()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
 });

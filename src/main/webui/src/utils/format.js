@@ -3,10 +3,10 @@
  */
 export const getStatusColor = (status) => {
     const s = status?.toLowerCase() || '';
-    if (s.includes('complete') || s.includes('success')) return 'badge-success text-success-content';
-    if (s.includes('fail') || s.includes('error')) return 'badge-error text-error-content';
-    if (s.includes('run') || s.includes('pending') || s.includes('negotiat')) return 'badge-info text-info-content';
-    return 'badge-neutral';
+    if (s.includes('complete') || s.includes('success')) return 'success';
+    if (s.includes('fail') || s.includes('error')) return 'danger';
+    if (s.includes('run') || s.includes('pending') || s.includes('negotiat')) return 'info';
+    return 'secondary';
 };
 
 /**

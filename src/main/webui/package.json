@@ -6,24 +6,23 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@lucide/vue": "^1.21.0",
+    "@nuxt/ui": "^4.9.0",
+    "@tanstack/vue-query": "^5.101.1",
+    "vue": "^3.5.39",
+    "vue-router": "^5.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.3.1",
-    "daisyui": "^5.5.23",
+    "@vitejs/plugin-vue": "^6.0.7",
     "eslint": "^10.3.0",
+    "eslint-plugin-vue": "^10.9.2",
     "globals": "^17.6.0",
     "tailwindcss": "^4.3.1",
-    "vite": "^8.0.12",
-    "vite-plugin-solid": "^2.11.12"
-  },
-  "dependencies": {
-    "@solidjs/meta": "^0.29.4",
-    "@solidjs/router": "^0.16.1",
-    "@tanstack/solid-query": "^5.101.0",
-    "lucide-solid": "^1.18.0",
-    "solid-js": "^1.9.13"
+    "vite": "^8.1.0"
   }
 }

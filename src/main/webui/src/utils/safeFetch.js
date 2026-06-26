@@ -20,7 +20,7 @@ export async function safeFetch(url, options = {}) {
         let data;
         try {
             data = text ? JSON.parse(text) : {};
-        } catch (e) {
+        } catch {
             data = {text};
         }
 
