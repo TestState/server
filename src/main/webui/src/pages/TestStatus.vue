@@ -34,13 +34,13 @@ let isConnectingOrConnected = false;
 
 const connectWebSocket = (sess) => {
   if (sess.terminal && !isConnectingOrConnected) {
-    telemetryLogs.value = sess.logs || [];
+    telemetryLogs.value = sess.logs ? [...sess.logs] : [];
     return;
   }
 
   if (!sess.terminal && !isConnectingOrConnected) {
     isConnectingOrConnected = true;
-    telemetryLogs.value = sess.logs || [];
+    telemetryLogs.value = [];
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
@@ -74,8 +74,18 @@ const connectWebSocket = (sess) => {
   if (sess.terminal && ws) {
     ws.close();
     ws = null;
+    isConnectingOrConnected = false;
   }
 };
+
+watch(() => props.sessionId, () => {
+  if (ws) {
+    ws.close();
+    ws = null;
+  }
+  isConnectingOrConnected = false;
+  telemetryLogs.value = [];
+});
 
 watch(session, (newVal) => {
   if (newVal) {

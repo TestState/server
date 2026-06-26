@@ -10,13 +10,13 @@ const props = defineProps({
 
 const logsContainerRef = ref(null);
 
-watch(() => props.logs.length, () => {
+watch(() => props.logs, () => {
   nextTick(() => {
     if (logsContainerRef.value) {
       logsContainerRef.value.scrollTop = logsContainerRef.value.scrollHeight;
     }
   });
-});
+}, { deep: true });
 </script>
 
 <template>

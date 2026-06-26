@@ -104,6 +104,14 @@ const handleCancel = () => {
   }
 };
 
+watch(() => props.batchId, () => {
+  if (ws) {
+    ws.close();
+    ws = null;
+  }
+  isConnectingOrConnected = false;
+});
+
 watch(batch, (newVal) => {
   if (newVal) {
     connectWebSocket(newVal);
