@@ -103,11 +103,11 @@ const mapColor = (status) => {
             <!-- Details -->
             <div class="grid grid-cols-2 gap-2 text-xs text-gray-650 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/50 p-2.5 rounded-lg border border-gray-100 dark:border-gray-800/80">
               <div>
-                <span class="text-gray-400 block">System:</span>
-                <span class="font-medium text-gray-700 dark:text-gray-300">{{ session.systemId || 'N/A' }}</span>
+                <span class="text-gray-400 block">Agent ID:</span>
+                <span class="font-medium text-gray-700 dark:text-gray-300">{{ session.agentId || 'N/A' }}</span>
               </div>
               <div>
-                <span class="text-gray-400 block">Agent:</span>
+                <span class="text-gray-400 block">Agent Name:</span>
                 <span
                   class="font-medium truncate block text-gray-700 dark:text-gray-300"
                   :title="session.agentName"

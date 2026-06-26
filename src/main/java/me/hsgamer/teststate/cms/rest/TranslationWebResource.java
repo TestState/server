@@ -150,6 +150,8 @@ public class TranslationWebResource {
     private Map<String, Object> sessionToMap(TranslationSession session) {
         Map<String, Object> m = new HashMap<>();
         m.put("sessionId", session.getSessionId());
+        m.put("agentId", session.getAgentId());
+        m.put("agentName", session.getAgentName());
         m.put("status", session.getStatus() != null ? session.getStatus().getState().name() : "PENDING");
         m.put("terminal", session.getStatus() != null && StatusUtil.isTerminal(session.getStatus().getState()));
         if (session.getStatus() != null && session.getStatus().getMessage() != null) {

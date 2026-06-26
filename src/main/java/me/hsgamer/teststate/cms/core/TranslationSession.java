@@ -23,9 +23,16 @@ public class TranslationSession extends AbstractSession<TranslationResponse> {
     @Getter
     private volatile TranslationResult result;
 
-    public TranslationSession(String sessionId, TranslationTicket ticket) {
+    @Getter
+    private final String agentId;
+    @Getter
+    private final String agentName;
+
+    public TranslationSession(String sessionId, TranslationTicket ticket, String agentId, String agentName) {
         super(sessionId);
         this.ticket = ticket;
+        this.agentId = agentId;
+        this.agentName = agentName;
     }
 
     public void updateStatus(TranslationStatus status) {

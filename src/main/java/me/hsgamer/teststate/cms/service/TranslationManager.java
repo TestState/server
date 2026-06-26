@@ -47,7 +47,7 @@ public class TranslationManager {
                     return;
                 }
 
-                TranslationSession s = new TranslationSession(sid, ticket);
+                TranslationSession s = new TranslationSession(sid, ticket, agentId, agent.displayName());
                 translationSessions.put(sid, s);
 
                 if (agent instanceof AgentManager.AgentImpl agentImpl) {
