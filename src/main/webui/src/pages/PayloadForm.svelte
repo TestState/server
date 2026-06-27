@@ -19,35 +19,35 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
   let errorMsg = $state(null);
 
   // Queries
-  const availableTypes = createQuery({
+  const availableTypes = createQuery(() => ({
     queryKey: ['payloadAvailableTypes'],
     queryFn: () => safeFetch('/api/payloads/available-types')
-  });
+  }));
 
-  const mimeMappings = createQuery({
+  const mimeMappings = createQuery(() => ({
     queryKey: ['payloadMimeMappings'],
     queryFn: () => safeFetch('/api/payloads/mime-mappings')
-  });
+  }));
 
-  const entity = createQuery({
-    get queryKey() { return ['payload', id]; },
-    get queryFn() { return () => safeFetch(`/api/payloads/${id}`); },
-    get enabled() { return isEdit; }
-  });
+  const entity = createQuery(() => ({
+    queryKey: ['payload', id],
+    queryFn: () => safeFetch(`/api/payloads/${id}`),
+    enabled: isEdit
+  }));
 
-  let types = $derived($availableTypes.data || []);
-  let mappings = $derived($mimeMappings.data || {});
+  let types = $derived(availableTypes.data || []);
+  let mappings = $derived(mimeMappings.data || {});
 
   $effect(() => {
-    if ($entity.data) {
-      name = $entity.data.name || '';
-      description = $entity.data.description || '';
-      type = $entity.data.type || '';
-      metadata = $entity.data.metadata || '';
+    if (entity.data) {
+      name = entity.data.name || '';
+      description = entity.data.description || '';
+      type = entity.data.type || '';
+      metadata = entity.data.metadata || '';
     }
   });
 
-  const saveMutation = createMutation({
+  const saveMutation = createMutation(() => ({
     mutationFn: (payloadForm) => {
       const url = isEdit ? `/api/payloads/${id}` : '/api/payloads';
       const method = isEdit ? 'PUT' : 'POST';
@@ -63,7 +63,7 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
     onError: (err) => {
       errorMsg = err.message;
     }
-  });
+  }));
 
   const handleFileChange = (e) => {
     attachmentFile = e.target.files[0];
@@ -95,10 +95,10 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
       payloadForm.append('attachmentFile', attachmentFile);
     }
 
-    $saveMutation.mutate(payloadForm);
+    saveMutation.mutate(payloadForm);
   };
 
-  let isLoading = $derived($entity.isPending && isEdit);
+  let isLoading = $derived(entity.isPending && isEdit);
 </script>
 
 <div class="max-w-3xl mx-auto w-full space-y-6">
@@ -223,10 +223,10 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
 
       <button
         type="submit"
-        class="btn btn-sm preset-filled-primary-500 w-full flex justify-center gap-2"
-        disabled={$saveMutation.isPending}
+        class="btn preset-filled-primary-500 w-full flex justify-center gap-2"
+        disabled={saveMutation.isPending}
       >
-        {#if $saveMutation.isPending}
+        {#if saveMutation.isPending}
           <Loader2 class="animate-spin" size={18} />
         {:else}
           <Save size={18} />

@@ -13,17 +13,17 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
   let type = $state('');
   let payloadIds = $state([]);
 
-  const agentsQuery = createQuery({
+  const agentsQuery = createQuery(() => ({
     queryKey: ['agents'],
     queryFn: () => safeFetch('/api/agents')
-  });
+  }));
 
-  const payloadsQuery = createQuery({
+  const payloadsQuery = createQuery(() => ({
     queryKey: ['payloads'],
     queryFn: () => safeFetch('/api/payloads')
-  });
+  }));
 
-  const mutation = createMutation({
+  const mutation = createMutation(() => ({
     mutationFn: (body) => safeFetch('/api/translations/sessions', {
       method: 'POST',
       headers: {
@@ -40,10 +40,10 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
     onError: (err) => {
       formError = err.message;
     }
-  });
+  }));
 
-  let agents = $derived($agentsQuery.data || []);
-  let payloads = $derived($payloadsQuery.data || []);
+  let agents = $derived(agentsQuery.data || []);
+  let payloads = $derived(payloadsQuery.data || []);
 
   let currentAgent = $derived(agents.find(a => a.id === agentId));
   let currentTranslation = $derived(currentAgent?.supportedTranslations?.find(t => t.type === type));
@@ -85,7 +85,7 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
       return;
     }
     formError = null;
-    $mutation.mutate({
+    mutation.mutate({
       agentId,
       type,
       payloadIds
@@ -102,8 +102,8 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
     }
   };
 
-  let isLoading = $derived($agentsQuery.isPending || $payloadsQuery.isPending);
-  let error = $derived(formError || $mutation.error?.message);
+  let isLoading = $derived(agentsQuery.isPending || payloadsQuery.isPending);
+  let error = $derived(formError || mutation.error?.message);
 
   let agentOptions = $derived(agents.map(a => ({ label: a.name, value: a.id })));
   let typeOptions = $derived((currentAgent?.supportedTranslations || []).map(t => ({ label: t.type, value: t.type })));
@@ -222,10 +222,10 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
 
       <button
         type="submit"
-        class="btn btn-sm preset-filled-primary-500 w-full flex justify-center gap-2"
-        disabled={!type || $mutation.isPending}
+        class="btn preset-filled-primary-500 w-full flex justify-center gap-2"
+        disabled={!type || mutation.isPending}
       >
-        {#if $mutation.isPending}
+        {#if mutation.isPending}
           <Loader2 class="animate-spin" size={18} />
         {:else}
           <Play size={18} />

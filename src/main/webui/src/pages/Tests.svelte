@@ -17,7 +17,7 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
   const sessionsQuery = useSessionsQuery();
   const batchesQuery = useBatchesQuery();
 
-  const deleteMutation = createMutation({
+  const deleteMutation = createMutation(() => ({
     mutationFn: (id) => safeFetch(`/api/tests/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
       alert('Test configuration deleted successfully');
@@ -26,9 +26,9 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
     onError: (err) => {
       alert('Failed to delete test: ' + err.message);
     }
-  });
+  }));
 
-  const copyMutation = createMutation({
+  const copyMutation = createMutation(() => ({
     mutationFn: (id) => safeFetch(`/api/tests/${id}/copy`, { method: 'POST' }),
     onSuccess: () => {
       alert('Test configuration duplicated successfully');
@@ -37,24 +37,24 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
     onError: (err) => {
       alert('Failed to duplicate test: ' + err.message);
     }
-  });
+  }));
 
   const handleDelete = (id) => {
     if (window.confirm('Are you sure you want to delete this test configuration?')) {
-      $deleteMutation.mutate(id);
+      deleteMutation.mutate(id);
     }
   };
 
-  let isLoading = $derived($testsQuery.isPending || $sessionsQuery.isPending || $batchesQuery.isPending);
-  let hasError = $derived($testsQuery.error || $sessionsQuery.error || $batchesQuery.error);
+  let isLoading = $derived(testsQuery.isPending || sessionsQuery.isPending || batchesQuery.isPending);
+  let hasError = $derived(testsQuery.error || sessionsQuery.error || batchesQuery.error);
   let errorMessage = $derived(() => {
-    const err = $testsQuery.error || $sessionsQuery.error || $batchesQuery.error;
+    const err = testsQuery.error || sessionsQuery.error || batchesQuery.error;
     return err ? (err.message || String(err)) : '';
   });
 
-  let tests = $derived($testsQuery.data || []);
-  let sessions = $derived($sessionsQuery.data || []);
-  let batches = $derived($batchesQuery.data || []);
+  let tests = $derived(testsQuery.data || []);
+  let sessions = $derived(sessionsQuery.data || []);
+  let batches = $derived(batchesQuery.data || []);
 
   let hasSessions = $derived(sessions.length > 0);
   let hasBatches = $derived(batches.length > 0);
@@ -137,8 +137,8 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
                 </button>
                 <button 
                   class="btn btn-sm preset-tonal-surface-500 flex items-center gap-1"
-                  disabled={$copyMutation.isPending && $copyMutation.variables === test.id}
-                  onclick={() => $copyMutation.mutate(test.id)}
+                  disabled={copyMutation.isPending && copyMutation.variables === test.id}
+                  onclick={() => copyMutation.mutate(test.id)}
                 >
                   <Copy size={12} />
                   Copy
@@ -152,7 +152,7 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
                 </button>
                 <button 
                   class="btn btn-sm preset-filled-error-500 flex items-center gap-1"
-                  disabled={$deleteMutation.isPending && $deleteMutation.variables === test.id}
+                  disabled={deleteMutation.isPending && deleteMutation.variables === test.id}
                   onclick={() => handleDelete(test.id)}
                 >
                   <Trash size={12} />

@@ -14,7 +14,7 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
     description = `Translated ${item.type} from session ${sessionId}`;
   });
 
-  const mutation = createMutation({
+  const mutation = createMutation(() => ({
     mutationFn: (body) => safeFetch(`/api/translations/sessions/${sessionId}/payloads/${item.index}/save`, {
       method: 'POST',
       headers: {
@@ -28,12 +28,12 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
     onError: (err) => {
       alert('Failed to save payload: ' + err.message);
     }
-  });
+  }));
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!name) return;
-    $mutation.mutate({
+    mutation.mutate({
       name,
       description
     });
@@ -62,10 +62,10 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
   <div class="flex justify-end">
     <button
       type="submit"
-      class="btn btn-sm preset-filled-primary-500 flex items-center gap-1"
-      disabled={$mutation.isPending}
+      class="btn preset-filled-primary-500 flex items-center gap-1"
+      disabled={mutation.isPending}
     >
-      {#if $mutation.isPending}
+      {#if mutation.isPending}
         <Loader2 class="animate-spin" size={12} />
       {:else}
         <Save size={12} />

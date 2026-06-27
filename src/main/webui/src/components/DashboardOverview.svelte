@@ -15,33 +15,33 @@
   const stats = usePerformanceStatsQuery();
 
   let isLoading = $derived(
-    $testsCount.isPending ||
-    $payloadsCount.isPending ||
-    $agentsCount.isPending ||
-    $sessionsCount.isPending ||
-    $stats.isPending
+    testsCount.isPending ||
+    payloadsCount.isPending ||
+    agentsCount.isPending ||
+    sessionsCount.isPending ||
+    stats.isPending
   );
 
   let hasError = $derived(
-    $testsCount.error ||
-    $payloadsCount.error ||
-    $agentsCount.error ||
-    $sessionsCount.error ||
-    $stats.error
+    testsCount.error ||
+    payloadsCount.error ||
+    agentsCount.error ||
+    sessionsCount.error ||
+    stats.error
   );
 
   let errorMessage = $derived(() => {
-    const err = $testsCount.error || $payloadsCount.error || $agentsCount.error || $sessionsCount.error || $stats.error;
+    const err = testsCount.error || payloadsCount.error || agentsCount.error || sessionsCount.error || stats.error;
     return err ? (err.message || String(err)) : '';
   });
 
   let overviewStats = $derived([
-    { title: 'Tests', value: $testsCount.data ?? 0 },
-    { title: 'Payloads', value: $payloadsCount.data ?? 0 },
-    { title: 'Nodes', value: $agentsCount.data ?? 0 },
-    { title: 'Sessions', value: $sessionsCount.data ?? 0 },
-    { title: 'Avg Time', value: `${Number($stats.data?.avgNegotiationTime ?? 0).toFixed(2)} ms` },
-    { title: 'Rate', value: `${Number($stats.data?.throughput ?? 0).toFixed(2)}/m` }
+    { title: 'Tests', value: testsCount.data ?? 0 },
+    { title: 'Payloads', value: payloadsCount.data ?? 0 },
+    { title: 'Nodes', value: agentsCount.data ?? 0 },
+    { title: 'Sessions', value: sessionsCount.data ?? 0 },
+    { title: 'Avg Time', value: `${Number(stats.data?.avgNegotiationTime ?? 0).toFixed(2)} ms` },
+    { title: 'Rate', value: `${Number(stats.data?.throughput ?? 0).toFixed(2)}/m` }
   ]);
 </script>
 

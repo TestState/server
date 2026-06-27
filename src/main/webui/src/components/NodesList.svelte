@@ -4,10 +4,10 @@
 
   const agentsQuery = useAgentsQuery();
 
-  let isLoading = $derived($agentsQuery.isPending);
-  let hasError = $derived($agentsQuery.error);
-  let errorMessage = $derived($agentsQuery.error?.message || String($agentsQuery.error));
-  let agents = $derived($agentsQuery.data || []);
+  let isLoading = $derived(agentsQuery.isPending);
+  let hasError = $derived(agentsQuery.error);
+  let errorMessage = $derived(agentsQuery.error?.message || String(agentsQuery.error));
+  let agents = $derived(agentsQuery.data || []);
 
   const capBadgePreset = (agent, cap) => {
     if (agent.supportedTestTypes?.includes(cap)) return 'preset-filled-primary-500';

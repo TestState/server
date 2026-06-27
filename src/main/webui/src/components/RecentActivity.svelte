@@ -7,15 +7,15 @@
   const batchesQuery = useBatchesQuery();
   const sessionsQuery = useSessionsQuery();
 
-  let isLoading = $derived($batchesQuery.isPending || $sessionsQuery.isPending);
-  let hasError = $derived($batchesQuery.error || $sessionsQuery.error);
+  let isLoading = $derived(batchesQuery.isPending || sessionsQuery.isPending);
+  let hasError = $derived(batchesQuery.error || sessionsQuery.error);
   let errorMessage = $derived(() => {
-    const err = $batchesQuery.error || $sessionsQuery.error;
+    const err = batchesQuery.error || sessionsQuery.error;
     return err ? (err.message || String(err)) : '';
   });
 
-  let batches = $derived($batchesQuery.data || []);
-  let sessions = $derived($sessionsQuery.data || []);
+  let batches = $derived(batchesQuery.data || []);
+  let sessions = $derived(sessionsQuery.data || []);
 
   const getBadgePreset = (status) => {
     const col = getStatusColor(status);

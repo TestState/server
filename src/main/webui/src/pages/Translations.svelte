@@ -8,10 +8,10 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
 
   const sessionsQuery = useTranslationSessionsQuery();
 
-  let isLoading = $derived($sessionsQuery.isPending);
-  let hasError = $derived($sessionsQuery.error);
-  let errorMessage = $derived($sessionsQuery.error?.message || String($sessionsQuery.error));
-  let sessions = $derived($sessionsQuery.data || []);
+  let isLoading = $derived(sessionsQuery.isPending);
+  let hasError = $derived(sessionsQuery.error);
+  let errorMessage = $derived(sessionsQuery.error?.message || String(sessionsQuery.error));
+  let sessions = $derived(sessionsQuery.data || []);
 
   const getBadgePreset = (status) => {
     const col = getStatusColor(status);

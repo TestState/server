@@ -18,25 +18,23 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
   let payloadIds = $state([]);
   let errorMsg = $state(null);
 
-  const contextQuery = createQuery({
-    get queryKey() { return ['test-form-context', id]; },
-    get queryFn() {
-      return async () => {
-        const [types, payloads, entity, agents] = await Promise.all([
-          safeFetch('/api/tests/available-types'),
-          safeFetch('/api/payloads'),
-          isEdit ? safeFetch(`/api/tests/${id}`) : Promise.resolve(null),
-          safeFetch('/api/agents')
-        ]);
-        return { types, payloads, entity, agents };
-      };
+  const contextQuery = createQuery(() => ({
+    queryKey: ['test-form-context', id],
+    queryFn: async () => {
+      const [types, payloads, entity, agents] = await Promise.all([
+        safeFetch('/api/tests/available-types'),
+        safeFetch('/api/payloads'),
+        isEdit ? safeFetch(`/api/tests/${id}`) : Promise.resolve(null),
+        safeFetch('/api/agents')
+      ]);
+      return { types, payloads, entity, agents };
     }
-  });
+  }));
 
-  let availableTypes = $derived($contextQuery.data?.types || []);
-  let allPayloads = $derived($contextQuery.data?.payloads || []);
-  let entity = $derived($contextQuery.data?.entity);
-  let agents = $derived($contextQuery.data?.agents || []);
+  let availableTypes = $derived(contextQuery.data?.types || []);
+  let allPayloads = $derived(contextQuery.data?.payloads || []);
+  let entity = $derived(contextQuery.data?.entity);
+  let agents = $derived(contextQuery.data?.agents || []);
 
   $effect(() => {
     if (entity) {
@@ -47,7 +45,7 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
     }
   });
 
-  const saveMutation = createMutation({
+  const saveMutation = createMutation(() => ({
     mutationFn: (body) => {
       const url = isEdit ? `/api/tests/${id}` : '/api/tests';
       const method = isEdit ? 'PUT' : 'POST';
@@ -66,9 +64,9 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
     onError: (err) => {
       errorMsg = err.message;
     }
-  });
+  }));
 
-  const copyMutation = createMutation({
+  const copyMutation = createMutation(() => ({
     mutationFn: () => safeFetch(`/api/tests/${id}/copy`, { method: 'POST' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tests'] });
@@ -77,7 +75,7 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
     onError: (err) => {
       alert('Failed to duplicate test: ' + err.message);
     }
-  });
+  }));
 
   const getPayloadRequirement = (payloadType) => {
     const tType = testType;
@@ -122,7 +120,7 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
       return;
     }
 
-    $saveMutation.mutate({
+    saveMutation.mutate({
       name,
       description,
       testType,
@@ -130,9 +128,9 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
     });
   };
 
-  let isLoading = $derived($contextQuery.isPending);
-  let hasError = $derived($contextQuery.isError);
-  let errorMessage = $derived($contextQuery.error?.message || String($contextQuery.error));
+  let isLoading = $derived(contextQuery.isPending);
+  let hasError = $derived(contextQuery.isError);
+  let errorMessage = $derived(contextQuery.error?.message || String(contextQuery.error));
 </script>
 
 <div class="max-w-3xl mx-auto w-full space-y-6">
@@ -156,10 +154,10 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
           {#if isEdit}
             <button
               class="btn btn-sm preset-tonal-surface-500 flex items-center gap-2"
-              disabled={$copyMutation.isPending}
-              onclick={() => $copyMutation.mutate()}
+              disabled={copyMutation.isPending}
+              onclick={() => copyMutation.mutate()}
             >
-              {#if $copyMutation.isPending}
+              {#if copyMutation.isPending}
                 <Loader2 class="animate-spin" size={16} />
               {:else}
                 <Copy size={16} />
@@ -278,10 +276,10 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
 
         <button
           type="submit"
-          class="btn btn-sm preset-filled-primary-500 w-full flex justify-center gap-2"
-          disabled={$saveMutation.isPending}
+          class="btn preset-filled-primary-500 w-full flex justify-center gap-2"
+          disabled={saveMutation.isPending}
         >
-          {#if $saveMutation.isPending}
+          {#if saveMutation.isPending}
             <Loader2 class="animate-spin" size={18} />
           {:else}
             <Save size={18} />

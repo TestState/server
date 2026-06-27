@@ -12,7 +12,7 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
   const queryClient = useQueryClient();
   const payloadsQuery = usePayloadsQuery();
 
-  const deleteMutation = createMutation({
+  const deleteMutation = createMutation(() => ({
     mutationFn: (id) => safeFetch(`/api/payloads/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
       alert('Payload deleted successfully');
@@ -21,11 +21,11 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
     onError: (err) => {
       alert('Failed to delete payload: ' + err.message);
     }
-  });
+  }));
 
   const handleDelete = (id) => {
     if (window.confirm('Are you sure you want to delete this payload?')) {
-      $deleteMutation.mutate(id);
+      deleteMutation.mutate(id);
     }
   };
 
@@ -38,10 +38,10 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
     document.body.removeChild(a);
   };
 
-  let isLoading = $derived($payloadsQuery.isPending);
-  let hasError = $derived($payloadsQuery.error);
-  let errorMessage = $derived($payloadsQuery.error?.message || String($payloadsQuery.error));
-  let payloads = $derived($payloadsQuery.data || []);
+  let isLoading = $derived(payloadsQuery.isPending);
+  let hasError = $derived(payloadsQuery.error);
+  let errorMessage = $derived(payloadsQuery.error?.message || String(payloadsQuery.error));
+  let payloads = $derived(payloadsQuery.data || []);
 </script>
 
 <div class="space-y-6 w-full">
@@ -117,7 +117,7 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
             </button>
             <button 
               class="btn btn-sm preset-filled-error-500 flex items-center gap-1"
-              disabled={$deleteMutation.isPending && $deleteMutation.variables === payload.id}
+              disabled={deleteMutation.isPending && deleteMutation.variables === payload.id}
               onclick={() => handleDelete(payload.id)}
             >
               <Trash size={12} />

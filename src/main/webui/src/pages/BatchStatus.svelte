@@ -16,10 +16,10 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
   const queryClient = useQueryClient();
   const batchQuery = useBatchQuery(() => batchId);
 
-  let batch = $derived($batchQuery.data);
-  let isLoading = $derived($batchQuery.isPending);
-  let hasError = $derived($batchQuery.isError);
-  let errorMessage = $derived($batchQuery.error?.message || String($batchQuery.error));
+  let batch = $derived(batchQuery.data);
+  let isLoading = $derived(batchQuery.isPending);
+  let hasError = $derived(batchQuery.isError);
+  let errorMessage = $derived(batchQuery.error?.message || String(batchQuery.error));
 
   let sessions = $derived(batch?.sessions || []);
   let isCancelable = $derived(batch && !batch.terminal);
@@ -123,10 +123,10 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
   };
 
   let total = $derived(sessions.length);
-  let passed = $derived(sessions.filter(s => getStatusColor(s.status) === 'success').length);
-  let failed = $derived(sessions.filter(s => getStatusColor(s.status) === 'danger').length);
-  let running = $derived(sessions.filter(s => getStatusColor(s.status) === 'warning' || s.status === 'RUNNING').length);
-  let pending = $derived(sessions.filter(s => getStatusColor(s.status) === 'info' || s.status === 'PENDING').length);
+  let passed = $derived(sessions.filter(s => s.status?.includes('COMPLETED') || s.status?.includes('SUCCESS')).length);
+  let failed = $derived(sessions.filter(s => s.status?.includes('FAILED') || s.status?.includes('ERROR')).length);
+  let running = $derived(sessions.filter(s => s.status?.includes('RUNNING') || s.status?.includes('NEGOTIATING')).length);
+  let pending = $derived(sessions.filter(s => !s.status || s.status?.includes('PENDING')).length);
 
   let rate = $derived(
     typeof batch?.throughput === 'number' 

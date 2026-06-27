@@ -8,37 +8,35 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
 
   let id = $derived(route.params.id);
 
-  const contextQuery = createQuery({
-    get queryKey() { return ['test-run-context', id]; },
-    get queryFn() {
-      return async () => {
-        const [test, agents, payloads] = await Promise.all([
-          safeFetch(`/api/tests/${id}`),
-          safeFetch('/api/agents'),
-          safeFetch('/api/payloads')
-        ]);
+  const contextQuery = createQuery(() => ({
+    queryKey: ['test-run-context', id],
+    queryFn: async () => {
+      const [test, agents, payloads] = await Promise.all([
+        safeFetch(`/api/tests/${id}`),
+        safeFetch('/api/agents'),
+        safeFetch('/api/payloads')
+      ]);
 
-        // eslint-disable-next-line svelte/prefer-svelte-reactivity -- ephemeral local Set, not reactive state
-        const compatibleTypes = new Set();
-        agents.forEach(agent => {
-          const t = agent.supportedTests?.find(st => st.testType === test.testType);
-          if (t) {
-            t.requiredPayloadTypes?.forEach(pt => compatibleTypes.add(pt));
-            t.optionalPayloadTypes?.forEach(pt => compatibleTypes.add(pt));
-          }
-        });
+      // eslint-disable-next-line svelte/prefer-svelte-reactivity -- ephemeral local Set, not reactive state
+      const compatibleTypes = new Set();
+      agents.forEach(agent => {
+        const t = agent.supportedTests?.find(st => st.testType === test.testType);
+        if (t) {
+          t.requiredPayloadTypes?.forEach(pt => compatibleTypes.add(pt));
+          t.optionalPayloadTypes?.forEach(pt => compatibleTypes.add(pt));
+        }
+      });
 
-        const linkedIds = new Set(test.payloads?.map(p => p.id) || []);
-        const extraPayloads = payloads.filter(p => !linkedIds.has(p.id) && compatibleTypes.has(p.type));
+      const linkedIds = new Set(test.payloads?.map(p => p.id) || []);
+      const extraPayloads = payloads.filter(p => !linkedIds.has(p.id) && compatibleTypes.has(p.type));
 
-        return { test, agents, extraPayloads };
-      };
+      return { test, agents, extraPayloads };
     }
-  });
+  }));
 
-  let test = $derived($contextQuery.data?.test || {});
-  let agents = $derived($contextQuery.data?.agents || []);
-  let extraPayloads = $derived($contextQuery.data?.extraPayloads || []);
+  let test = $derived(contextQuery.data?.test || {});
+  let agents = $derived(contextQuery.data?.agents || []);
+  let extraPayloads = $derived(contextQuery.data?.extraPayloads || []);
 
   let agentIds = $state([]);
   let extraPayloadIds = $state([]);
@@ -55,7 +53,7 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
     }
   });
 
-  const runMutation = createMutation({
+  const runMutation = createMutation(() => ({
     mutationFn: (body) => safeFetch(`/api/tests/${id}/runs`, {
       method: 'POST',
       headers: {
@@ -73,7 +71,7 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
     onError: (err) => {
       errorMsg = 'Failed to trigger run: ' + err.message;
     }
-  });
+  }));
 
   const getPayloadRequirement = (payloadType) => {
     const ags = agents;
@@ -126,7 +124,7 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
       return;
     }
 
-    $runMutation.mutate({
+    runMutation.mutate({
       agentIds,
       extraPayloadIds,
       iterations: parseInt(iterations) || 1,
@@ -134,9 +132,9 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
     });
   };
 
-  let isLoading = $derived($contextQuery.isPending);
-  let hasError = $derived($contextQuery.isError);
-  let errorMessage = $derived($contextQuery.error?.message || String($contextQuery.error));
+  let isLoading = $derived(contextQuery.isPending);
+  let hasError = $derived(contextQuery.isError);
+  let errorMessage = $derived(contextQuery.error?.message || String(contextQuery.error));
 </script>
 
 <div class="max-w-3xl mx-auto w-full space-y-6">
@@ -309,10 +307,10 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
 
         <button
           type="submit"
-          class="btn btn-sm preset-filled-primary-500 w-full flex justify-center gap-2"
-          disabled={$runMutation.isPending}
+          class="btn preset-filled-primary-500 w-full flex justify-center gap-2"
+          disabled={runMutation.isPending}
         >
-          {#if $runMutation.isPending}
+          {#if runMutation.isPending}
             <Loader2 class="animate-spin" size={18} />
           {:else}
             <Play size={18} />

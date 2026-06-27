@@ -19,10 +19,10 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
   const queryClient = useQueryClient();
   const sessionQuery = useTestSessionQuery(() => sessionId);
 
-  let session = $derived($sessionQuery.data);
-  let isLoading = $derived($sessionQuery.isPending);
-  let hasError = $derived($sessionQuery.isError);
-  let errorMessage = $derived($sessionQuery.error?.message || String($sessionQuery.error));
+  let session = $derived(sessionQuery.data);
+  let isLoading = $derived(sessionQuery.isPending);
+  let hasError = $derived(sessionQuery.isError);
+  let errorMessage = $derived(sessionQuery.error?.message || String(sessionQuery.error));
 
   let hasResult = $derived(!!session?.result);
   let resultData = $derived(session?.result);
