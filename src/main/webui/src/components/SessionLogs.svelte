@@ -19,7 +19,7 @@
       <div class="text-gray-600 italic">Awaiting telemetry logs...</div>
     {:else}
       <div>
-        {#each logs as log (log.timestamp + log.message)}
+        {#each logs as log, idx (idx)}
           {@const colorClass = log.level === 'ERROR' ? 'text-red-400' : (log.level === 'WARNING' ? 'text-yellow-400' : 'text-green-400')}
           <div class="mb-1 {colorClass}">
             [{new Date(log.timestamp).toLocaleTimeString()}] [{log.level}] {log.message}

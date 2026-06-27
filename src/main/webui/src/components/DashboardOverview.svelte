@@ -57,7 +57,7 @@
     </div>
   {:else}
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-      {#each overviewStats as stat}
+      {#each overviewStats as stat (stat.title)}
         <div class="card p-4 text-center bg-surface-100 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-lg shadow-sm">
           <span class="text-xs uppercase font-bold text-surface-500 dark:text-surface-400">{stat.title}</span>
           <span class="text-2xl font-bold block mt-1 text-surface-900 dark:text-white">{stat.value}</span>

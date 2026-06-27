@@ -45,7 +45,7 @@
                 <hr class="my-2 border-surface-200 dark:border-surface-850" />
                 <p class="text-xs font-bold text-surface-500 dark:text-surface-400">Capabilities:</p>
                 <div class="flex flex-wrap gap-1">
-                  {#each agent.capabilities || [] as cap}
+                  {#each agent.capabilities || [] as cap (cap)}
                     <span class="badge {capBadgePreset(agent, cap)} text-[10px] px-1.5 py-0.5">
                       {cap}
                     </span>

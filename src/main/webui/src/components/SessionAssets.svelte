@@ -12,7 +12,7 @@
   <div class="card p-6 bg-surface-100 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-lg shadow-sm">
     <h2 class="text-base font-semibold text-surface-900 dark:text-white mb-4">Assets</h2>
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-      {#each attachments as attachment, idx (attachment.name)}
+      {#each attachments as attachment, idx (idx)}
         <div class="bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-850 rounded-lg p-4 text-center flex flex-col justify-between items-center gap-2">
           <div class="w-full text-center">
             <h3 class="font-semibold text-sm truncate text-surface-850 dark:text-gray-250" title={attachment.name}>

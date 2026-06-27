@@ -18,6 +18,7 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
           safeFetch('/api/payloads')
         ]);
 
+        // eslint-disable-next-line svelte/prefer-svelte-reactivity -- ephemeral local Set, not reactive state
         const compatibleTypes = new Set();
         agents.forEach(agent => {
           const t = agent.supportedTests?.find(st => st.testType === test.testType);
@@ -78,6 +79,7 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
     const ags = agents;
     const t = test;
     if (!ags || !t) return null;
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity -- ephemeral local Map, not reactive state
     const requirements = new Map();
     ags.forEach(agent => {
       if (agentIds.length > 0 && !agentIds.includes(agent.id)) return;

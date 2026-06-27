@@ -83,6 +83,7 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
     const tType = testType;
     const ags = agents;
     if (!tType || !ags) return null;
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity -- ephemeral local Map, not reactive state
     const requirements = new Map();
     ags.forEach(agent => {
       const test = agent.supportedTests?.find(t => t.testType === tType);
@@ -224,7 +225,7 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
                 list="available-test-types"
               />
               <datalist id="available-test-types">
-                {#each availableTypes as item}
+                {#each availableTypes as item (item)}
                   <option value={item}></option>
                 {/each}
               </datalist>

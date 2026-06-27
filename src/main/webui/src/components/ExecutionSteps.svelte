@@ -26,7 +26,7 @@ import ChevronRight from '@lucide/svelte/icons/chevron-right';
   <div class="space-y-2 pt-4">
     <h3 class="font-semibold text-sm">Execution Steps</h3>
     <div class="space-y-2">
-      {#each reports as step (step.name)}
+      {#each reports as step, idx (idx)}
         <div class="border border-surface-200 dark:border-surface-800 rounded-lg overflow-hidden bg-surface-100 dark:bg-surface-900">
           <!-- svelte-ignore a11y_click_events_have_key_events -->
           <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -59,7 +59,7 @@ import ChevronRight from '@lucide/svelte/icons/chevron-right';
               <!-- Substeps -->
               {#if step.steps && step.steps.length > 0}
                 <div class="pl-3 border-l-2 border-surface-200 dark:border-surface-800 space-y-2">
-                  {#each step.steps as subStep (subStep.name)}
+                  {#each step.steps as subStep, sIdx (sIdx)}
                     <div class="border border-surface-200 dark:border-surface-800 rounded-lg overflow-hidden bg-surface-100 dark:bg-surface-900">
                       <!-- svelte-ignore a11y_click_events_have_key_events -->
                       <!-- svelte-ignore a11y_no_static_element_interactions -->

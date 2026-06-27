@@ -77,7 +77,7 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
     if (metadata) {
       try {
         metaJson = JSON.parse(metadata);
-      } catch (err) {
+      } catch {
         errorMsg = 'Invalid metadata JSON format';
         return;
       }
@@ -171,7 +171,7 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
               list="available-types"
             />
             <datalist id="available-types">
-              {#each types as item}
+              {#each types as item (item)}
                 <option value={item}></option>
               {/each}
             </datalist>
@@ -182,7 +182,7 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
             <textarea
               id="payload-metadata"
               bind:value={metadata}
-              placeholder="{`{ \"key\": \"value\" }`}"
+              placeholder={'{ "key": "value" }'}
               rows="5"
               class="textarea p-2 rounded-lg bg-surface-50 dark:bg-surface-950 border border-surface-300 dark:border-surface-850 w-full font-mono text-xs"
             ></textarea>

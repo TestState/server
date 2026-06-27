@@ -151,7 +151,7 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
               class="select p-2 rounded-lg bg-surface-50 dark:bg-surface-950 border border-surface-300 dark:border-surface-850 w-full"
             >
               <option value="" disabled>Select translation node</option>
-              {#each agentOptions as opt}
+              {#each agentOptions as opt (opt.value)}
                 <option value={opt.value}>{opt.label}</option>
               {/each}
             </select>
@@ -167,7 +167,7 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
               class="select p-2 rounded-lg bg-surface-50 dark:bg-surface-950 border border-surface-300 dark:border-surface-850 w-full"
             >
               <option value="" disabled>{agentId ? 'Select translation format type' : 'Select node first'}</option>
-              {#each typeOptions as opt}
+              {#each typeOptions as opt (opt.value)}
                 <option value={opt.value}>{opt.label}</option>
               {/each}
             </select>
