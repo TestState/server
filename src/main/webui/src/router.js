@@ -1,44 +1,28 @@
-import { createRouter, createWebHistory } from 'vue-router';
-const Dashboard = () => import('@/pages/Dashboard.vue');
-const Payloads = () => import('@/pages/Payloads.vue');
-const PayloadForm = () => import('@/pages/PayloadForm.vue');
-const Tests = () => import('@/pages/Tests.vue');
-const TestForm = () => import('@/pages/TestForm.vue');
-const TestRun = () => import('@/pages/TestRun.vue');
-const TestStatus = () => import('@/pages/TestStatus.vue');
-const BatchStatus = () => import('@/pages/BatchStatus.vue');
-const Translations = () => import('@/pages/Translations.vue');
-const TranslationForm = () => import('@/pages/TranslationForm.vue');
-const TranslationStatus = () => import('@/pages/TranslationStatus.vue');
+import { createRouter } from 'sv-router';
+import Dashboard from './pages/Dashboard.svelte';
+import Payloads from './pages/Payloads.svelte';
+import PayloadForm from './pages/PayloadForm.svelte';
+import Tests from './pages/Tests.svelte';
+import TestForm from './pages/TestForm.svelte';
+import TestRun from './pages/TestRun.svelte';
+import TestStatus from './pages/TestStatus.svelte';
+import BatchStatus from './pages/BatchStatus.svelte';
+import Translations from './pages/Translations.svelte';
+import TranslationForm from './pages/TranslationForm.svelte';
+import TranslationStatus from './pages/TranslationStatus.svelte';
 
-const routes = [
-  { path: '/', component: Dashboard, meta: { title: 'Dashboard' } },
-  { path: '/payloads', component: Payloads, meta: { title: 'Payloads' } },
-  { path: '/payloads/new', component: PayloadForm, meta: { title: 'New Payload' } },
-  { path: '/payloads/:id/edit', component: PayloadForm, props: true, meta: { title: 'Edit Payload' } },
-  { path: '/tests', component: Tests, meta: { title: 'Tests' } },
-  { path: '/tests/new', component: TestForm, meta: { title: 'New Test' } },
-  { path: '/tests/:id/edit', component: TestForm, props: true, meta: { title: 'Edit Test' } },
-  { path: '/tests/:id/run', component: TestRun, props: true, meta: { title: 'Run Test' } },
-  { path: '/tests/session/:sessionId/status', component: TestStatus, props: true, meta: { title: 'Test Session Status' } },
-  { path: '/tests/batch/:batchId/status', component: BatchStatus, props: true, meta: { title: 'Batch Status' } },
-  { path: '/translations', component: Translations, meta: { title: 'Translations' } },
-  { path: '/translations/new', component: TranslationForm, meta: { title: 'New Translation' } },
-  { path: '/translations/:sessionId/status', component: TranslationStatus, props: true, meta: { title: 'Translation Status' } }
-];
-
-const router = createRouter({
-  history: createWebHistory(),
-  routes
+export const { p, navigate, isActive, route } = createRouter({
+  '/': Dashboard,
+  '/payloads': Payloads,
+  '/payloads/new': PayloadForm,
+  '/payloads/:id/edit': PayloadForm,
+  '/tests': Tests,
+  '/tests/new': TestForm,
+  '/tests/:id/edit': TestForm,
+  '/tests/:id/run': TestRun,
+  '/tests/session/:sessionId/status': TestStatus,
+  '/tests/batch/:batchId/status': BatchStatus,
+  '/translations': Translations,
+  '/translations/new': TranslationForm,
+  '/translations/:sessionId/status': TranslationStatus
 });
-
-router.beforeEach((to) => {
-  const baseTitle = 'TestState CMS';
-  if (to.meta.title) {
-    document.title = `${to.meta.title} - ${baseTitle}`;
-  } else {
-    document.title = baseTitle;
-  }
-});
-
-export default router;

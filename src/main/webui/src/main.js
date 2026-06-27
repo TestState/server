@@ -1,14 +1,9 @@
-import { createApp } from 'vue';
-import { VueQueryPlugin } from '@tanstack/vue-query';
-import ui from '@nuxt/ui/vue-plugin';
-
-import App from './App.vue';
-import router from './router';
+import { mount } from 'svelte';
+import App from './App.svelte';
 import './index.css';
 
-const app = createApp(App);
+const app = mount(App, {
+  target: document.getElementById('app')
+});
 
-app.use(router);
-app.use(ui);
-app.use(VueQueryPlugin);
-app.mount('#app');
+export default app;

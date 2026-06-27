@@ -27,3 +27,6 @@ dist-ssr
 auto-imports.d.ts
 components.d.ts
 
+# Vite config temp files
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
