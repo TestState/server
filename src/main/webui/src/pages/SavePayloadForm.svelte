@@ -1,5 +1,5 @@
 <script>
-  import { createMutation } from '@tanstack/svelte-query';
+  import { createMutation } from '@/composables/queries.svelte';
   import { safeFetch } from '@/utils/safeFetch';
   import Save from '@lucide/svelte/icons/save';
 import Loader2 from '@lucide/svelte/icons/loader-2';
@@ -14,21 +14,23 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
     description = `Translated ${item.type} from session ${sessionId}`;
   });
 
-  const mutation = createMutation(() => ({
-    mutationFn: (body) => safeFetch(`/api/translations/sessions/${sessionId}/payloads/${item.index}/save`, {
+  const mutation = createMutation(
+    (body) => safeFetch(`/api/translations/sessions/${sessionId}/payloads/${item.index}/save`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(body)
     }),
-    onSuccess: () => {
-      if (onSaveSuccess) onSaveSuccess();
-    },
-    onError: (err) => {
-      alert('Failed to save payload: ' + err.message);
+    {
+      onSuccess: () => {
+        if (onSaveSuccess) onSaveSuccess();
+      },
+      onError: (err) => {
+        alert('Failed to save payload: ' + err.message);
+      }
     }
-  }));
+  );
 
   const handleSubmit = (e) => {
     e.preventDefault();

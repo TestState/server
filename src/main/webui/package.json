@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@lucide/svelte": "^1.21.0",
-    "@tanstack/svelte-query": "^6.1.35",
     "sv-router": "^0.17.0",
     "svelte": "^5.56.4"
   },

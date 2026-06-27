@@ -1,7 +1,6 @@
 <script>
   import { onDestroy } from 'svelte';
-  import { useQueryClient } from '@tanstack/svelte-query';
-  import { useTestSessionQuery } from '@/composables/queries';
+  import { useTestSessionQuery } from '@/composables/queries.svelte';
   import { getDisplayDuration } from '@/utils/format';
   import { navigate, route } from '@/router.js';
   import ExternalLink from '@lucide/svelte/icons/external-link';
@@ -16,7 +15,6 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
 
   let sessionId = $derived(route.params.sessionId);
 
-  const queryClient = useQueryClient();
   const sessionQuery = useTestSessionQuery(() => sessionId);
 
   let session = $derived(sessionQuery.data);
@@ -52,14 +50,16 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
         try {
           const msg = JSON.parse(event.data);
           if (msg.type === 'STATUS') {
-            queryClient.setQueryData(['test-session', sessionId], prev =>
-              prev ? { ...prev, status: msg.state, statusMessage: msg.message } : null
-            );
+            const prev = sessionQuery.data;
+            if (prev) {
+              sessionQuery.data = { ...prev, status: msg.state, statusMessage: msg.message };
+            }
           } else if (msg.type === 'RESULT') {
-            queryClient.setQueryData(['test-session', sessionId], prev =>
-              prev ? { ...prev, result: msg.result } : null
-            );
-            queryClient.invalidateQueries({ queryKey: ['test-session', sessionId] });
+            const prev = sessionQuery.data;
+            if (prev) {
+              sessionQuery.data = { ...prev, result: msg.result };
+            }
+            sessionQuery.refetch();
           } else if (msg.type === 'TELEMETRY') {
             telemetryLogs = [...telemetryLogs, msg];
           }

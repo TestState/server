@@ -1,5 +1,5 @@
 <script>
-  import { createQuery, createMutation } from '@tanstack/svelte-query';
+  import { createQuery, createMutation } from '@/composables/queries.svelte';
   import { safeFetch } from '@/utils/safeFetch';
   import { navigate, route } from '@/router.js';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
@@ -8,31 +8,28 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
 
   let id = $derived(route.params.id);
 
-  const contextQuery = createQuery(() => ({
-    queryKey: ['test-run-context', id],
-    queryFn: async () => {
-      const [test, agents, payloads] = await Promise.all([
-        safeFetch(`/api/tests/${id}`),
-        safeFetch('/api/agents'),
-        safeFetch('/api/payloads')
-      ]);
+  const contextQuery = createQuery(async () => {
+    const [test, agents, payloads] = await Promise.all([
+      safeFetch(`/api/tests/${id}`),
+      safeFetch('/api/agents'),
+      safeFetch('/api/payloads')
+    ]);
 
-      // eslint-disable-next-line svelte/prefer-svelte-reactivity -- ephemeral local Set, not reactive state
-      const compatibleTypes = new Set();
-      agents.forEach(agent => {
-        const t = agent.supportedTests?.find(st => st.testType === test.testType);
-        if (t) {
-          t.requiredPayloadTypes?.forEach(pt => compatibleTypes.add(pt));
-          t.optionalPayloadTypes?.forEach(pt => compatibleTypes.add(pt));
-        }
-      });
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity -- ephemeral local Set, not reactive state
+    const compatibleTypes = new Set();
+    agents.forEach(agent => {
+      const t = agent.supportedTests?.find(st => st.testType === test.testType);
+      if (t) {
+        t.requiredPayloadTypes?.forEach(pt => compatibleTypes.add(pt));
+        t.optionalPayloadTypes?.forEach(pt => compatibleTypes.add(pt));
+      }
+    });
 
-      const linkedIds = new Set(test.payloads?.map(p => p.id) || []);
-      const extraPayloads = payloads.filter(p => !linkedIds.has(p.id) && compatibleTypes.has(p.type));
+    const linkedIds = new Set(test.payloads?.map(p => p.id) || []);
+    const extraPayloads = payloads.filter(p => !linkedIds.has(p.id) && compatibleTypes.has(p.type));
 
-      return { test, agents, extraPayloads };
-    }
-  }));
+    return { test, agents, extraPayloads };
+  });
 
   let test = $derived(contextQuery.data?.test || {});
   let agents = $derived(contextQuery.data?.agents || []);
@@ -53,25 +50,27 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
     }
   });
 
-  const runMutation = createMutation(() => ({
-    mutationFn: (body) => safeFetch(`/api/tests/${id}/runs`, {
+  const runMutation = createMutation(
+    (body) => safeFetch(`/api/tests/${id}/runs`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(body)
     }),
-    onSuccess: (res) => {
-      if (res.batchId) {
-        navigate(`/tests/batch/${res.batchId}/status`);
-      } else if (res.sessionId) {
-        navigate(`/tests/session/${res.sessionId}/status`);
+    {
+      onSuccess: (res) => {
+        if (res.batchId) {
+          navigate(`/tests/batch/${res.batchId}/status`);
+        } else if (res.sessionId) {
+          navigate(`/tests/session/${res.sessionId}/status`);
+        }
+      },
+      onError: (err) => {
+        errorMsg = 'Failed to trigger run: ' + err.message;
       }
-    },
-    onError: (err) => {
-      errorMsg = 'Failed to trigger run: ' + err.message;
     }
-  }));
+  );
 
   const getPayloadRequirement = (payloadType) => {
     const ags = agents;

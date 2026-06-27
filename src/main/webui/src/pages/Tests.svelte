@@ -1,6 +1,5 @@
 <script>
-  import { createMutation, useQueryClient } from '@tanstack/svelte-query';
-  import { useTestsQuery, useSessionsQuery, useBatchesQuery } from '@/composables/queries';
+  import { useTestsQuery, useSessionsQuery, useBatchesQuery, createMutation } from '@/composables/queries.svelte';
   import { safeFetch } from '@/utils/safeFetch';
   import { getCleanStatus, getStatusColor } from '@/utils/format';
   import { navigate } from '@/router.js';
@@ -11,33 +10,29 @@ import Edit from '@lucide/svelte/icons/edit';
 import Trash from '@lucide/svelte/icons/trash';
 import Loader2 from '@lucide/svelte/icons/loader-2';
 
-  const queryClient = useQueryClient();
-
   const testsQuery = useTestsQuery();
   const sessionsQuery = useSessionsQuery();
   const batchesQuery = useBatchesQuery();
 
-  const deleteMutation = createMutation(() => ({
-    mutationFn: (id) => safeFetch(`/api/tests/${id}`, { method: 'DELETE' }),
+  const deleteMutation = createMutation((id) => safeFetch(`/api/tests/${id}`, { method: 'DELETE' }), {
     onSuccess: () => {
       alert('Test configuration deleted successfully');
-      queryClient.invalidateQueries({ queryKey: ['tests'] });
+      testsQuery.refetch();
     },
     onError: (err) => {
       alert('Failed to delete test: ' + err.message);
     }
-  }));
+  });
 
-  const copyMutation = createMutation(() => ({
-    mutationFn: (id) => safeFetch(`/api/tests/${id}/copy`, { method: 'POST' }),
+  const copyMutation = createMutation((id) => safeFetch(`/api/tests/${id}/copy`, { method: 'POST' }), {
     onSuccess: () => {
       alert('Test configuration duplicated successfully');
-      queryClient.invalidateQueries({ queryKey: ['tests'] });
+      testsQuery.refetch();
     },
     onError: (err) => {
       alert('Failed to duplicate test: ' + err.message);
     }
-  }));
+  });
 
   const handleDelete = (id) => {
     if (window.confirm('Are you sure you want to delete this test configuration?')) {

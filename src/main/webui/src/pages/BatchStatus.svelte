@@ -1,7 +1,6 @@
 <script>
   import { onDestroy } from 'svelte';
-  import { useQueryClient } from '@tanstack/svelte-query';
-  import { useBatchQuery } from '@/composables/queries';
+  import { useBatchQuery } from '@/composables/queries.svelte';
   import { getCleanStatus, getStatusColor } from '@/utils/format';
   import { navigate, route } from '@/router.js';
   import { safeFetch } from '@/utils/safeFetch';
@@ -13,7 +12,6 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
 
   let batchId = $derived(route.params.batchId);
 
-  const queryClient = useQueryClient();
   const batchQuery = useBatchQuery(() => batchId);
 
   let batch = $derived(batchQuery.data);
@@ -44,9 +42,9 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
         try {
           const msg = JSON.parse(event.data);
           if (msg.type === 'BATCH_UPDATE') {
-            queryClient.setQueryData(['batch', batchId], prev => {
-              if (!prev) return null;
-              return {
+            const prev = batchQuery.data;
+            if (prev) {
+              batchQuery.data = {
                 ...prev,
                 status: msg.status,
                 completed: msg.completed,
@@ -63,9 +61,9 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
                   terminal: s.terminal
                 }))
               };
-            });
+            }
           } else if (msg.type === 'RESULT') {
-            queryClient.invalidateQueries({ queryKey: ['batch', batchId] });
+            batchQuery.refetch();
           }
         } catch (e) {
           console.error("Failed to parse WS message", e);
@@ -113,7 +111,7 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
       cancelling = true;
       try {
         await safeFetch(`/api/tests/batches/${batchId}/cancel`, { method: 'POST' });
-        queryClient.invalidateQueries({ queryKey: ['batch', batchId] });
+        batchQuery.refetch();
       } catch (err) {
         alert('Failed to stop batch: ' + err.message);
       } finally {

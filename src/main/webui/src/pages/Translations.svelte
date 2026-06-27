@@ -1,5 +1,5 @@
 <script>
-  import { useTranslationSessionsQuery } from '@/composables/queries';
+  import { useTranslationSessionsQuery } from '@/composables/queries.svelte';
   import { getCleanStatus, getStatusColor } from '@/utils/format';
   import { navigate } from '@/router.js';
   import ChevronRight from '@lucide/svelte/icons/chevron-right';

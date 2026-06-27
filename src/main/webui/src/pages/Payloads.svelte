@@ -1,6 +1,5 @@
 <script>
-  import { createMutation, useQueryClient } from '@tanstack/svelte-query';
-  import { usePayloadsQuery } from '@/composables/queries';
+  import { usePayloadsQuery, createMutation } from '@/composables/queries.svelte';
   import { safeFetch } from '@/utils/safeFetch';
   import { navigate } from '@/router.js';
   import Plus from '@lucide/svelte/icons/plus';
@@ -9,19 +8,17 @@ import Edit from '@lucide/svelte/icons/edit';
 import Trash from '@lucide/svelte/icons/trash';
 import Loader2 from '@lucide/svelte/icons/loader-2';
 
-  const queryClient = useQueryClient();
   const payloadsQuery = usePayloadsQuery();
 
-  const deleteMutation = createMutation(() => ({
-    mutationFn: (id) => safeFetch(`/api/payloads/${id}`, { method: 'DELETE' }),
+  const deleteMutation = createMutation((id) => safeFetch(`/api/payloads/${id}`, { method: 'DELETE' }), {
     onSuccess: () => {
       alert('Payload deleted successfully');
-      queryClient.invalidateQueries({ queryKey: ['payloads'] });
+      payloadsQuery.refetch();
     },
     onError: (err) => {
       alert('Failed to delete payload: ' + err.message);
     }
-  }));
+  });
 
   const handleDelete = (id) => {
     if (window.confirm('Are you sure you want to delete this payload?')) {

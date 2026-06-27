@@ -1,5 +1,5 @@
 <script>
-  import { createQuery, createMutation, useQueryClient } from '@tanstack/svelte-query';
+  import { createQuery, createMutation } from '@/composables/queries.svelte';
   import { safeFetch } from '@/utils/safeFetch';
   import { navigate, route } from '@/router.js';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
@@ -8,7 +8,6 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
 
   let id = $derived(route.params.id);
 
-  const queryClient = useQueryClient();
   const isEdit = $derived(!!id);
 
   let name = $state('');
@@ -19,21 +18,9 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
   let errorMsg = $state(null);
 
   // Queries
-  const availableTypes = createQuery(() => ({
-    queryKey: ['payloadAvailableTypes'],
-    queryFn: () => safeFetch('/api/payloads/available-types')
-  }));
-
-  const mimeMappings = createQuery(() => ({
-    queryKey: ['payloadMimeMappings'],
-    queryFn: () => safeFetch('/api/payloads/mime-mappings')
-  }));
-
-  const entity = createQuery(() => ({
-    queryKey: ['payload', id],
-    queryFn: () => safeFetch(`/api/payloads/${id}`),
-    enabled: isEdit
-  }));
+  const availableTypes = createQuery('/api/payloads/available-types');
+  const mimeMappings = createQuery('/api/payloads/mime-mappings');
+  const entity = createQuery(() => `/api/payloads/${id}`, () => isEdit);
 
   let types = $derived(availableTypes.data || []);
   let mappings = $derived(mimeMappings.data || {});
@@ -47,8 +34,8 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
     }
   });
 
-  const saveMutation = createMutation(() => ({
-    mutationFn: (payloadForm) => {
+  const saveMutation = createMutation(
+    (payloadForm) => {
       const url = isEdit ? `/api/payloads/${id}` : '/api/payloads';
       const method = isEdit ? 'PUT' : 'POST';
       return safeFetch(url, {
@@ -56,14 +43,15 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
         body: payloadForm
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['payloads'] });
-      navigate('/payloads');
-    },
-    onError: (err) => {
-      errorMsg = err.message;
+    {
+      onSuccess: () => {
+        navigate('/payloads');
+      },
+      onError: (err) => {
+        errorMsg = err.message;
+      }
     }
-  }));
+  );
 
   const handleFileChange = (e) => {
     attachmentFile = e.target.files[0];
@@ -195,10 +183,10 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
         <h2 class="text-lg font-semibold text-surface-900 dark:text-white mb-4">File</h2>
 
         <div class="space-y-4">
-          {#if isEdit && $entity.data?.attachmentName}
+          {#if isEdit && entity.data?.attachmentName}
             <div class="flex items-center gap-2 text-sm">
               <span class="text-surface-500">Current Asset:</span>
-              <span class="font-semibold text-surface-900 dark:text-white">{$entity.data.attachmentName}</span>
+              <span class="font-semibold text-surface-900 dark:text-white">{entity.data.attachmentName}</span>
             </div>
           {/if}
 

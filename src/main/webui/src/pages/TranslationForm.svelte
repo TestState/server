@@ -1,46 +1,39 @@
 <script>
-  import { createQuery, createMutation, useQueryClient } from '@tanstack/svelte-query';
+  import { createQuery, createMutation } from '@/composables/queries.svelte';
   import { safeFetch } from '@/utils/safeFetch';
   import { navigate } from '@/router.js';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 import Play from '@lucide/svelte/icons/play';
 import Loader2 from '@lucide/svelte/icons/loader-2';
 
-  const queryClient = useQueryClient();
   let formError = $state(null);
 
   let agentId = $state('');
   let type = $state('');
   let payloadIds = $state([]);
 
-  const agentsQuery = createQuery(() => ({
-    queryKey: ['agents'],
-    queryFn: () => safeFetch('/api/agents')
-  }));
+  const agentsQuery = createQuery('/api/agents');
+  const payloadsQuery = createQuery('/api/payloads');
 
-  const payloadsQuery = createQuery(() => ({
-    queryKey: ['payloads'],
-    queryFn: () => safeFetch('/api/payloads')
-  }));
-
-  const mutation = createMutation(() => ({
-    mutationFn: (body) => safeFetch('/api/translations/sessions', {
+  const mutation = createMutation(
+    (body) => safeFetch('/api/translations/sessions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(body)
     }),
-    onSuccess: (res) => {
-      queryClient.invalidateQueries({ queryKey: ['translationsSessions'] });
-      if (res.sessionId) {
-        navigate(`/translations/${res.sessionId}/status`);
+    {
+      onSuccess: (res) => {
+        if (res.sessionId) {
+          navigate(`/translations/${res.sessionId}/status`);
+        }
+      },
+      onError: (err) => {
+        formError = err.message;
       }
-    },
-    onError: (err) => {
-      formError = err.message;
     }
-  }));
+  );
 
   let agents = $derived(agentsQuery.data || []);
   let payloads = $derived(payloadsQuery.data || []);

@@ -1,6 +1,6 @@
 <script>
   import Loader2 from '@lucide/svelte/icons/loader-2';
-  import { useAgentsQuery } from '@/composables/queries';
+  import { useAgentsQuery } from '@/composables/queries.svelte';
 
   const agentsQuery = useAgentsQuery();
 

@@ -6,7 +6,7 @@
     useAgentsCountQuery,
     useSessionsCountQuery,
     usePerformanceStatsQuery
-  } from '@/composables/queries';
+  } from '@/composables/queries.svelte';
 
   const testsCount = useTestsCountQuery();
   const payloadsCount = usePayloadsCountQuery();

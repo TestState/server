@@ -1,5 +1,5 @@
 <script>
-  import { createQuery, createMutation, useQueryClient } from '@tanstack/svelte-query';
+  import { createQuery, createMutation } from '@/composables/queries.svelte';
   import { safeFetch } from '@/utils/safeFetch';
   import { navigate, route } from '@/router.js';
   import Copy from '@lucide/svelte/icons/copy';
@@ -9,7 +9,6 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
 
   let id = $derived(route.params.id);
 
-  const queryClient = useQueryClient();
   const isEdit = $derived(!!id);
 
   let name = $state('');
@@ -18,18 +17,15 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
   let payloadIds = $state([]);
   let errorMsg = $state(null);
 
-  const contextQuery = createQuery(() => ({
-    queryKey: ['test-form-context', id],
-    queryFn: async () => {
-      const [types, payloads, entity, agents] = await Promise.all([
-        safeFetch('/api/tests/available-types'),
-        safeFetch('/api/payloads'),
-        isEdit ? safeFetch(`/api/tests/${id}`) : Promise.resolve(null),
-        safeFetch('/api/agents')
-      ]);
-      return { types, payloads, entity, agents };
-    }
-  }));
+  const contextQuery = createQuery(async () => {
+    const [types, payloads, entity, agents] = await Promise.all([
+      safeFetch('/api/tests/available-types'),
+      safeFetch('/api/payloads'),
+      isEdit ? safeFetch(`/api/tests/${id}`) : Promise.resolve(null),
+      safeFetch('/api/agents')
+    ]);
+    return { types, payloads, entity, agents };
+  });
 
   let availableTypes = $derived(contextQuery.data?.types || []);
   let allPayloads = $derived(contextQuery.data?.payloads || []);
@@ -45,8 +41,8 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
     }
   });
 
-  const saveMutation = createMutation(() => ({
-    mutationFn: (body) => {
+  const saveMutation = createMutation(
+    (body) => {
       const url = isEdit ? `/api/tests/${id}` : '/api/tests';
       const method = isEdit ? 'PUT' : 'POST';
       return safeFetch(url, {
@@ -57,25 +53,27 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
         body: JSON.stringify(body)
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tests'] });
-      navigate('/tests');
-    },
-    onError: (err) => {
-      errorMsg = err.message;
+    {
+      onSuccess: () => {
+        navigate('/tests');
+      },
+      onError: (err) => {
+        errorMsg = err.message;
+      }
     }
-  }));
+  );
 
-  const copyMutation = createMutation(() => ({
-    mutationFn: () => safeFetch(`/api/tests/${id}/copy`, { method: 'POST' }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tests'] });
-      navigate('/tests');
-    },
-    onError: (err) => {
-      alert('Failed to duplicate test: ' + err.message);
+  const copyMutation = createMutation(
+    () => safeFetch(`/api/tests/${id}/copy`, { method: 'POST' }),
+    {
+      onSuccess: () => {
+        navigate('/tests');
+      },
+      onError: (err) => {
+        alert('Failed to duplicate test: ' + err.message);
+      }
     }
-  }));
+  );
 
   const getPayloadRequirement = (payloadType) => {
     const tType = testType;

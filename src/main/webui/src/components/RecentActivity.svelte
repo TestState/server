@@ -1,7 +1,7 @@
 <script>
   import Loader2 from '@lucide/svelte/icons/loader-2';
   import { navigate } from '@/router.js';
-  import { useBatchesQuery, useSessionsQuery } from '@/composables/queries';
+  import { useBatchesQuery, useSessionsQuery } from '@/composables/queries.svelte';
   import { getCleanStatus, getStatusColor } from '@/utils/format';
 
   const batchesQuery = useBatchesQuery();

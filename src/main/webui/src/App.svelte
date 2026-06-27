@@ -1,6 +1,5 @@
 <script>
   import { Router } from 'sv-router';
-  import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query';
   import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
 import Files from '@lucide/svelte/icons/files';
 import CircleCheck from '@lucide/svelte/icons/circle-check';
@@ -8,7 +7,6 @@ import Languages from '@lucide/svelte/icons/languages';
 import Menu from '@lucide/svelte/icons/menu';
   import { route } from './router.js';
 
-  const queryClient = new QueryClient();
   let sidebarOpen = $state(false);
 
   const isActive = (targetPath) => {
@@ -19,7 +17,6 @@ import Menu from '@lucide/svelte/icons/menu';
   };
 </script>
 
-<QueryClientProvider client={queryClient}>
   <div class="h-screen w-screen overflow-hidden bg-surface-50 dark:bg-surface-950 text-surface-900 dark:text-surface-50 flex flex-col font-sans">
     <!-- Header / Navbar -->
     <header class="bg-surface-100 dark:bg-surface-900 border-b border-surface-200 dark:border-surface-800 px-6 h-16 flex items-center justify-between shrink-0 z-30">
@@ -172,4 +169,3 @@ import Menu from '@lucide/svelte/icons/menu';
       </main>
     </div>
   </div>
-</QueryClientProvider>

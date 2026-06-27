@@ -1,7 +1,6 @@
 <script>
   import { onDestroy } from 'svelte';
-  import { useQueryClient } from '@tanstack/svelte-query';
-  import { useTranslationSessionQuery } from '@/composables/queries';
+  import { useTranslationSessionQuery } from '@/composables/queries.svelte';
   import { getCleanStatus, getStatusColor } from '@/utils/format';
   import { navigate, route } from '@/router.js';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
@@ -14,7 +13,6 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
 
   let sessionId = $derived(route.params.sessionId);
 
-  const queryClient = useQueryClient();
   const sessionQuery = useTranslationSessionQuery(() => sessionId);
 
   let session = $derived(sessionQuery?.data);
@@ -23,7 +21,7 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
   let errorMessage = $derived(sessionQuery?.error?.message || String(sessionQuery?.error));
 
   const handleSaveSuccess = () => {
-    queryClient.invalidateQueries({ queryKey: ['translation-session', sessionId] });
+    sessionQuery.refetch();
   };
 
   let telemetryLogs = $state([]);
@@ -48,9 +46,10 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
         try {
           const msg = JSON.parse(event.data);
           if (msg.type === 'STATUS') {
-            queryClient.setQueryData(['translation-session', sessionId], (prev) => {
-              return prev ? { ...prev, status: msg.state, statusMessage: msg.message } : null;
-            });
+            const prev = sessionQuery.data;
+            if (prev) {
+              sessionQuery.data = { ...prev, status: msg.state, statusMessage: msg.message };
+            }
           } else if (msg.type === 'RESULT') {
             const items = msg.result.map(item => ({
               index: item.index,
@@ -58,10 +57,11 @@ import Loader2 from '@lucide/svelte/icons/loader-2';
               type: item.type,
               databaseId: null
             }));
-            queryClient.setQueryData(['translation-session', sessionId], (prev) => {
-              return prev ? { ...prev, generatedItems: items } : null;
-            });
-            queryClient.invalidateQueries({ queryKey: ['translation-session', sessionId] });
+            const prev = sessionQuery.data;
+            if (prev) {
+              sessionQuery.data = { ...prev, generatedItems: items };
+            }
+            sessionQuery.refetch();
           } else if (msg.type === 'TELEMETRY') {
             telemetryLogs = [...telemetryLogs, msg];
           }
